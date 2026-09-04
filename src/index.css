@@ -1,0 +1,216 @@
+@import "tailwindcss";
+
+/* ═══════════════════════════════════════════════════
+   DESIGN TOKENS — Apple Dark Mode System
+   Based on iOS Human Interface Guidelines
+   ═══════════════════════════════════════════════════ */
+
+@theme {
+  /* ── Surfaces ── */
+  --color-canvas: #000000;
+  --color-surface-1: #1c1c1e;
+  --color-surface-2: #2c2c2e;
+  --color-surface-3: #3a3a3c;
+  --color-surface-4: #48484a;
+  --color-surface-elevated: #1c1c1e;
+  --color-surface-sheet: #1c1c1e;
+  --color-surface-dialog: rgba(44, 44, 46, 0.97);
+  --color-surface-input: #1c1c1e;
+
+  /* ── Accent ── */
+  --color-accent: #0a84ff;
+  --color-accent-hover: #409cff;
+  --color-accent-pressed: #0071e3;
+
+  /* ── System Colors ── */
+  --color-sys-green: #30d158;
+  --color-sys-orange: #ff9f0a;
+  --color-sys-red: #ff375f;
+  --color-sys-yellow: #ffd60a;
+  --color-sys-purple: #bf5af2;
+  --color-sys-pink: #ff2d55;
+  --color-sys-teal: #64d2ff;
+  --color-sys-indigo: #5e5ce6;
+  --color-sys-cyan: #5ac8fa;
+  --color-sys-mint: #66d4cf;
+  --color-sys-brown: #ac8e68;
+
+  /* ── Labels (Text) ── */
+  --color-label: #ffffff;
+  --color-label-secondary: rgba(235, 235, 245, 0.6);
+  --color-label-tertiary: rgba(235, 235, 245, 0.3);
+  --color-label-quaternary: rgba(235, 235, 245, 0.18);
+
+  /* ── Fills ── */
+  --color-fill-primary: rgba(120, 120, 128, 0.36);
+  --color-fill-secondary: rgba(120, 120, 128, 0.32);
+  --color-fill-tertiary: rgba(118, 118, 128, 0.24);
+
+  /* ── Separators ── */
+  --color-separator: rgba(84, 84, 88, 0.65);
+  --color-separator-opaque: #38383a;
+
+  /* ── Budget Thresholds ── */
+  --color-budget-ok: #30d158;
+  --color-budget-warn: #ff9f0a;
+  --color-budget-danger: #ff375f;
+
+  /* ── Spacing ── */
+  --spacing-safe-top: env(safe-area-inset-top, 0px);
+  --spacing-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --spacing-safe-left: env(safe-area-inset-left, 0px);
+  --spacing-safe-right: env(safe-area-inset-right, 0px);
+  --spacing-bottom-nav: 80px;
+
+  /* ── Border Radius ── */
+  --radius-xs: 5px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+  --radius-sheet: 14px;
+  --radius-pill: 9999px;
+
+  /* ── Typography ── */
+  --font-sans: "Inter", "SF Pro Display", "SF Pro Text", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* ── Animations ── */
+  --ease-spring: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --ease-ios: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* ═══════════════════════════════════════════════════
+   GLOBAL STYLES
+   ═══════════════════════════════════════════════════ */
+
+* {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+
+html {
+  background-color: #000000;
+  color-scheme: dark;
+  overscroll-behavior: none;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-canvas);
+  color: var(--color-label);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overscroll-behavior: none;
+  user-select: none;
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+}
+
+#root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+/* Scrollbar nascosta ma funzionante */
+.scrollable {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.scrollable::-webkit-scrollbar {
+  display: none;
+}
+
+/* Scrollbar orizzontale nascosta */
+.scrollable-x {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.scrollable-x::-webkit-scrollbar {
+  display: none;
+}
+
+/* Input styling per dark mode */
+input, textarea, select {
+  background-color: var(--color-surface-input);
+  color: var(--color-label);
+  border: none;
+  outline: none;
+  font-family: inherit;
+}
+
+input::placeholder, textarea::placeholder {
+  color: var(--color-label-tertiary);
+}
+
+/* PIN input dots */
+.pin-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--color-label-secondary);
+  transition: all 0.15s ease;
+}
+.pin-dot.filled {
+  background-color: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+/* Animazione shake per PIN errato */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-8px); }
+  40%, 80% { transform: translateX(8px); }
+}
+.shake {
+  animation: shake 0.4s ease;
+}
+
+/* iOS Toggle */
+.toggle-track {
+  width: 51px;
+  height: 31px;
+  border-radius: 15.5px;
+  background-color: var(--color-fill-primary);
+  transition: background-color 0.2s ease;
+  position: relative;
+  cursor: pointer;
+}
+.toggle-track.active {
+  background-color: var(--color-accent);
+}
+.toggle-thumb {
+  width: 27px;
+  height: 27px;
+  border-radius: 50%;
+  background-color: #ffffff;
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  transition: transform 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+.toggle-track.active .toggle-thumb {
+  transform: translateX(20px);
+}
+
+/* Context menu backdrop blur */
+.backdrop-blur-dialog {
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+}
+
+/* Framer Motion drag constraint helper */
+.drag-container {
+  touch-action: pan-y;
+}
+
+/* Progress ring */
+.progress-ring-circle {
+  transition: stroke-dashoffset 0.5s ease;
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
+}
