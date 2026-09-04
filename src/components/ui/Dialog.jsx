@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
  * Dialog — Modale centrato con backdrop blur (stile iOS).
  * Replica il pattern degli screenshot (05, 10, 11).
  */
-export default function Dialog({ isOpen, onClose, title, children, actions }) {
+function Dialog({ isOpen, onClose, title, children, actions }) {
   return (
     <AnimatePresence>
       {isOpen && (
@@ -51,3 +51,6 @@ export default function Dialog({ isOpen, onClose, title, children, actions }) {
     </AnimatePresence>
   );
 }
+
+export { Dialog };
+export default Dialog;

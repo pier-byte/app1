@@ -1,15 +1,19 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Delete } from 'lucide-react';
+import { HAS_CONVEX } from '../../lib/db';
 
 /**
  * PinScreen — Schermata PIN a 6 cifre al primo avvio.
  * Design iOS: 6 dot, tastierino numerico circolare, logo in alto.
+ * Validazione: mutation Convex su env APP_PIN (o fallback locale in demo).
  */
 export default function PinScreen({ onAuthenticate }) {
   const [pin, setPin] = useState('');
   const [error, setError] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
+  const hasConvex = HAS_CONVEX;
+  const demoPin = import.meta.env.VITE_APP_PIN || '123456';
 
   const handleDigit = useCallback(async (digit) => {
     if (pin.length >= 6 || isChecking) return;
@@ -103,6 +107,28 @@ export default function PinScreen({ onAuthenticate }) {
           );
         })}
       </div>
+
+      {/* Hint demo quando Convex non è configurato */}
+      {!hasConvex && (
+        <p className="text-[12px] text-label-tertiary mt-8">
+          Modalità demo · PIN: {demoPin}
+        </p>
+      )}
+
+      {/* Supporto tastiera fisica (desktop) */}
+      <KeyboardInput onDigit={handleDigit} onDelete={handleDelete} />
     </div>
   );
+}
+
+function KeyboardInput({ onDigit, onDelete }) {
+  useEffect(() => {
+    const handler = (e) => {
+      if (/^[0-9]$/.test(e.key)) onDigit(e.key);
+      else if (e.key === 'Backspace') onDelete();
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [onDigit, onDelete]);
+  return null;
 }

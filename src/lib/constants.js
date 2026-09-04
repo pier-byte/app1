@@ -51,8 +51,30 @@ export const STUDY_END_HOUR = 20;   // 20:00
 export const STUDY_DURATION_MINUTES = (STUDY_END_HOUR - STUDY_START_HOUR) * 60;
 
 // ── Soglie budget wallet ──
+// Verde <50% · Giallo 50-80% · Rosso >80%
 export const BUDGET_THRESHOLDS = {
   ok: 0.5,      // <50% = verde
   warn: 0.8,    // 50-80% = giallo
   danger: 1.0,  // >80% = rosso
 };
+
+/** Colore di soglia in base alla percentuale di budget usata (0–1+). */
+export function budgetColor(ratio) {
+  if (ratio < BUDGET_THRESHOLDS.ok) return '#30d158';      // verde
+  if (ratio <= BUDGET_THRESHOLDS.warn) return '#ffd60a';   // giallo
+  return '#ff375f';                                        // rosso
+}
+
+// ── Rotazione pasti predefinita ──
+export const DEFAULT_WEEK_PLAN = [
+  { day: 'Lunedì', colazione: 'Latte e cereali', pranzo: 'Pasta al pomodoro', cena: 'Pollo e verdure' },
+  { day: 'Martedì', colazione: 'Yogurt e frutta', pranzo: 'Riso con tonno', cena: 'Pesce e insalata' },
+  { day: 'Mercoledì', colazione: 'Pane, burro e marmellata', pranzo: 'Pasta alle zucchine', cena: 'Stringhi e pomodori' },
+  { day: 'Giovedì', colazione: 'Frullato e biscotti', pranzo: 'Uova e toast', cena: 'Carne magra e spinaci' },
+  { day: 'Venerdì', colazione: 'Latte e cereali', pranzo: 'Pasta al pesto', cena: 'Pizza (pizza night!)' },
+  { day: 'Sabato', colazione: 'Cornetto e cappuccino', pranzo: 'Lasagna', cena: 'Sushi' },
+  { day: 'Domenica', colazione: 'Torta della nonna', pranzo: 'Pranzo in famiglia', cena: 'Zuppa e formaggio' },
+];
+
+// ── Categorie spese ──
+export const EXPENSE_CATEGORIES = ['Mensa', 'Trasporti', 'Scuola', 'Svago', 'Regali', 'Altro'];

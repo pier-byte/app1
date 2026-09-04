@@ -2,6 +2,8 @@ import { GoogleGenAI } from '@google/genai';
 
 let ai = null;
 
+export const hasGemini = Boolean(import.meta.env.VITE_GEMINI_API_KEY);
+
 function getAI() {
   if (!ai) {
     const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
@@ -40,6 +42,40 @@ Rispondi SOLO con un numero intero (i minuti stimati). Niente altro.`,
     return isNaN(minutes) ? null : Math.max(5, Math.min(minutes, 300));
   } catch (err) {
     console.error('[Gemini] Errore stima tempo:', err);
+    return null;
+  }
+}
+
+/**
+ * Analizza il carico di studio di una giornata e restituisce un consiglio.
+ * @param {Array<{title:string, category:string, estimatedMinutes:number, completed:boolean}>} tasks
+ * @returns {Promise<string|null>} Breve analisi testuale in italiano
+ */
+export async function estimateDayLoad(tasks) {
+  const client = getAI();
+  if (!client) return null;
+
+  const pending = tasks.filter((t) => !t.completed);
+  if (pending.length === 0) return 'Tutti i compiti di oggi sono completati. Ottimo lavoro! 🎉';
+
+  const totalMin = pending.reduce((sum, t) => sum + (t.estimatedMinutes || 0), 0);
+  const list = pending
+    .map((t) => `- ${t.title} [${t.category}, ~${t.estimatedMinutes || '?'} min]`)
+    .join('\n');
+
+  try {
+    const response = await client.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: `Sei un coach scolastico. Una studentessa ha questi compiti per oggi (carico totale stimato: ${totalMin} minuti):
+
+${list}
+
+In massimo 2 frasi in italiano: valuta il carico (leggero/medio/alto) e dai UN consiglio pratico su come organizzare il pomeriggio (la finestra di studio è 15:00-20:00). Tono diretto e incoraggiante, senza elenchi puntati.`,
+    });
+
+    return response.text.trim() || null;
+  } catch (err) {
+    console.error('[Gemini] Errore analisi carico:', err);
     return null;
   }
 }

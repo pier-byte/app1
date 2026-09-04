@@ -51,5 +51,23 @@ export default defineConfig({
       },
     }),
   ],
-  server: { port: 5173 },
+  build: {
+    rollupOptions: {
+      output: {
+        // Code-splitting: cache parallela e long-term dei vendor
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom'],
+          charts: ['recharts'],
+          motion: ['framer-motion'],
+          convex: ['convex'],
+          gemini: ['@google/genai'],
+        },
+      },
+    },
+  },
+  server: {
+    host: true, // bind 0.0.0.0 — necessario per il preview
+    port: 5173,
+    allowedHosts: true,
+  },
 });

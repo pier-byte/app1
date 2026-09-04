@@ -1,0 +1,17 @@
+# Cloudflare Pages — headers
+# Asset con hash: cache immutabile per 1 anno
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Service worker e manifest: sempre aggiornati
+/sw.js
+  Cache-Control: no-cache
+/manifest.webmanifest
+  Cache-Control: no-cache
+
+# Sicurezza base
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
