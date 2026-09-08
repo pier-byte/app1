@@ -21,7 +21,7 @@ import { toDateKey, addDays } from '../lib/dates';
 export default function SchoolPage({ selectedDate }) {
   const dateKey = toDateKey(selectedDate);
   const { data: tasks, isLoading, createTask, updateTask, toggleTask, removeTask, moveTaskToDate, addTaskMinutes } = useTasks(dateKey);
-  const { data: categories } = useTaskCategories();
+  const { data: categories, createCategory } = useTaskCategories();
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
@@ -144,6 +144,7 @@ export default function SchoolPage({ selectedDate }) {
         editingTask={editingTask}
         defaultDate={dateKey}
         categories={categories ?? []}
+        onCreateCategory={createCategory}
       />
 
       {/* Menu contestuale (screenshot 13) */}

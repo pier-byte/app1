@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
-import { Play, Check, RotateCcw, Dumbbell, Clock3 } from 'lucide-react';
+import { Play, Check, RotateCcw, Dumbbell, Clock3, Trash2, Plus } from 'lucide-react';
 import { useRoutine } from '../hooks/useData';
 import { useRoutineSession, routineSession } from '../store/routineSession';
 import RoutineCarousel from '../components/routine/RoutineCarousel';
@@ -19,6 +19,11 @@ export default function RoutinePage({ selectedDate }) {
   const { data: savedRoutine, isLoading, saveRoutine } = useRoutine(dateKey);
   const session = useRoutineSession();
   const [savedFlash, setSavedFlash] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [routineSteps, setRoutineSteps] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('app1_routine_steps')) || DEFAULT_ROUTINE_STEPS; } catch { return DEFAULT_ROUTINE_STEPS; }
+  });
+  const saveSteps = (steps) => { setRoutineSteps(steps); localStorage.setItem('app1_routine_steps', JSON.stringify(steps)); };
 
   const isActiveSession = session.dateKey === dateKey && session.steps.length > 0 && session.status !== 'idle';
   const showSummary = !isActiveSession && savedRoutine && savedRoutine.completedAt;
@@ -57,7 +62,7 @@ export default function RoutinePage({ selectedDate }) {
     [savedRoutine]
   );
 
-  const begin = () => routineSession.begin(dateKey, DEFAULT_ROUTINE_STEPS);
+  const begin = () => routineSession.begin(dateKey, routineSteps);
 
   return (
     <div className="h-full overflow-y-auto scrollable px-4 pt-2 pb-32">
@@ -111,24 +116,26 @@ export default function RoutinePage({ selectedDate }) {
           <div className="bg-surface-1 rounded-2xl p-5 mb-4">
             <div className="flex items-center gap-2 mb-4">
               <Dumbbell size={18} className="text-accent" />
-              <span className="text-[15px] font-semibold text-label">Sequence post-volley</span>
+              <span className="text-[15px] font-semibold text-label">La mia sequenza</span>
+              <button onClick={() => setEditing(!editing)} className="ml-auto text-[13px] text-accent min-h-9">{editing ? 'Fine' : 'Personalizza'}</button>
             </div>
             <div className="flex flex-col gap-1">
-              {DEFAULT_ROUTINE_STEPS.map((step, i) => (
+              {routineSteps.map((step, i) => (
                 <div key={step.name} className="flex items-center justify-between py-2.5 border-b border-separator last:border-0">
                   <div className="flex items-center gap-3">
                     <span className="w-6 h-6 rounded-full bg-fill-tertiary text-label-secondary text-[12px] font-semibold flex items-center justify-center">
                       {i + 1}
                     </span>
-                    <span className="text-[16px] text-label">{step.name}</span>
+                    {editing ? <input value={step.name} onChange={(e) => saveSteps(routineSteps.map((s,j) => j === i ? {...s,name:e.target.value} : s))} className="text-[16px] bg-surface-2 rounded-lg px-2 py-1 w-36" aria-label={`Nome attività ${i+1}`} /> : <span className="text-[16px] text-label">{step.name}</span>}
                   </div>
-                  <span className="text-[13px] text-label-tertiary tabular-nums">~{step.targetMinutes} min</span>
+                  {editing ? <div className="flex items-center gap-1"><label className="flex items-center gap-1 text-[12px] text-label-tertiary"><input type="number" min="1" max="180" value={step.targetMinutes} onChange={(e) => saveSteps(routineSteps.map((s,j) => j === i ? {...s,targetMinutes:Number(e.target.value)} : s))} className="w-14 bg-surface-2 rounded-lg px-2 py-1 text-right" /> min</label><button onClick={()=>saveSteps(routineSteps.filter((_,j)=>j!==i))} className="w-9 h-9 grid place-items-center text-sys-red" aria-label="Rimuovi attività"><Trash2 size={15}/></button></div> : <span className="text-[13px] text-label-tertiary tabular-nums">~{step.targetMinutes} min</span>}
                 </div>
               ))}
             </div>
+            {editing && <button onClick={()=>saveSteps([...routineSteps,{name:'Nuova attività',targetMinutes:10}])} className="w-full h-11 mt-3 rounded-full border border-accent text-accent text-[14px] font-semibold flex items-center justify-center gap-2"><Plus size={16}/> Aggiungi attività</button>}
             <div className="flex items-center justify-center gap-1.5 mt-4 text-[13px] text-label-secondary">
               <Clock3 size={13} />
-              Durata totale stimata: {formatMinutes(DEFAULT_ROUTINE_STEPS.reduce((s, st) => s + st.targetMinutes, 0))}
+              Durata totale stimata: {formatMinutes(routineSteps.reduce((s, st) => s + st.targetMinutes, 0))}
             </div>
           </div>
 

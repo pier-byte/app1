@@ -25,6 +25,8 @@ const MACROS = [
  */
 export default function NutritionPage({ selectedDate }) {
   const [view, setView] = useState('oggi');
+  const [goals, setGoals] = useState(() => { try { return JSON.parse(localStorage.getItem('app1_nutrition_goals')) || {calories:2000,protein:100,carbs:250,fat:65}; } catch { return {calories:2000,protein:100,carbs:250,fat:65}; } });
+  const updateGoal = (key, value) => { const next={...goals,[key]:Number(value)}; setGoals(next); localStorage.setItem('app1_nutrition_goals',JSON.stringify(next)); };
   const dateKey = toDateKey(selectedDate);
   const weekStartKey = toDateKey(getMonday(selectedDate));
 
@@ -96,6 +98,7 @@ export default function NutritionPage({ selectedDate }) {
                 onConfirm={(fields) => addMeal({ ...fields, date: dateKey })}
               />
 
+              <div className="bg-surface-1 rounded-2xl p-4"><p className="text-[13px] font-semibold text-label-secondary mb-3">Obiettivi giornalieri</p><div className="grid grid-cols-4 gap-2">{[['calories','kcal'],['protein','P g'],['carbs','C g'],['fat','G g']].map(([key,label])=><label key={key} className="bg-surface-2 rounded-xl p-2 text-[10px] text-label-tertiary"><input type="number" min="0" value={goals[key]} onChange={(e)=>updateGoal(key,e.target.value)} className="w-full bg-transparent text-[16px] font-semibold"/>{label}</label>)}</div></div>
               {/* Riepilogo giorno */}
               <div className="bg-surface-1 rounded-2xl p-5">
                 <div className="flex items-center gap-2 mb-4">

@@ -24,6 +24,12 @@ export const listByDate = query({
       .collect(),
 });
 
+export const listBetween = query({
+  args: { start: v.string(), end: v.string() },
+  handler: async (ctx, { start, end }) =>
+    await ctx.db.query("tasks").withIndex("by_date", (q) => q.gte("date", start).lte("date", end)).collect(),
+});
+
 export const listCategories = query({
   args: {},
   handler: async (ctx) => await ctx.db.query("taskCategories").collect(),

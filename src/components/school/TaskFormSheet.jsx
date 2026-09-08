@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Check, Clock, ChevronRight, ListChecks, Sparkles, Loader2, Timer } from 'lucide-react';
+import { Check, Clock, ChevronRight, ListChecks, Loader2, Timer, Mic, Plus } from 'lucide-react';
+import { CATEGORY_COLORS } from '../../lib/constants';
 import BottomSheet from '../ui/BottomSheet';
 import DatePickerDialog from './DatePickerDialog';
 import { formatDateDisplay, parseISO, formatMinutes } from '../../lib/dates';
@@ -13,7 +14,7 @@ import { cn } from '../../lib/cn';
  * titolo + descrizione, scadenza, categoria (elenco con radio colorate),
  * conferma con pulsante check circolare blu. Stima tempi via Gemini AI.
  */
-export default function TaskFormSheet({ isOpen, onClose, onSave, editingTask, defaultDate, categories }) {
+export default function TaskFormSheet({ isOpen, onClose, onSave, editingTask, defaultDate, categories, onCreateCategory }) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState(null);
@@ -22,6 +23,17 @@ export default function TaskFormSheet({ isOpen, onClose, onSave, editingTask, de
   const [datePickerOpen, setDatePickerOpen] = useState(false);
   const [categoryPickerOpen, setCategoryPickerOpen] = useState(false);
   const [estimating, setEstimating] = useState(false);
+  const [listName, setListName] = useState('');
+  const [listColor, setListColor] = useState(CATEGORY_COLORS[7]);
+  const [listCreating, setListCreating] = useState(false);
+
+  const dictate = () => {
+    const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!Recognition) return alert('La dettatura vocale non è supportata da questo browser.');
+    const recognition = new Recognition(); recognition.lang = 'it-IT'; recognition.interimResults = false;
+    recognition.onresult = (e) => setDescription((v) => `${v}${v ? ' ' : ''}${e.results[0][0].transcript}`);
+    recognition.start();
+  };
 
   // Reset ad ogni apertura
   useEffect(() => {
@@ -46,7 +58,7 @@ export default function TaskFormSheet({ isOpen, onClose, onSave, editingTask, de
     let estimatedMinutes = estimate;
     if (!estimatedMinutes && hasGemini) {
       setEstimating(true);
-      estimatedMinutes = await estimateStudyTime(title.trim(), category.name);
+      estimatedMinutes = await estimateStudyTime(`${title.trim()}. Dettagli: ${description.trim()}`, category.name);
       setEstimating(false);
     }
 
@@ -74,12 +86,7 @@ export default function TaskFormSheet({ isOpen, onClose, onSave, editingTask, de
             autoFocus={!editingTask}
             className="w-full bg-transparent text-[17px] font-medium text-label placeholder:text-label-tertiary resize-none"
           />
-          <input
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Descrizione"
-            className="w-full bg-transparent text-[14px] text-label-secondary placeholder:text-label-tertiary mt-1"
-          />
+          <div className="flex items-center gap-2"><input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Spiega brevemente cosa devi fare" className="flex-1 bg-transparent text-[14px] text-label-secondary placeholder:text-label-tertiary mt-1" /><button onClick={dictate} className="w-10 h-10 rounded-full bg-fill-tertiary grid place-items-center text-accent" aria-label="Detta descrizione"><Mic size={17}/></button></div>
         </div>
 
         {/* Scadenza */}
@@ -114,16 +121,11 @@ export default function TaskFormSheet({ isOpen, onClose, onSave, editingTask, de
         <div className="w-full flex items-center gap-3 px-1 py-3.5">
           <Timer size={20} className="text-label-secondary shrink-0" />
           <span className="flex-1 text-left text-[16px] text-label">Tempo stimato</span>
-          {estimating ? (
-            <span className="flex items-center gap-1.5 text-[14px] text-accent">
-              <Loader2 size={14} className="animate-spin" /> Gemini sta stimando…
-            </span>
-          ) : estimate ? (
-            <span className="flex items-center gap-1.5 text-[15px] text-label-secondary">
-              <Sparkles size={13} className="text-accent" /> ~{formatMinutes(estimate)}
-            </span>
-          ) : (
-            <span className="text-[14px] text-label-tertiary">{hasGemini ? 'Automatica con AI' : '—'}</span>
+          {estimating ? <Loader2 size={16} className="animate-spin text-accent" /> : (
+            <label className="flex items-center gap-2">
+              <input type="number" min="1" max="600" value={estimate ?? ''} onChange={(e) => setEstimate(e.target.value ? Number(e.target.value) : null)} placeholder="Auto" className="w-20 h-9 rounded-lg bg-surface-2 px-2 text-right text-[15px]" aria-label="Tempo stimato in minuti" />
+              <span className="text-[13px] text-label-tertiary">min</span>
+            </label>
           )}
         </div>
 
@@ -160,16 +162,15 @@ export default function TaskFormSheet({ isOpen, onClose, onSave, editingTask, de
         onClose={() => setCategoryPickerOpen(false)}
         categories={categories}
         selected={category}
-        onSelect={(cat) => {
-          setCategory(cat);
-          setCategoryPickerOpen(false);
-        }}
+        onSelect={(cat) => { setCategory(cat); setCategoryPickerOpen(false); }}
+        listCreating={listCreating} setListCreating={setListCreating} listName={listName} setListName={setListName} listColor={listColor} setListColor={setListColor}
+        onCreate={async () => { if (!listName.trim()) return; await onCreateCategory?.(listName.trim(), listColor); setCategory({name:listName.trim(),color:listColor}); setListName(''); setListCreating(false); setCategoryPickerOpen(false); }}
       />
     </>
   );
 }
 
-function CategoryPickerDialog({ isOpen, onClose, categories, selected, onSelect }) {
+function CategoryPickerDialog({ isOpen, onClose, categories, selected, onSelect, listCreating, setListCreating, listName, setListName, listColor, setListColor, onCreate }) {
   return (
     <Dialog
       isOpen={isOpen}
@@ -200,6 +201,7 @@ function CategoryPickerDialog({ isOpen, onClose, categories, selected, onSelect 
             </button>
           );
         })}
+        {!listCreating ? <button onClick={() => setListCreating(true)} className="w-full flex items-center gap-3 py-3 text-accent font-semibold"><Plus size={20}/> Crea nuovo elenco</button> : <div className="border-t border-separator pt-4 mt-2"><input autoFocus maxLength={50} value={listName} onChange={(e)=>setListName(e.target.value)} placeholder="Nome elenco" className="w-full bg-surface-2 rounded-xl px-4 py-3 mb-4"/><div className="grid grid-cols-6 gap-3">{CATEGORY_COLORS.slice(0,24).map(color=><button key={color} onClick={()=>setListColor(color)} className="aspect-square rounded-full grid place-items-center" style={{backgroundColor:color}}>{listColor===color&&<Check size={16} className="text-white" strokeWidth={3}/>}</button>)}</div><button onClick={onCreate} disabled={!listName.trim()} className="w-full h-11 rounded-full bg-accent text-white font-semibold mt-5 disabled:opacity-40">Crea elenco</button></div>}
       </div>
     </Dialog>
   );
