@@ -23,17 +23,19 @@ export const getByDate = query({
 export const save = mutation({
   args: {
     date: v.string(),
+    routineId: v.optional(v.string()),
+    routineName: v.optional(v.string()),
     steps: v.array(stepValidator),
     startedAt: v.optional(v.string()),
     completedAt: v.optional(v.string()),
   },
-  handler: async (ctx, { date, steps, startedAt, completedAt }) => {
+  handler: async (ctx, { date, routineId, routineName, steps, startedAt, completedAt }) => {
     const rows = await ctx.db
       .query("routines")
       .withIndex("by_date", (q) => q.eq("date", date))
       .take(1);
     const existing = rows[0];
-    const patch = { steps, startedAt, completedAt };
+    const patch = { steps, startedAt, completedAt, routineId, routineName };
     if (existing) {
       await ctx.db.patch(existing._id, patch);
       return existing._id;

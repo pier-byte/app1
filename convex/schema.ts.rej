@@ -1,0 +1,111 @@
+diff a/convex/schema.ts b/convex/schema.ts	(rejected hunks)
+@@ -2,7 +2,7 @@ import { defineSchema, defineTable } from "convex/server";
+ import { v } from "convex/values";
+ 
+ export default defineSchema({
+-  // ── TAB 1: Scuola ──
++  // ── TAB 1: Compiti / Eventi ──
+   tasks: defineTable({
+     title: v.string(),
+     description: v.optional(v.string()),
+@@ -13,6 +13,39 @@ export default defineSchema({
+     estimatedMinutes: v.optional(v.number()),
+     actualMinutes: v.optional(v.number()),
+     priority: v.optional(v.number()),
++    // Campi "evento" (screenshot 12_menu_allegati)
++    startTime: v.optional(v.string()), // "HH:mm"
++    endTime: v.optional(v.string()),
++    allDay: v.optional(v.boolean()),
++    reminders: v.optional(
++      v.array(
++        v.object({
++          at: v.string(), // ISO datetime
++          label: v.string(),
++          offsetKey: v.optional(v.string()),
++          notified: v.optional(v.boolean()),
++        })
++      )
++    ),
++    repeat: v.optional(
++      v.object({
++        frequency: v.string(), // none | daily | weekdays | weekly | monthly
++        weekdays: v.optional(v.array(v.number())),
++        endMode: v.optional(v.string()), // never | after | on
++        endAfter: v.optional(v.number()),
++        endDate: v.optional(v.string()),
++      })
++    ),
++    attachments: v.optional(
++      v.array(
++        v.object({
++          name: v.string(),
++          type: v.string(),
++          size: v.optional(v.number()),
++          dataUrl: v.optional(v.string()),
++        })
++      )
++    ),
+   })
+     .index("by_date", ["date"])
+     .index("by_category", ["category"]),
+@@ -26,6 +59,8 @@ export default defineSchema({
+   // ── TAB 2: Routine ──
+   routines: defineTable({
+     date: v.string(),
++    routineId: v.optional(v.string()),
++    routineName: v.optional(v.string()),
+     steps: v.array(
+       v.object({
+         name: v.string(),
+@@ -38,6 +73,18 @@ export default defineSchema({
+     completedAt: v.optional(v.string()),
+   }).index("by_date", ["date"]),
+ 
++  routineTemplates: defineTable({
++    name: v.string(),
++    emoji: v.string(),
++    color: v.string(),
++    steps: v.array(
++      v.object({
++        name: v.string(),
++        targetMinutes: v.number(),
++      })
++    ),
++  }),
++
+   // ── TAB 3: Nutrizione ──
+   meals: defineTable({
+     date: v.string(),
+@@ -47,6 +94,7 @@ export default defineSchema({
+     protein: v.optional(v.number()),
+     carbs: v.optional(v.number()),
+     fat: v.optional(v.number()),
++    caloriesSource: v.optional(v.string()), // macro | ai | manual
+     parsedByAI: v.boolean(),
+   }).index("by_date", ["date"]),
+ 
+@@ -69,6 +117,24 @@ export default defineSchema({
+     heightCm: v.optional(v.number()),
+   }).index("by_date", ["date"]),
+ 
++  // ── TAB 5: Note ──
++  notes: defineTable({
++    title: v.string(),
++    body: v.string(),
++    type: v.string(), // note | todo
++    todos: v.array(
++      v.object({
++        id: v.string(),
++        text: v.string(),
++        done: v.boolean(),
++      })
++    ),
++    pinned: v.boolean(),
++    color: v.string(),
++    createdAt: v.number(),
++    updatedAt: v.number(),
++  }).index("by_updated", ["updatedAt"]),
++
+   // ── TAB 4: Wallet ──
+   expenses: defineTable({
+     date: v.string(),

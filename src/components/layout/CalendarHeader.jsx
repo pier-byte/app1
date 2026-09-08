@@ -41,11 +41,25 @@ export default function CalendarHeader({ mode, onModeChange, selectedDate, onSel
       {mode === 'week' ? weekStrip : <div className="month-grid pb-3">
         {DAYS.map((d,i) => <div key={i} className="text-center text-[11px] font-semibold text-label-tertiary py-1">{d}</div>)}
         {dates.map(date => {
-          const active = isSameDay(date, selectedDate); const colors = [...new Set(colorsByDate[toDateKey(date)] || [])].slice(0,3);
-          return <button key={date.toISOString()} onClick={() => onSelectDate(date)} className={cn('month-day', !isSameMonth(date, selectedDate) && 'opacity-35')} aria-label={format(date, 'd MMMM yyyy', {locale:it})}>
-            <span className={cn('month-number', active && 'bg-accent text-white')}>{format(date,'d')}</span>
-            <span className="flex h-1.5 gap-0.5 justify-center">{colors.map(c => <i key={c} className="w-1 h-1 rounded-full" style={{backgroundColor:c}} />)}</span>
-          </button>
+          const active = isSameDay(date, selectedDate);
+          const dayTasks = (monthTasks || []).filter((t) => t.date === toDateKey(date));
+          const colors = [...new Set(dayTasks.map((t) => t.categoryColor || '#0a84ff'))].slice(0, 4);
+          return (
+            <button key={date.toISOString()} onClick={() => onSelectDate(date)} className={cn('month-day', !isSameMonth(date, selectedDate) && 'opacity-35')} aria-label={format(date, 'd MMMM yyyy', {locale:it})}>
+              <span className={cn('month-number', active && 'bg-accent text-white')}>{format(date,'d')}</span>
+              {/* Anteprima eventi/attività (screenshot home) */}
+              <span className="flex flex-col items-center gap-0.5 w-full min-h-[16px]">
+                {dayTasks.slice(0, 2).map((t) => (
+                  <span key={t._id} className={cn('flex items-center gap-1 max-w-full px-1 py-px rounded-[4px] text-[8.5px] leading-[1.15] truncate', active ? 'bg-accent/20 text-label' : 'bg-surface-2 text-label-secondary')}>
+                    <i className="w-1 h-1 rounded-full shrink-0" style={{ backgroundColor: t.categoryColor || '#0a84ff' }} />
+                    <span className="truncate">{t.title}</span>
+                  </span>
+                ))}
+                {dayTasks.length > 2 && <span className="text-[8.5px] text-label-tertiary leading-none">+{dayTasks.length - 2}</span>}
+                {dayTasks.length === 0 && <span className="flex h-1.5 gap-0.5 justify-center">{colors.map(c => <i key={c} className="w-1 h-1 rounded-full" style={{backgroundColor:c}} />)}</span>}
+              </span>
+            </button>
+          );
         })}
       </div>}
     </div>

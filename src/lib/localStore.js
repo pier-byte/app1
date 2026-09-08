@@ -1,6 +1,11 @@
 import { useSyncExternalStore } from 'react';
 import { toDateKey, addDays, getMonday } from './dates';
-import { DEFAULT_TASK_CATEGORIES, DEFAULT_ROUTINE_STEPS, DEFAULT_WEEK_PLAN } from './constants';
+import {
+  DEFAULT_TASK_CATEGORIES,
+  DEFAULT_ROUTINE_TEMPLATES,
+  DEFAULT_WEEK_PLAN,
+  emptyNote,
+} from './constants';
 
 /**
  * Store locale reattivo (localStorage) che replica le shape dei documenti Convex.
@@ -62,6 +67,55 @@ function buildSeed() {
       { _id: uid(), date: toDateKey(addDays(today, -2)), description: 'Cinema con amiche', amount: 8.5, category: 'Svago', createdAt: 4 },
     ],
     budgets: [{ _id: uid(), weekStart, budgetAmount: 35 }],
+    notes: [
+      {
+        _id: uid(),
+        title: 'Idee regali',
+        body: 'Regalo mamma: candela profumata + pianta. Regalo Leo: fumetti.',
+        type: 'note',
+        todos: [],
+        pinned: true,
+        color: '#bf5af2',
+        createdAt: 1,
+        updatedAt: 1,
+      },
+      {
+        _id: uid(),
+        title: 'Da fare questo weekend',
+        body: '',
+        type: 'todo',
+        todos: [
+          { id: uid(), text: 'Ripassare inglese', done: false },
+          { id: uid(), text: 'Comprare regalo nonna', done: false },
+          { id: uid(), text: 'Lavare la divisa', done: true },
+        ],
+        pinned: false,
+        color: '#30d158',
+        createdAt: 2,
+        updatedAt: 2,
+      },
+    ],
+    routineTemplates: DEFAULT_ROUTINE_TEMPLATES.map((r) => ({
+      _id: uid(),
+      ...r,
+      steps: r.steps.map((s) => ({ ...s })),
+    })),
+  };
+}
+
+/** Normalizza lo stato: garantisce la presenza di tutte le chiavi (migrazione). */
+function normalize(state = {}) {
+  return {
+    tasks: state.tasks ?? [],
+    taskCategories: state.taskCategories ?? [],
+    routines: state.routines ?? [],
+    meals: state.meals ?? [],
+    mealPlans: state.mealPlans ?? [],
+    bodyMetrics: state.bodyMetrics ?? [],
+    expenses: state.expenses ?? [],
+    budgets: state.budgets ?? [],
+    notes: state.notes ?? [],
+    routineTemplates: state.routineTemplates ?? [],
   };
 }
 
@@ -70,29 +124,20 @@ function buildSeed() {
 function load() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
+    if (raw) return normalize(JSON.parse(raw));
   } catch (err) {
     console.warn('[localStore] impossibile leggere lo stato:', err);
   }
   // Prima apertura: seed demo (solo se non mai inizializzato)
   const seeded = localStorage.getItem(SEED_FLAG);
-  const state = seeded ? emptyState() : buildSeed();
+  const state = normalize(seeded ? emptyState() : buildSeed());
   localStorage.setItem(SEED_FLAG, '1');
   persist(state);
   return state;
 }
 
 function emptyState() {
-  return {
-    tasks: [],
-    taskCategories: [],
-    routines: [],
-    meals: [],
-    mealPlans: [],
-    bodyMetrics: [],
-    expenses: [],
-    budgets: [],
-  };
+  return normalize({});
 }
 
 function persist(state) {
@@ -170,15 +215,29 @@ export const localMutations = {
     return doc;
   },
   // Routine
-  saveRoutine({ date, steps, startedAt, completedAt }) {
+  saveRoutine({ date, steps, startedAt, completedAt, routineId, routineName }) {
     update((s) => {
       const existing = s.routines.find((r) => r.date === date);
-      const patch = { steps, startedAt, completedAt };
+      const patch = { steps, startedAt, completedAt, routineId, routineName };
       if (existing) {
         return { routines: s.routines.map((r) => (r.date === date ? { ...r, ...patch } : r)) };
       }
       return { routines: [...s.routines, { _id: uid(), date, ...patch }] };
     });
+  },
+  // Template routine (schede personalizzabili)
+  createRoutineTemplate(fields) {
+    const doc = { ...fields, _id: uid() };
+    update((s) => ({ routineTemplates: [...s.routineTemplates, doc] }));
+    return doc;
+  },
+  updateRoutineTemplate({ id, ...patch }) {
+    update((s) => ({
+      routineTemplates: s.routineTemplates.map((r) => (r._id === id ? { ...r, ...patch } : r)),
+    }));
+  },
+  removeRoutineTemplate({ id }) {
+    update((s) => ({ routineTemplates: s.routineTemplates.filter((r) => r._id !== id) }));
   },
   // Pasti
   addMeal(fields) {
@@ -209,6 +268,22 @@ export const localMutations = {
   },
   removeBodyMetric({ id }) {
     update((s) => ({ bodyMetrics: s.bodyMetrics.filter((m) => m._id !== id) }));
+  },
+  // Note
+  createNote(fields) {
+    const doc = { ...emptyNote(), ...fields, _id: uid(), createdAt: Date.now(), updatedAt: Date.now() };
+    update((s) => ({ notes: [...s.notes, doc] }));
+    return doc._id;
+  },
+  updateNote({ id, ...patch }) {
+    update((s) => ({
+      notes: s.notes.map((n) =>
+        n._id === id ? { ...n, ...patch, updatedAt: Date.now() } : n
+      ),
+    }));
+  },
+  removeNote({ id }) {
+    update((s) => ({ notes: s.notes.filter((n) => n._id !== id) }));
   },
   // Wallet
   addExpense(fields) {

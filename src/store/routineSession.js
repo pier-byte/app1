@@ -12,6 +12,9 @@ const STORAGE_KEY = 'app1_routine_session_v1';
 function blank() {
   return {
     dateKey: null,
+    routineId: null,
+    routineName: null,
+    routineEmoji: null,
     steps: [],
     currentIndex: 0,
     status: 'idle', // idle | running | paused | done
@@ -69,11 +72,14 @@ try {
 notify();
 
 export const routineSession = {
-  /** Avvia una nuova sessione per la data indicata. */
-  begin(dateKey, stepTemplates) {
+  /** Avvia una nuova sessione per la data indicata (template = scheda routine). */
+  begin(dateKey, stepTemplates, meta = {}) {
     internal = {
       ...blank(),
       dateKey,
+      routineId: meta.routineId ?? null,
+      routineName: meta.routineName ?? null,
+      routineEmoji: meta.routineEmoji ?? null,
       startedAt: new Date().toISOString(),
       currentIndex: 0,
       status: 'running',

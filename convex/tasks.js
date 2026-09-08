@@ -1,6 +1,28 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 
+const reminderValidator = v.object({
+  at: v.string(),
+  label: v.string(),
+  offsetKey: v.optional(v.string()),
+  notified: v.optional(v.boolean()),
+});
+
+const repeatValidator = v.object({
+  frequency: v.string(),
+  weekdays: v.optional(v.array(v.number())),
+  endMode: v.optional(v.string()),
+  endAfter: v.optional(v.number()),
+  endDate: v.optional(v.string()),
+});
+
+const attachmentValidator = v.object({
+  name: v.string(),
+  type: v.string(),
+  size: v.optional(v.number()),
+  dataUrl: v.optional(v.string()),
+});
+
 const taskFields = {
   title: v.string(),
   description: v.optional(v.string()),
@@ -11,6 +33,12 @@ const taskFields = {
   estimatedMinutes: v.optional(v.number()),
   actualMinutes: v.optional(v.number()),
   priority: v.optional(v.number()),
+  startTime: v.optional(v.string()),
+  endTime: v.optional(v.string()),
+  allDay: v.optional(v.boolean()),
+  reminders: v.optional(v.array(reminderValidator)),
+  repeat: v.optional(repeatValidator),
+  attachments: v.optional(v.array(attachmentValidator)),
 };
 
 // ── Query ──
@@ -55,6 +83,14 @@ export const update = mutation({
     date: v.optional(v.string()),
     completed: v.optional(v.boolean()),
     estimatedMinutes: v.optional(v.number()),
+    actualMinutes: v.optional(v.number()),
+    priority: v.optional(v.number()),
+    startTime: v.optional(v.string()),
+    endTime: v.optional(v.string()),
+    allDay: v.optional(v.boolean()),
+    reminders: v.optional(v.array(reminderValidator)),
+    repeat: v.optional(repeatValidator),
+    attachments: v.optional(v.array(attachmentValidator)),
   },
   handler: async (ctx, { id, ...patch }) => {
     const clean = Object.fromEntries(Object.entries(patch).filter(([, v]) => v !== undefined));

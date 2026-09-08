@@ -3,7 +3,9 @@ import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { HAS_CONVEX } from '../lib/db';
 import { useLocalState, localMutations } from '../lib/localStore';
-import { DEFAULT_TASK_CATEGORIES } from '../lib/constants';
+import { DEFAULT_TASK_CATEGORIES, DEFAULT_ROUTINE_TEMPLATES } from '../lib/constants';
+import { expandEventsForDate } from '../lib/repeat';
+import { addDays, getMonday, toDateKey } from '../lib/dates';
 
 /**
  * Layer dati unificato: ogni hook espone { data, isLoading, ...azioni }.
@@ -65,6 +67,22 @@ export function useTasks(dateKey) {
   };
 }
 
+/**
+ * Compiti/eventi della giornata, incluse le occorrenze ripetute.
+ * Carica un anno indietro + la settimana per espandere le ripetizioni.
+ */
+export function useExpandedTasks(dateKey) {
+  const weekStart = toDateKey(getMonday(new Date(`${dateKey}T12:00:00`)));
+  const rangeStart = toDateKey(addDays(new Date(`${weekStart}T12:00:00`), -365));
+  const rangeEnd = toDateKey(addDays(new Date(`${weekStart}T12:00:00`), 6));
+  const { data: weekTasks, isLoading } = useTasksBetween(rangeStart, rangeEnd);
+  const data = useMemo(
+    () => expandEventsForDate(weekTasks ?? [], dateKey),
+    [weekTasks, dateKey]
+  );
+  return { data, isLoading };
+}
+
 export function useTaskCategories() {
   if (HAS_CONVEX) {
     const raw = useQuery(api.tasks.listCategories, {});
@@ -120,6 +138,44 @@ export function useRoutine(dateKey) {
   const state = useLocalState();
   const data = useMemo(() => state.routines.find((r) => r.date === dateKey) ?? null, [state.routines, dateKey]);
   return { data, isLoading: false, saveRoutine: localMutations.saveRoutine };
+}
+
+export function useRoutineTemplates() {
+  if (HAS_CONVEX) {
+    const raw = useQuery(api.routineTemplates.listAll, {});
+    const createM = useMutation(api.routineTemplates.create);
+    const updateM = useMutation(api.routineTemplates.update);
+    const removeM = useMutation(api.routineTemplates.remove);
+    const seededRef = useRef(false);
+
+    useEffect(() => {
+      if (!seededRef.current && raw !== undefined && raw.length === 0) {
+        seededRef.current = true;
+        DEFAULT_ROUTINE_TEMPLATES.forEach((t) => createM({ ...t, steps: t.steps.map((s) => ({ ...s })) }));
+      }
+    }, [raw, createM]);
+
+    return {
+      data: raw ?? [],
+      isLoading: raw === undefined,
+      createTemplate: (fields) => createM(fields),
+      updateTemplate: (id, patch) => updateM({ id, ...patch }),
+      removeTemplate: (id) => removeM({ id }),
+    };
+  }
+
+  const state = useLocalState();
+  const data = useMemo(() => state.routineTemplates, [state.routineTemplates]);
+  return {
+    data,
+    isLoading: false,
+    createTemplate: (fields) => {
+      const doc = localMutations.createRoutineTemplate(fields);
+      return doc._id;
+    },
+    updateTemplate: (id, patch) => localMutations.updateRoutineTemplate({ id, ...patch }),
+    removeTemplate: (id) => localMutations.removeRoutineTemplate({ id }),
+  };
 }
 
 // ═══════════════════ TAB 3 — NUTRIZIONE ═══════════════════
@@ -213,4 +269,39 @@ export function useBudget(weekStartKey) {
     [state.budgets, weekStartKey]
   );
   return { data, isLoading: false, setBudget: (amount) => localMutations.setBudget({ weekStart: weekStartKey, budgetAmount: amount }) };
+}
+
+// ═══════════════════ TAB 5 — NOTE ═══════════════════
+
+export function useNotes() {
+  if (HAS_CONVEX) {
+    const raw = useQuery(api.notes.listAll, {});
+    const createM = useMutation(api.notes.create);
+    const updateM = useMutation(api.notes.update);
+    const removeM = useMutation(api.notes.remove);
+    return {
+      data: raw ?? [],
+      isLoading: raw === undefined,
+      createNote: (fields) => createM(fields),
+      updateNote: (id, patch) => updateM({ id, ...patch }),
+      removeNote: (id) => removeM({ id }),
+    };
+  }
+
+  const state = useLocalState();
+  const data = useMemo(
+    () =>
+      state.notes.slice().sort((a, b) => {
+        if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
+        return (b.updatedAt || 0) - (a.updatedAt || 0);
+      }),
+    [state.notes]
+  );
+  return {
+    data,
+    isLoading: false,
+    createNote: (fields) => localMutations.createNote(fields),
+    updateNote: (id, patch) => localMutations.updateNote({ id, ...patch }),
+    removeNote: (id) => localMutations.removeNote({ id }),
+  };
 }

@@ -39,9 +39,10 @@ try {
 
 // 2) Ogni pagina singolarmente (bypass del gate)
 const pages = [
-  ['SchoolPage', { selectedDate: new Date() }],
+  ['SchoolPage', { selectedDate: new Date(), weekDates: [new Date()], weekLabel: 'test', goToPrevWeek: () => {}, goToNextWeek: () => {}, goToToday: () => {}, onSelectDate: () => {} }],
   ['RoutinePage', { selectedDate: new Date() }],
   ['NutritionPage', { selectedDate: new Date() }],
+  ['NotesPage', {}],
   ['WalletPage', { selectedDate: new Date(), weekDates: [] }],
 ];
 
@@ -62,6 +63,8 @@ const units = [
   ['BottomNav', '/src/components/layout/BottomNav.jsx', { activeTab: 'scuola', onTabChange: () => {} }],
   ['StudyTimerCard', '/src/components/school/StudyTimerCard.jsx', { selectedDate: new Date(), tasks: [], onAssignMinutes: () => {} }],
   ['TaskFormSheet (chiuso)', '/src/components/school/TaskFormSheet.jsx', { isOpen: false, onClose: () => {}, onSave: () => {}, defaultDate: '2026-09-04', categories: [{ _id: 'a', name: 'Studiare', color: '#30d158' }] }],
+  ['NoteEditorSheet (chiuso)', '/src/components/notes/NoteEditorSheet.jsx', { isOpen: false, onClose: () => {}, onSave: () => {}, onDelete: null }],
+  ['GoalPlannerDialog (chiuso)', '/src/components/nutrition/GoalPlannerDialog.jsx', { isOpen: false, onClose: () => {}, onApply: () => {}, initial: null }],
   ['WeeklyPlanTable', '/src/components/nutrition/WeeklyPlanTable.jsx', { plan: [{ day: 'Lunedì', colazione: 'a', pranzo: 'b', cena: 'c' }], onUpdatePlan: () => {} }],
   ['MetricsCharts', '/src/components/nutrition/MetricsCharts.jsx', { metrics: [{ date: '2026-09-01', weightKg: 54, heightCm: 165 }], onAdd: () => {} }],
   ['ExpenseFormSheet (chiuso)', '/src/components/wallet/ExpenseFormSheet.jsx', { isOpen: false, onClose: () => {}, onSave: () => {}, defaultDate: '2026-09-04' }],

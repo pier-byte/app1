@@ -2,25 +2,27 @@ import { useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
-import { ClipboardList, Plus } from 'lucide-react';
-import { useTasks, useTaskCategories } from '../hooks/useData';
+import { ClipboardList, Plus, Timer } from 'lucide-react';
+import { useTasks, useExpandedTasks, useTaskCategories } from '../hooks/useData';
 import TaskCard from '../components/school/TaskCard';
 import TaskFormSheet from '../components/school/TaskFormSheet';
 import StudyTimerCard from '../components/school/StudyTimerCard';
 import LoadInsightCard from '../components/school/LoadInsightCard';
 import DatePickerDialog from '../components/school/DatePickerDialog';
+import WeekStrip from '../components/layout/WeekStrip';
 import ContextMenu from '../components/ui/ContextMenu';
 import EmptyState from '../components/ui/EmptyState';
 import FAB from '../components/ui/FAB';
 import { toDateKey, addDays } from '../lib/dates';
 
 /**
- * Tab 1 — Scuola: timer studio (15:00–20:00), task categorizzati con
- * menu contestuale, stima tempi e carico via Gemini AI.
+ * Tab — Compiti (screenshot 06): strip settimanale, lista attività/eventi
+ * con orari, ripetizione, promemoria e allegati; timer studio e AI sotto.
  */
-export default function SchoolPage({ selectedDate }) {
+export default function SchoolPage({ selectedDate, weekDates, weekLabel, goToPrevWeek, goToNextWeek, goToToday, onSelectDate }) {
   const dateKey = toDateKey(selectedDate);
-  const { data: tasks, isLoading, createTask, updateTask, toggleTask, removeTask, moveTaskToDate, addTaskMinutes } = useTasks(dateKey);
+  const { data: tasks /* mutazioni */, createTask, updateTask, toggleTask, removeTask, moveTaskToDate, addTaskMinutes } = useTasks(dateKey);
+  const { data: expandedTasks, isLoading } = useExpandedTasks(dateKey);
   const { data: categories, createCategory } = useTaskCategories();
 
   const [formOpen, setFormOpen] = useState(false);
@@ -28,9 +30,10 @@ export default function SchoolPage({ selectedDate }) {
   const [menuTask, setMenuTask] = useState(null);
   const [menuPos, setMenuPos] = useState(null);
   const [dateChangeTask, setDateChangeTask] = useState(null);
+  const [showStudy, setShowStudy] = useState(false);
 
-  const openTasks = useMemo(() => (tasks ?? []).filter((t) => !t.completed), [tasks]);
-  const doneTasks = useMemo(() => (tasks ?? []).filter((t) => t.completed), [tasks]);
+  const openTasks = useMemo(() => (expandedTasks ?? []).filter((t) => !t.completed), [expandedTasks]);
+  const doneTasks = useMemo(() => (expandedTasks ?? []).filter((t) => t.completed), [expandedTasks]);
 
   const openMenu = useCallback((task, e) => {
     setMenuPos({ y: Math.min(e.clientY ?? 200, window.innerHeight - 260) });
@@ -50,23 +53,24 @@ export default function SchoolPage({ selectedDate }) {
   const handleMoveTomorrow = (task) => moveTaskToDate(task._id, toDateKey(addDays(selectedDate, 1)));
 
   return (
-    <div className="h-full overflow-y-auto scrollable px-4 pt-2 pb-32">
+    <div className="h-full overflow-y-auto scrollable px-4 pt-3 pb-32">
       {/* Header pagina */}
-      <div className="flex items-end justify-between mb-4">
-        <div>
-          <h1 className="text-[28px] font-bold text-label tracking-tight leading-tight">Scuola</h1>
-          <p className="text-[13px] text-label-secondary capitalize">{format(selectedDate, 'EEEE d MMMM', { locale: it })}</p>
-        </div>
+      <div className="mb-1">
+        <h1 className="text-[28px] font-bold text-label tracking-tight leading-tight">Compiti</h1>
+        <p className="text-[13px] text-label-secondary capitalize">{format(selectedDate, 'EEEE d MMMM', { locale: it })}</p>
       </div>
 
-      {/* Timer studio */}
-      <div className="mb-4">
-        <StudyTimerCard
-          selectedDate={selectedDate}
-          tasks={tasks ?? []}
-          onAssignMinutes={(taskId, minutes) => addTaskMinutes(taskId, minutes)}
-        />
-      </div>
+      {/* Strip settimanale (screenshot 06) */}
+      <WeekStrip
+        embedded
+        weekDates={weekDates}
+        selectedDate={selectedDate}
+        weekLabel={weekLabel}
+        onSelectDate={onSelectDate}
+        onPrevWeek={goToPrevWeek}
+        onNextWeek={goToNextWeek}
+        onToday={goToToday}
+      />
 
       {/* Carico AI */}
       <div className="mb-4">
@@ -77,7 +81,7 @@ export default function SchoolPage({ selectedDate }) {
       {(openTasks.length > 0 || doneTasks.length > 0) && (
         <div>
           <div className="flex items-center justify-between mb-2.5 px-1">
-            <h2 className="text-[15px] font-semibold text-label-secondary">Compiti con data ({tasks.length})</h2>
+            <h2 className="text-[15px] font-semibold text-label-secondary">Attività del giorno ({openTasks.length})</h2>
           </div>
           <div className="flex flex-col gap-2">
             <AnimatePresence initial={false}>
@@ -115,13 +119,32 @@ export default function SchoolPage({ selectedDate }) {
       )}
 
       {/* Vuoto */}
-      {!isLoading && tasks.length === 0 && (
+      {!isLoading && expandedTasks.length === 0 && (
         <EmptyState
           title="Nessuna attività in questo giorno"
           subtitle="Tocca + per aggiungere un compito"
           icon={ClipboardList}
         />
       )}
+
+      {/* Timer studio (collassabile, per non appesantire la lista) */}
+      <div className="mt-5">
+        <button
+          onClick={() => setShowStudy((s) => !s)}
+          className="w-full flex items-center gap-2 px-1 mb-2 text-[14px] font-semibold text-label-secondary"
+        >
+          <Timer size={15} className="text-accent" />
+          Timer di studio (15:00–20:00)
+          <span className="ml-auto text-[13px] text-accent">{showStudy ? 'Nascondi' : 'Mostra'}</span>
+        </button>
+        {showStudy && (
+          <StudyTimerCard
+            selectedDate={selectedDate}
+            tasks={tasks ?? []}
+            onAssignMinutes={(taskId, minutes) => addTaskMinutes(taskId, minutes)}
+          />
+        )}
+      </div>
 
       {/* FAB nuovo compito */}
       <FAB

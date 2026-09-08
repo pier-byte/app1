@@ -1,0 +1,4374 @@
+diff --git a/README.md b/README.md
+index d634273..1f16f1e 100644
+--- a/README.md
++++ b/README.md
+@@ -1,6 +1,6 @@
+ # app1 — PWA Gestione Personale
+ 
+-PWA ad alte prestazioni per la gestione personale: **Scuola**, **Routine**, **Nutrizione** e **Wallet**.
++PWA ad alte prestazioni per la gestione personale: **Calendario**, **Compiti**, **Routine**, **Nutrizione**, **Note** e **Wallet**.
+ Design Apple Dark Mode, realtime con Convex DB, AI con Gemini 2.5 Flash, installabile su iOS/Android/Desktop.
+ 
+ ![Stack](https://img.shields.io/badge/React_19-Vite_6-61dafb) ![PWA](https://img.shields.io/badge/PWA-vite--plugin--pwa-5a0fc8) ![DB](https://img.shields.io/badge/Convex-Realtime-f3b331) ![AI](https://img.shields.io/badge/Gemini-2.5_Flash-8e75b2) ![Hosting](https://img.shields.io/badge/Cloudflare_Pages-€0/mese-f38020)
+@@ -11,27 +11,36 @@ Design Apple Dark Mode, realtime con Convex DB, AI con Gemini 2.5 Flash, install
+ - **PIN Lock a 6 cifre** al primo avvio, validato **server-side** tramite mutation Convex sull'env `APP_PIN`
+ - Persistenza sessione in `localStorage`, tasti freccia supportati su desktop
+ 
+-### 🎓 Tab 1 — Scuola
+-- Timer di studio con finestra **15:00–20:00**, pausa/ripresa e ripristino dopo reload
+-- Attribuzione dei minuti studiati a un compito alla chiusura della sessione
+-- Task categorizzati (Studiare, Esercizi, Verifica…) con colori
+-- **Stima tempi** e **analisi carico** via Gemini 2.5 Flash
+-- Menu contestuale per task: **Modifica, Sposta a domani, Cambia data, Elimina**
++### 📅 Tab 1 — Calendario (home)
++- Vista **Mese/Settimana** con **anteprima eventi e attività** dentro ogni giorno (stile screenshot home)
++- Agenda del giorno selezionato con orari, icone ripetizione/promemoria/allegati e FAB rapido
+ 
+-### 🔁 Tab 2 — Routine
+-- Sequence post-volley: Doccia → Capelli → Skincare → Denti → Cena
+-- **Timer a scorrimento** (carousel con scroll-snap) che registra i tempi effettivi
+-- Riepilogo con confronto tempi reali vs obiettivo, salvataggio automatico
++### 🎓 Tab 2 — Compiti
++- Strip settimanale (Lun–Dom) + lista attività del giorno con categorie colorate e checkbox
++- **Editor completo stile iOS (screenshot 12)**: titolo/descrizione, scadenza, **tutto il giorno + orari**, **promemoria** (all'ora, 5/15/30 min prima, 1h/2h, giorno alle 09:00 → notifiche di sistema + banner in-app), **ripeti** (giornaliero, feriali, settimanale con giorni scelti, mensile + fine: mai / dopo N volte / in data), **elenco attività** (categorie personalizzabili) e **allegati** (foto, PDF, documenti)
++- Timer di studio 15:00–20:00, stima tempi e carico via Gemini 2.5 Flash
++- Menu contestuale: Modifica, Sposta a domani, Cambia data, Elimina
+ 
+-### 🥗 Tab 3 — Nutrizione
+-- **Log macro/calorie via prompt AI**: scrivi *"150g pollo e riso"* → Gemini estrae kcal e macro
+-- **Tabella rotazione pasti** Lun–Dom con **swap rapido** dei giorni (modalità scambia)
+-- Grafici **Peso (kg)** e **Altezza (cm)** con storico
++### 🔁 Tab 3 — Routine
++- **Più schede** (template) con **attività personalizzabili dentro**: nome, emoji, colore, step con nome/obiettivo minuti, ordine, aggiunta/rimozione
++- Timer a scorrimento (carousel con scroll-snap) che registra i tempi effettivi per scheda
++- Riepilogo con confronto tempi reali vs obiettivo e salvataggio automatico
+ 
+-### 💰 Tab 4 — Wallet
+-- Budget settimanale impostabile con quick-pick
+-- Log rapido spese (importo grande, categoria, data)
+-- Indicatori visivi di soglia: 🟢 <50% · 🟡 50–80% · 🔴 >80%
++### 🥗 Tab 4 — Nutrizione
++- **Kcal ↔ macro sempre collegate (regola 4-4-9)**: P·4 + C·4 + G·9 = kcal. I macro sono la fonte, le kcal si aggiornano in automatico; ogni pasto mostra il calcolo
++- Log macro/calorie via **prompt AI** ("150g pollo e riso" → Gemini estrae macro), con editor che evidenzia eventuali scostamenti
++- **Calcolo obiettivo** (Mifflin-St Jeor): BMR, TDEE, target kcal per **mantenere / aumentare / diminuire peso**, con surplus suggerito (+250/+500 kcal → ~0,25–0,5 kg/settimana), proteine 1,6–2,2 g/kg e macro suggeriti. Un tap applica i target
++- Tabella rotazione pasti Lun–Dom con swap rapido, grafici Peso/Altezza
++
++### 📝 Tab 5 — Note
++- **Note rapide e checklist stile Notion**: testo libero o to-do con checkbox, pin, colori, ricerca e filtro (tutte/note/to-do)
++
++### 💰 Tab 6 — Wallet
++- Budget settimanale, log rapido spese, indicatori di soglia 🟢 <50% · 🟡 50–80% · 🔴 >80%
++
++### 📱 UX mobile (Android/iOS)
++- Touch target ≥44px, stepper +/−, chip di scelta, picker data/ora nativi del sistema
++- Input ≥16px per evitare lo zoom automatico iOS, safe-area per notch e gesture bar
+ 
+ ## 🚀 Avvio rapido
+ 
+@@ -58,6 +67,11 @@ Chiave gratuita su [aistudio.google.com/apikey](https://aistudio.google.com/apik
+ 
+ > Nota: la chiave è client-side (app personale, costi €0 col free tier). Per produzione multi-utente si raccomanda un proxy.
+ 
++### Notifiche promemoria (iOS/Android)
++- Su **PWA** le notifiche locali programmate non esistono: l'app, quando è aperta, mostra notifica di sistema + banner in-app al momento del promemoria
++- Su **iOS** l'app deve essere installata nella home e il permesso notifiche concesso
++- I promemoria delle occorrenze ripetute seguono l'evento base
++
+ ## ☁️ Deploy su Cloudflare Pages
+ 
+ ```bash
+@@ -80,25 +94,26 @@ Oppure dal dashboard Cloudflare:
+ ## 🗂 Struttura
+ 
+ ```
+-convex/              # schema + query/mutation (tasks, routines, meals, mealPlan, bodyMetrics, wallet)
++convex/              # schema + query/mutation (tasks, routines, routineTemplates, meals, mealPlan, bodyMetrics, notes, wallet)
+ src/
+ ├── components/
+ │   ├── auth/        # PinScreen
+ │   ├── layout/      # AppShell, WeekStrip (calendario swipeable), BottomNav
+ │   ├── ui/          # BottomSheet, Dialog, ContextMenu, FAB, EmptyState, SegmentedControl, Toggle
+-│   ├── school/      # StudyTimerCard, TaskCard, TaskFormSheet, DatePickerDialog, LoadInsightCard
++│   ├── school/      # StudyTimerCard, TaskCard, TaskFormSheet (promemoria/ripeti/allegati), ReminderPicker, RepeatPicker, AttachmentList, LoadInsightCard
+ │   ├── routine/     # RoutineCarousel
+-│   ├── nutrition/   # AiMealInput, WeeklyPlanTable, MetricsCharts
++│   ├── nutrition/   # AiMealInput, GoalPlannerDialog (BMR/TDEE/macro), WeeklyPlanTable, MetricsCharts
++│   ├── notes/       # NoteEditorSheet
+ │   └── wallet/      # ExpenseFormSheet
+-├── hooks/           # useAuth, useData (Convex↔locale), useDateNavigation, useSwipeNavigation, useTimer
+-├── pages/           # SchoolPage, RoutinePage, NutritionPage, WalletPage
++├── hooks/           # useAuth, useData (Convex↔locale, ripetizioni), useDateNavigation, useSwipeNavigation, useTimer
++├── pages/           # CalendarPage, SchoolPage, RoutinePage, NutritionPage, NotesPage, WalletPage
+ ├── store/           # studyTimer, routineSession (singleton persistenti)
+-└── lib/             # constants (design tokens), dates, gemini, localStore, db, cn
++└── lib/             # constants, dates, repeat, nutritionMath, notifications, gemini, localStore, db, cn
+ scripts/             # generate-icons.mjs, smoke-test.mjs
+ ```
+ 
+ ## 🧪 Test
+ 
+ ```bash
+-node scripts/smoke-test.mjs   # rendering SSR di tutte le pagine/componenti (13 test)
++node scripts/smoke-test.mjs   # rendering SSR di tutte le pagine/componenti (18 test)
+ ```
+diff --git a/convex/notes.js b/convex/notes.js
+new file mode 100644
+index 0000000..51e16a6
+--- /dev/null
++++ b/convex/notes.js
+@@ -0,0 +1,63 @@
++import { query, mutation } from "./_generated/server";
++import { v } from "convex/values";
++
++const todoValidator = v.object({
++  id: v.string(),
++  text: v.string(),
++  done: v.boolean(),
++});
++
++const noteFields = {
++  title: v.string(),
++  body: v.string(),
++  type: v.string(), // note | todo
++  todos: v.array(todoValidator),
++  pinned: v.boolean(),
++  color: v.string(),
++};
++
++export const listAll = query({
++  args: {},
++  handler: async (ctx) => {
++    const rows = await ctx.db.query("notes").collect();
++    return rows.sort((a, b) => {
++      if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
++      return b.updatedAt - a.updatedAt;
++    });
++  },
++});
++
++export const create = mutation({
++  args: { ...noteFields, createdAt: v.optional(v.number()), updatedAt: v.optional(v.number()) },
++  handler: async (ctx, args) => {
++    const now = Date.now();
++    return await ctx.db.insert("notes", {
++      ...args,
++      createdAt: args.createdAt ?? now,
++      updatedAt: args.updatedAt ?? now,
++    });
++  },
++});
++
++export const update = mutation({
++  args: {
++    id: v.id("notes"),
++    title: v.optional(v.string()),
++    body: v.optional(v.string()),
++    type: v.optional(v.string()),
++    todos: v.optional(v.array(todoValidator)),
++    pinned: v.optional(v.boolean()),
++    color: v.optional(v.string()),
++  },
++  handler: async (ctx, { id, ...patch }) => {
++    const clean = Object.fromEntries(Object.entries(patch).filter(([, v]) => v !== undefined));
++    await ctx.db.patch(id, { ...clean, updatedAt: Date.now() });
++  },
++});
++
++export const remove = mutation({
++  args: { id: v.id("notes") },
++  handler: async (ctx, { id }) => {
++    await ctx.db.delete(id);
++  },
++});
+diff --git a/convex/routineTemplates.js b/convex/routineTemplates.js
+new file mode 100644
+index 0000000..d4e2da2
+--- /dev/null
++++ b/convex/routineTemplates.js
+@@ -0,0 +1,38 @@
++import { query, mutation } from "./_generated/server";
++import { v } from "convex/values";
++
++const stepValidator = v.object({
++  name: v.string(),
++  targetMinutes: v.number(),
++});
++
++export const listAll = query({
++  args: {},
++  handler: async (ctx) => await ctx.db.query("routineTemplates").collect(),
++});
++
++export const create = mutation({
++  args: { name: v.string(), emoji: v.string(), color: v.string(), steps: v.array(stepValidator) },
++  handler: async (ctx, args) => await ctx.db.insert("routineTemplates", args),
++});
++
++export const update = mutation({
++  args: {
++    id: v.id("routineTemplates"),
++    name: v.optional(v.string()),
++    emoji: v.optional(v.string()),
++    color: v.optional(v.string()),
++    steps: v.optional(v.array(stepValidator)),
++  },
++  handler: async (ctx, { id, ...patch }) => {
++    const clean = Object.fromEntries(Object.entries(patch).filter(([, v]) => v !== undefined));
++    await ctx.db.patch(id, clean);
++  },
++});
++
++export const remove = mutation({
++  args: { id: v.id("routineTemplates") },
++  handler: async (ctx, { id }) => {
++    await ctx.db.delete(id);
++  },
++});
+diff --git a/convex/routines.js b/convex/routines.js
+index 966ce0b..7a01143 100644
+--- a/convex/routines.js
++++ b/convex/routines.js
+@@ -23,17 +23,19 @@ export const getByDate = query({
+ export const save = mutation({
+   args: {
+     date: v.string(),
++    routineId: v.optional(v.string()),
++    routineName: v.optional(v.string()),
+     steps: v.array(stepValidator),
+     startedAt: v.optional(v.string()),
+     completedAt: v.optional(v.string()),
+   },
+-  handler: async (ctx, { date, steps, startedAt, completedAt }) => {
++  handler: async (ctx, { date, routineId, routineName, steps, startedAt, completedAt }) => {
+     const rows = await ctx.db
+       .query("routines")
+       .withIndex("by_date", (q) => q.eq("date", date))
+       .take(1);
+     const existing = rows[0];
+-    const patch = { steps, startedAt, completedAt };
++    const patch = { steps, startedAt, completedAt, routineId, routineName };
+     if (existing) {
+       await ctx.db.patch(existing._id, patch);
+       return existing._id;
+diff --git a/convex/schema.ts b/convex/schema.ts
+index 3e1824b..714d1e8 100644
+--- a/convex/schema.ts
++++ b/convex/schema.ts
+@@ -2,7 +2,7 @@ import { defineSchema, defineTable } from "convex/server";
+ import { v } from "convex/values";
+ 
+ export default defineSchema({
+-  // ── TAB 1: Scuola ──
++  // ── TAB 1: Compiti / Eventi ──
+   tasks: defineTable({
+     title: v.string(),
+     description: v.optional(v.string()),
+@@ -13,6 +13,39 @@ export default defineSchema({
+     estimatedMinutes: v.optional(v.number()),
+     actualMinutes: v.optional(v.number()),
+     priority: v.optional(v.number()),
++    // Campi "evento" (screenshot 12_menu_allegati)
++    startTime: v.optional(v.string()), // "HH:mm"
++    endTime: v.optional(v.string()),
++    allDay: v.optional(v.boolean()),
++    reminders: v.optional(
++      v.array(
++        v.object({
++          at: v.string(), // ISO datetime
++          label: v.string(),
++          offsetKey: v.optional(v.string()),
++          notified: v.optional(v.boolean()),
++        })
++      )
++    ),
++    repeat: v.optional(
++      v.object({
++        frequency: v.string(), // none | daily | weekdays | weekly | monthly
++        weekdays: v.optional(v.array(v.number())),
++        endMode: v.optional(v.string()), // never | after | on
++        endAfter: v.optional(v.number()),
++        endDate: v.optional(v.string()),
++      })
++    ),
++    attachments: v.optional(
++      v.array(
++        v.object({
++          name: v.string(),
++          type: v.string(),
++          size: v.optional(v.number()),
++          dataUrl: v.optional(v.string()),
++        })
++      )
++    ),
+   })
+     .index("by_date", ["date"])
+     .index("by_category", ["category"]),
+@@ -26,6 +59,8 @@ export default defineSchema({
+   // ── TAB 2: Routine ──
+   routines: defineTable({
+     date: v.string(),
++    routineId: v.optional(v.string()),
++    routineName: v.optional(v.string()),
+     steps: v.array(
+       v.object({
+         name: v.string(),
+@@ -38,6 +73,18 @@ export default defineSchema({
+     completedAt: v.optional(v.string()),
+   }).index("by_date", ["date"]),
+ 
++  routineTemplates: defineTable({
++    name: v.string(),
++    emoji: v.string(),
++    color: v.string(),
++    steps: v.array(
++      v.object({
++        name: v.string(),
++        targetMinutes: v.number(),
++      })
++    ),
++  }),
++
+   // ── TAB 3: Nutrizione ──
+   meals: defineTable({
+     date: v.string(),
+@@ -47,6 +94,7 @@ export default defineSchema({
+     protein: v.optional(v.number()),
+     carbs: v.optional(v.number()),
+     fat: v.optional(v.number()),
++    caloriesSource: v.optional(v.string()), // macro | ai | manual
+     parsedByAI: v.boolean(),
+   }).index("by_date", ["date"]),
+ 
+@@ -69,6 +117,24 @@ export default defineSchema({
+     heightCm: v.optional(v.number()),
+   }).index("by_date", ["date"]),
+ 
++  // ── TAB 5: Note ──
++  notes: defineTable({
++    title: v.string(),
++    body: v.string(),
++    type: v.string(), // note | todo
++    todos: v.array(
++      v.object({
++        id: v.string(),
++        text: v.string(),
++        done: v.boolean(),
++      })
++    ),
++    pinned: v.boolean(),
++    color: v.string(),
++    createdAt: v.number(),
++    updatedAt: v.number(),
++  }).index("by_updated", ["updatedAt"]),
++
+   // ── TAB 4: Wallet ──
+   expenses: defineTable({
+     date: v.string(),
+diff --git a/convex/tasks.js b/convex/tasks.js
+index c5d8317..cd93609 100644
+--- a/convex/tasks.js
++++ b/convex/tasks.js
+@@ -1,6 +1,28 @@
+ import { query, mutation } from "./_generated/server";
+ import { v } from "convex/values";
+ 
++const reminderValidator = v.object({
++  at: v.string(),
++  label: v.string(),
++  offsetKey: v.optional(v.string()),
++  notified: v.optional(v.boolean()),
++});
++
++const repeatValidator = v.object({
++  frequency: v.string(),
++  weekdays: v.optional(v.array(v.number())),
++  endMode: v.optional(v.string()),
++  endAfter: v.optional(v.number()),
++  endDate: v.optional(v.string()),
++});
++
++const attachmentValidator = v.object({
++  name: v.string(),
++  type: v.string(),
++  size: v.optional(v.number()),
++  dataUrl: v.optional(v.string()),
++});
++
+ const taskFields = {
+   title: v.string(),
+   description: v.optional(v.string()),
+@@ -11,6 +33,12 @@ const taskFields = {
+   estimatedMinutes: v.optional(v.number()),
+   actualMinutes: v.optional(v.number()),
+   priority: v.optional(v.number()),
++  startTime: v.optional(v.string()),
++  endTime: v.optional(v.string()),
++  allDay: v.optional(v.boolean()),
++  reminders: v.optional(v.array(reminderValidator)),
++  repeat: v.optional(repeatValidator),
++  attachments: v.optional(v.array(attachmentValidator)),
+ };
+ 
+ // ── Query ──
+@@ -55,6 +83,14 @@ export const update = mutation({
+     date: v.optional(v.string()),
+     completed: v.optional(v.boolean()),
+     estimatedMinutes: v.optional(v.number()),
++    actualMinutes: v.optional(v.number()),
++    priority: v.optional(v.number()),
++    startTime: v.optional(v.string()),
++    endTime: v.optional(v.string()),
++    allDay: v.optional(v.boolean()),
++    reminders: v.optional(v.array(reminderValidator)),
++    repeat: v.optional(repeatValidator),
++    attachments: v.optional(v.array(attachmentValidator)),
+   },
+   handler: async (ctx, { id, ...patch }) => {
+     const clean = Object.fromEntries(Object.entries(patch).filter(([, v]) => v !== undefined));
+diff --git a/package-lock.json b/package-lock.json
+index 2fd2673..249747a 100644
+--- a/package-lock.json
++++ b/package-lock.json
+@@ -2134,9 +2134,6 @@
+         "x64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -2422,9 +2419,6 @@
+         "arm"
+       ],
+       "dev": true,
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -2439,9 +2433,6 @@
+         "arm"
+       ],
+       "dev": true,
+-      "libc": [
+-        "musl"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -2456,9 +2447,6 @@
+         "arm64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -2473,9 +2461,6 @@
+         "arm64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "musl"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -2490,9 +2475,6 @@
+         "loong64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -2507,9 +2489,6 @@
+         "loong64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "musl"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -2524,9 +2503,6 @@
+         "ppc64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -2541,9 +2517,6 @@
+         "ppc64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "musl"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -2558,9 +2531,6 @@
+         "riscv64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -2575,9 +2545,6 @@
+         "riscv64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "musl"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -2592,9 +2559,6 @@
+         "s390x"
+       ],
+       "dev": true,
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -2609,9 +2573,6 @@
+         "x64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -2626,9 +2587,6 @@
+         "x64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "musl"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -2852,9 +2810,6 @@
+         "arm64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -2872,9 +2827,6 @@
+         "arm64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "musl"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -2892,9 +2844,6 @@
+         "x64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -2912,9 +2861,6 @@
+         "x64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "musl"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -5579,9 +5525,6 @@
+         "arm64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "MPL-2.0",
+       "optional": true,
+       "os": [
+@@ -5603,9 +5546,6 @@
+         "arm64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "musl"
+-      ],
+       "license": "MPL-2.0",
+       "optional": true,
+       "os": [
+@@ -5627,9 +5567,6 @@
+         "x64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "MPL-2.0",
+       "optional": true,
+       "os": [
+@@ -5651,9 +5588,6 @@
+         "x64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "musl"
+-      ],
+       "license": "MPL-2.0",
+       "optional": true,
+       "os": [
+diff --git a/package.json b/package.json
+index 5262101..12158b9 100644
+--- a/package.json
++++ b/package.json
+@@ -9,20 +9,20 @@
+     "preview": "vite preview"
+   },
+   "dependencies": {
+-    "react": "^19.1.0",
+-    "react-dom": "^19.1.0",
++    "@google/genai": "^1.3.0",
+     "convex": "^1.21.0",
++    "date-fns": "^4.1.0",
+     "framer-motion": "^12.12.0",
+-    "@google/genai": "^1.3.0",
+     "lucide-react": "^0.511.0",
+-    "recharts": "^2.15.0",
+-    "date-fns": "^4.1.0"
++    "react": "^19.1.0",
++    "react-dom": "^19.1.0",
++    "recharts": "^2.15.0"
+   },
+   "devDependencies": {
++    "@tailwindcss/vite": "^4.1.0",
+     "@vitejs/plugin-react": "^4.5.2",
+-    "vite": "^6.3.0",
+-    "vite-plugin-pwa": "^1.0.0",
+     "tailwindcss": "^4.1.0",
+-    "@tailwindcss/vite": "^4.1.0"
++    "vite": "^6.3.0",
++    "vite-plugin-pwa": "^1.0.0"
+   }
+ }
+diff --git a/scripts/smoke-test.mjs b/scripts/smoke-test.mjs
+index e38d801..a458c8b 100644
+--- a/scripts/smoke-test.mjs
++++ b/scripts/smoke-test.mjs
+@@ -39,9 +39,10 @@ try {
+ 
+ // 2) Ogni pagina singolarmente (bypass del gate)
+ const pages = [
+-  ['SchoolPage', { selectedDate: new Date() }],
++  ['SchoolPage', { selectedDate: new Date(), weekDates: [new Date()], weekLabel: 'test', goToPrevWeek: () => {}, goToNextWeek: () => {}, goToToday: () => {}, onSelectDate: () => {} }],
+   ['RoutinePage', { selectedDate: new Date() }],
+   ['NutritionPage', { selectedDate: new Date() }],
++  ['NotesPage', {}],
+   ['WalletPage', { selectedDate: new Date(), weekDates: [] }],
+ ];
+ 
+@@ -62,6 +63,8 @@ const units = [
+   ['BottomNav', '/src/components/layout/BottomNav.jsx', { activeTab: 'scuola', onTabChange: () => {} }],
+   ['StudyTimerCard', '/src/components/school/StudyTimerCard.jsx', { selectedDate: new Date(), tasks: [], onAssignMinutes: () => {} }],
+   ['TaskFormSheet (chiuso)', '/src/components/school/TaskFormSheet.jsx', { isOpen: false, onClose: () => {}, onSave: () => {}, defaultDate: '2026-09-04', categories: [{ _id: 'a', name: 'Studiare', color: '#30d158' }] }],
++  ['NoteEditorSheet (chiuso)', '/src/components/notes/NoteEditorSheet.jsx', { isOpen: false, onClose: () => {}, onSave: () => {}, onDelete: null }],
++  ['GoalPlannerDialog (chiuso)', '/src/components/nutrition/GoalPlannerDialog.jsx', { isOpen: false, onClose: () => {}, onApply: () => {}, initial: null }],
+   ['WeeklyPlanTable', '/src/components/nutrition/WeeklyPlanTable.jsx', { plan: [{ day: 'Lunedì', colazione: 'a', pranzo: 'b', cena: 'c' }], onUpdatePlan: () => {} }],
+   ['MetricsCharts', '/src/components/nutrition/MetricsCharts.jsx', { metrics: [{ date: '2026-09-01', weightKg: 54, heightCm: 165 }], onAdd: () => {} }],
+   ['ExpenseFormSheet (chiuso)', '/src/components/wallet/ExpenseFormSheet.jsx', { isOpen: false, onClose: () => {}, onSave: () => {}, defaultDate: '2026-09-04' }],
+diff --git a/src/App.jsx b/src/App.jsx
+index 7b4be53..2059ed8 100644
+--- a/src/App.jsx
++++ b/src/App.jsx
+@@ -1,4 +1,4 @@
+-import { useState, useCallback } from 'react';
++import { useState, useCallback, useEffect } from 'react';
+ import { AnimatePresence } from 'framer-motion';
+ import { addMonths, subMonths } from 'date-fns';
+ import { useAuth } from './hooks/useAuth';
+@@ -10,26 +10,89 @@ import CalendarPage from './pages/CalendarPage';
+ import SchoolPage from './pages/SchoolPage';
+ import RoutinePage from './pages/RoutinePage';
+ import NutritionPage from './pages/NutritionPage';
++import NotesPage from './pages/NotesPage';
+ import WalletPage from './pages/WalletPage';
++import { startReminderEngine, notify, showInAppToast } from './lib/notifications';
++import { useExpandedTasks, useTasks } from './hooks/useData';
++import { toDateKey } from './lib/dates';
+ 
+ export default function App() {
+   const { isAuthenticated, authenticate, isLoading: authLoading } = useAuth();
+   const [activeTab, setActiveTab] = useState('calendario');
+   const [calendarMode, setCalendarModeState] = useState(() => localStorage.getItem('app1_calendar_mode') || 'month');
+   const nav = useDateNavigation();
+-  const setCalendarMode = (mode) => { setCalendarModeState(mode); localStorage.setItem('app1_calendar_mode', mode); };
++  const setCalendarMode = (mode) => {
++    setCalendarModeState(mode);
++    localStorage.setItem('app1_calendar_mode', mode);
++  };
+ 
+   const renderPage = useCallback(() => {
+-    const pageProps = { selectedDate: nav.selectedDate, weekDates: nav.weekDates };
+-    if (activeTab === 'calendario') return <CalendarPage key="calendario" {...nav} mode={calendarMode} setMode={setCalendarMode} goPrev={() => nav.selectDate(subMonths(nav.selectedDate,1))} goNext={() => nav.selectDate(addMonths(nav.selectedDate,1))} onOpenTasks={() => setActiveTab('scuola')} />;
++    const pageProps = { selectedDate: nav.selectedDate, weekDates: nav.weekDates, weekLabel: nav.weekLabel, goToPrevWeek: nav.goToPrevWeek, goToNextWeek: nav.goToNextWeek, goToToday: nav.goToToday, onSelectDate: nav.selectDate };
++    if (activeTab === 'calendario') return <CalendarPage key="calendario" {...nav} mode={calendarMode} setMode={setCalendarMode} goPrev={() => nav.selectDate(subMonths(nav.selectedDate, 1))} goNext={() => nav.selectDate(addMonths(nav.selectedDate, 1))} onOpenTasks={() => setActiveTab('scuola')} />;
+     if (activeTab === 'scuola') return <SchoolPage key="scuola" {...pageProps} />;
+     if (activeTab === 'routine') return <RoutinePage key="routine" {...pageProps} />;
+     if (activeTab === 'nutrizione') return <NutritionPage key="nutrizione" {...pageProps} />;
++    if (activeTab === 'note') return <NotesPage key="note" />;
+     if (activeTab === 'wallet') return <WalletPage key="wallet" {...pageProps} />;
+     return null;
+-  }, [activeTab, nav.selectedDate, nav.weekDates, nav.weekLabel, calendarMode]);
++  }, [activeTab, nav.selectedDate, nav.weekDates, nav.weekLabel, nav.goToPrevWeek, nav.goToNextWeek, nav.goToToday, nav.selectDate, calendarMode]);
++
++  // Motore promemoria: controlla le notifiche non ancora mostrate anche
++  // quando si cambia tab (l'app deve essere installata per le notifiche iOS).
++  const todayKey = toDateKey(new Date());
++  const { data: todayTasks } = useExpandedTasks(todayKey);
++  const { updateTask } = useTasks(todayKey);
++  useEffect(() => {
++    if (!isAuthenticated) return;
++    const stop = startReminderEngine(() => {
++      const now = Date.now();
++      (todayTasks ?? []).forEach((task) => {
++        const due = (task.reminders || []).filter((rem) => !rem.notified && new Date(rem.at).getTime() <= now);
++        if (!due.length) return;
++        if (!task.completed) {
++          due.forEach((rem) => {
++            notify({ title: task.title, body: rem.label });
++            showInAppToast(task.title, rem.label);
++          });
++        }
++        // segna come notificati per non ripetere
++        updateTask(task._id, {
++          reminders: (task.reminders || []).map((rem) =>
++            due.some((d) => d.at === rem.at) ? { ...rem, notified: true } : rem
++          ),
++        });
++      });
++    });
++    return stop;
++  }, [isAuthenticated, todayTasks, updateTask]);
+ 
+   if (authLoading) return <div className="flex items-center justify-center h-full bg-canvas"><div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" /></div>;
+   if (!isAuthenticated) return <PinScreen onAuthenticate={authenticate} />;
+-  return <AppShell><div className="flex-1 overflow-hidden"><AnimatePresence mode="wait">{renderPage()}</AnimatePresence></div><BottomNav activeTab={activeTab} onTabChange={setActiveTab} /></AppShell>;
++  return <AppShell><div className="flex-1 overflow-hidden"><AnimatePresence mode="wait">{renderPage()}</AnimatePresence></div><ToastHost /><BottomNav activeTab={activeTab} onTabChange={setActiveTab} /></AppShell>;
++}
++
++/** Banner in-app per i promemoria (oltre alla notifica di sistema). */
++function ToastHost() {
++  const [toast, setToast] = useState(null);
++  useEffect(() => {
++    const handler = (e) => {
++      setToast(e.detail);
++      setTimeout(() => setToast((t) => (t?.at === e.detail.at ? null : t)), 6000);
++    };
++    window.addEventListener('app1-toast', handler);
++    return () => window.removeEventListener('app1-toast', handler);
++  }, []);
++
++  return (
++    <AnimatePresence>
++      {toast && (
++        <div className="fixed left-4 right-4 z-[60] rounded-2xl bg-surface-dialog backdrop-blur-dialog p-4 shadow-2xl border border-separator"
++          style={{ bottom: 'calc(88px + env(safe-area-inset-bottom, 8px))' }}>
++          <p className="text-[13px] text-accent font-semibold mb-0.5">🔔 Promemoria</p>
++          <p className="text-[14px] text-label font-medium">{toast.title}</p>
++          <p className="text-[12px] text-label-secondary">{toast.body}</p>
++        </div>
++      )}
++    </AnimatePresence>
++  );
+ }
+diff --git a/src/components/layout/BottomNav.jsx b/src/components/layout/BottomNav.jsx
+index 83ae67f..ff828fa 100644
+--- a/src/components/layout/BottomNav.jsx
++++ b/src/components/layout/BottomNav.jsx
+@@ -1,5 +1,5 @@
+ import { motion } from 'framer-motion';
+-import { CalendarDays, ListChecks, Dumbbell, UtensilsCrossed, Wallet } from 'lucide-react';
++import { CalendarDays, ListChecks, Dumbbell, UtensilsCrossed, StickyNote, Wallet } from 'lucide-react';
+ import { cn } from '../../lib/cn';
+ 
+ const tabs = [
+@@ -7,8 +7,31 @@ const tabs = [
+   { id:'scuola', label:'Compiti', Icon:ListChecks },
+   { id:'routine', label:'Routine', Icon:Dumbbell },
+   { id:'nutrizione', label:'Nutrizione', Icon:UtensilsCrossed },
++  { id:'note', label:'Note', Icon:StickyNote },
+   { id:'wallet', label:'Wallet', Icon:Wallet },
+ ];
++
+ export default function BottomNav({activeTab,onTabChange}) {
+- return <nav className="flex items-end justify-around bg-surface-1/88 backdrop-blur-dialog border-t border-separator-opaque shrink-0" style={{paddingBottom:'calc(env(safe-area-inset-bottom, 8px) + 4px)',minHeight:72}}>{tabs.map(({id,label,Icon})=>{const active=activeTab===id;return <button key={id} onClick={()=>onTabChange(id)} className={cn('flex flex-col items-center justify-center gap-1 pt-2 pb-1 min-w-[58px] relative',active?'text-accent':'text-label-tertiary')}><div className="relative"><Icon size={23} strokeWidth={active?2.2:1.6}/>{active&&<motion.i layoutId="nav" className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-accent"/>}</div><span className="text-[9px] sm:text-[10px]">{label}</span></button>})}</nav>
++  return (
++    <nav className="flex items-end justify-around bg-surface-1/88 backdrop-blur-dialog border-t border-separator-opaque shrink-0"
++      style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 8px) + 4px)', minHeight: 72 }}>
++      {tabs.map(({id,label,Icon})=>{
++        const active=activeTab===id;
++        return (
++          <button
++            key={id}
++            onClick={()=>onTabChange(id)}
++            className={cn('flex flex-1 flex-col items-center justify-center gap-1 pt-2 pb-1 min-w-0 relative', active ? 'text-accent' : 'text-label-tertiary')}
++            style={{ minHeight: 52 }}
++          >
++            <div className="relative">
++              <Icon size={22} strokeWidth={active ? 2.2 : 1.6} />
++              {active && <motion.i layoutId="nav" className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-accent" />}
++            </div>
++            <span className="text-[8.5px] sm:text-[10px] leading-none">{label}</span>
++          </button>
++        );
++      })}
++    </nav>
++  );
+ }
+diff --git a/src/components/layout/CalendarHeader.jsx b/src/components/layout/CalendarHeader.jsx
+index 870ab26..dcdeac4 100644
+--- a/src/components/layout/CalendarHeader.jsx
++++ b/src/components/layout/CalendarHeader.jsx
+@@ -41,11 +41,25 @@ export default function CalendarHeader({ mode, onModeChange, selectedDate, onSel
+       {mode === 'week' ? weekStrip : <div className="month-grid pb-3">
+         {DAYS.map((d,i) => <div key={i} className="text-center text-[11px] font-semibold text-label-tertiary py-1">{d}</div>)}
+         {dates.map(date => {
+-          const active = isSameDay(date, selectedDate); const colors = [...new Set(colorsByDate[toDateKey(date)] || [])].slice(0,3);
+-          return <button key={date.toISOString()} onClick={() => onSelectDate(date)} className={cn('month-day', !isSameMonth(date, selectedDate) && 'opacity-35')} aria-label={format(date, 'd MMMM yyyy', {locale:it})}>
+-            <span className={cn('month-number', active && 'bg-accent text-white')}>{format(date,'d')}</span>
+-            <span className="flex h-1.5 gap-0.5 justify-center">{colors.map(c => <i key={c} className="w-1 h-1 rounded-full" style={{backgroundColor:c}} />)}</span>
+-          </button>
++          const active = isSameDay(date, selectedDate);
++          const dayTasks = (monthTasks || []).filter((t) => t.date === toDateKey(date));
++          const colors = [...new Set(dayTasks.map((t) => t.categoryColor || '#0a84ff'))].slice(0, 4);
++          return (
++            <button key={date.toISOString()} onClick={() => onSelectDate(date)} className={cn('month-day', !isSameMonth(date, selectedDate) && 'opacity-35')} aria-label={format(date, 'd MMMM yyyy', {locale:it})}>
++              <span className={cn('month-number', active && 'bg-accent text-white')}>{format(date,'d')}</span>
++              {/* Anteprima eventi/attività (screenshot home) */}
++              <span className="flex flex-col items-center gap-0.5 w-full min-h-[16px]">
++                {dayTasks.slice(0, 2).map((t) => (
++                  <span key={t._id} className={cn('flex items-center gap-1 max-w-full px-1 py-px rounded-[4px] text-[8.5px] leading-[1.15] truncate', active ? 'bg-accent/20 text-label' : 'bg-surface-2 text-label-secondary')}>
++                    <i className="w-1 h-1 rounded-full shrink-0" style={{ backgroundColor: t.categoryColor || '#0a84ff' }} />
++                    <span className="truncate">{t.title}</span>
++                  </span>
++                ))}
++                {dayTasks.length > 2 && <span className="text-[8.5px] text-label-tertiary leading-none">+{dayTasks.length - 2}</span>}
++                {dayTasks.length === 0 && <span className="flex h-1.5 gap-0.5 justify-center">{colors.map(c => <i key={c} className="w-1 h-1 rounded-full" style={{backgroundColor:c}} />)}</span>}
++              </span>
++            </button>
++          );
+         })}
+       </div>}
+     </div>
+diff --git a/src/components/notes/NoteEditorSheet.jsx b/src/components/notes/NoteEditorSheet.jsx
+new file mode 100644
+index 0000000..61ed7b6
+--- /dev/null
++++ b/src/components/notes/NoteEditorSheet.jsx
+@@ -0,0 +1,178 @@
++import { useEffect, useState } from 'react';
++import { X, Trash2, Pin, Plus, Check, Circle, CheckCircle2 } from 'lucide-react';
++import BottomSheet from '../ui/BottomSheet';
++import SegmentedControl from '../ui/SegmentedControl';
++import { NOTE_COLORS, emptyNote } from '../../lib/constants';
++import { uid } from '../../lib/localStore';
++import { cn } from '../../lib/cn';
++
++/**
++ * NoteEditorSheet — editor nota/checklist stile Notion:
++ * titolo, testo o lista attività, pin, colore, eliminazione.
++ */
++export default function NoteEditorSheet({ isOpen, onClose, note, onSave, onDelete }) {
++  const [draft, setDraft] = useState(emptyNote());
++  const [newTodo, setNewTodo] = useState('');
++
++  useEffect(() => {
++    if (isOpen) {
++      setDraft(
++        note
++          ? { title: note.title, body: note.body, type: note.type, todos: (note.todos || []).map((t) => ({ ...t })), pinned: note.pinned, color: note.color }
++          : emptyNote()
++      );
++      setNewTodo('');
++    }
++  }, [isOpen, note]);
++
++  const patch = (p) => setDraft((d) => ({ ...d, ...p }));
++
++  const addTodo = () => {
++    const text = newTodo.trim();
++    if (!text) return;
++    patch({ todos: [...draft.todos, { id: uid(), text, done: false }] });
++    setNewTodo('');
++  };
++
++  const save = () => {
++    if (!draft.title.trim() && draft.type === 'note' && !draft.body.trim() && draft.todos.length === 0) return;
++    onSave({
++      ...draft,
++      title: draft.title.trim(),
++      body: draft.body.trim(),
++      todos: draft.todos,
++    });
++  };
++
++  const canSave = draft.title.trim() || draft.body.trim() || draft.todos.length > 0;
++
++  return (
++    <BottomSheet isOpen={isOpen} onClose={onClose} title={note ? 'Modifica nota' : 'Nuova nota'}>
++      {/* Header azioni */}
++      <div className="flex items-center gap-2 pb-3">
++        <div className="flex-1" />
++        {onDelete && (
++          <button
++            onClick={() => {
++              onDelete();
++              onClose();
++            }}
++            className="w-10 h-10 grid place-items-center text-sys-red active:opacity-60"
++            aria-label="Elimina nota"
++          >
++            <Trash2 size={18} />
++          </button>
++        )}
++        <button
++          onClick={() => patch({ pinned: !draft.pinned })}
++          className={cn('w-10 h-10 grid place-items-center', draft.pinned ? 'text-sys-yellow' : 'text-label-secondary')}
++          aria-label="Fissa nota"
++        >
++          <Pin size={18} fill={draft.pinned ? 'currentColor' : 'none'} />
++        </button>
++        <button
++          onClick={save}
++          disabled={!canSave}
++          className={cn('h-10 px-5 rounded-full text-[14px] font-semibold', canSave ? 'bg-accent text-white active:bg-accent-pressed' : 'bg-fill-secondary text-label-tertiary')}
++        >
++          Salva
++        </button>
++      </div>
++
++      {/* Tipo */}
++      <div className="mb-3">
++        <SegmentedControl
++          segments={[
++            { id: 'note', label: 'Nota' },
++            { id: 'todo', label: 'Checklist' },
++          ]}
++          value={draft.type}
++          onChange={(type) => patch({ type })}
++        />
++      </div>
++
++      {/* Titolo */}
++      <input
++        value={draft.title}
++        onChange={(e) => patch({ title: e.target.value })}
++        placeholder="Titolo"
++        autoFocus={!note}
++        className="w-full bg-surface-2 rounded-xl px-4 py-3 text-[17px] font-semibold text-label placeholder:text-label-tertiary mb-3"
++      />
++
++      {/* Corpo o checklist */}
++      {draft.type === 'note' ? (
++        <textarea
++          value={draft.body}
++          onChange={(e) => patch({ body: e.target.value })}
++          placeholder="Scrivi qui… (come Notion: appunti, idee, elenchi liberi)"
++          rows={7}
++          className="w-full bg-surface-2 rounded-xl px-4 py-3 text-[15px] text-label placeholder:text-label-tertiary resize-none leading-relaxed"
++        />
++      ) : (
++        <div className="bg-surface-2 rounded-xl p-3">
++          <div className="flex flex-col gap-1 mb-2">
++            {draft.todos.map((t) => (
++              <div key={t.id} className="flex items-center gap-2 py-1.5">
++                <button
++                  onClick={() => patch({ todos: draft.todos.map((x) => (x.id === t.id ? { ...x, done: !x.done } : x)) })}
++                  className="shrink-0"
++                  aria-label={t.done ? 'Segna da fare' : 'Segna fatto'}
++                >
++                  {t.done ? (
++                    <CheckCircle2 size={20} className="text-sys-green" />
++                  ) : (
++                    <Circle size={20} className="text-label-quaternary" />
++                  )}
++                </button>
++                <input
++                  value={t.text}
++                  onChange={(e) => patch({ todos: draft.todos.map((x) => (x.id === t.id ? { ...x, text: e.target.value } : x)) })}
++                  className={cn('flex-1 bg-transparent text-[15px] min-h-9', t.done ? 'line-through text-label-tertiary' : 'text-label')}
++                />
++                <button
++                  onClick={() => patch({ todos: draft.todos.filter((x) => x.id !== t.id) })}
++                  className="w-8 h-8 grid place-items-center text-label-tertiary active:text-sys-red shrink-0"
++                  aria-label="Rimuovi elemento"
++                >
++                  <X size={15} />
++                </button>
++              </div>
++            ))}
++          </div>
++          <div className="flex items-center gap-2">
++            <Plus size={16} className="text-label-tertiary shrink-0" />
++            <input
++              value={newTodo}
++              onChange={(e) => setNewTodo(e.target.value)}
++              onKeyDown={(e) => e.key === 'Enter' && addTodo()}
++              placeholder="Aggiungi un elemento e premi Invio"
++              className="flex-1 bg-transparent text-[15px] text-label placeholder:text-label-tertiary min-h-9"
++            />
++            <button onClick={addTodo} className="h-9 px-3 rounded-full bg-accent text-white text-[13px] font-semibold shrink-0">
++              Aggiungi
++            </button>
++          </div>
++        </div>
++      )}
++
++      {/* Colore */}
++      <div className="flex items-center gap-2 mt-4">
++        <span className="text-[13px] text-label-secondary">Colore</span>
++        <div className="flex gap-2 flex-wrap">
++          {NOTE_COLORS.map((c) => (
++            <button
++              key={c}
++              onClick={() => patch({ color: c })}
++              className={cn('w-8 h-8 rounded-full grid place-items-center', draft.color === c && 'ring-2 ring-offset-2 ring-offset-surface-1')}
++              style={{ backgroundColor: c }}
++              aria-label={`Colore ${c}`}
++            >
++              {draft.color === c && <Check size={13} className="text-white" strokeWidth={3} />}
++            </button>
++          ))}
++        </div>
++      </div>
++    </BottomSheet>
++  );
++}
+diff --git a/src/components/nutrition/AiMealInput.jsx b/src/components/nutrition/AiMealInput.jsx
+index 009d9fa..de48f85 100644
+--- a/src/components/nutrition/AiMealInput.jsx
++++ b/src/components/nutrition/AiMealInput.jsx
+@@ -1,14 +1,22 @@
+ import { useState } from 'react';
+ import { motion, AnimatePresence } from 'framer-motion';
+-import { Sparkles, Loader2, Send, AlertCircle } from 'lucide-react';
++import { Sparkles, Loader2, Send, AlertCircle, Link2, Minus, Plus } from 'lucide-react';
+ import { parseFoodInput, hasGemini } from '../../lib/gemini';
+ import { Dialog } from '../ui/Dialog';
+-import { cn } from '../../lib/cn';
++import { kcalFromMacros, macroKcalBreakdown } from '../../lib/nutritionMath';
+ import { MEAL_TYPES } from '../../lib/constants';
++import { cn } from '../../lib/cn';
++
++const MACRO_FIELDS = [
++  { key: 'protein', label: 'Proteine', unit: 'g', color: '#30d158' },
++  { key: 'carbs', label: 'Carboidrati', unit: 'g', color: '#ffd60a' },
++  { key: 'fat', label: 'Grassi', unit: 'g', color: '#ff375f' },
++];
+ 
+ /**
+- * AiMealInput — Log macro/calorie tramite prompt testo processato da Gemini AI.
+- * Es: "150g pollo e riso" → preview macros → conferma con tipo pasto.
++ * AiMealInput — Log rapido: Gemini estrae kcal e macro, poi l'utente conferma.
++ * Le kcal sono SEMPRE collegate ai macro (regola 4-4-9): quando cambi P/C/G
++ * la somma si aggiorna automaticamente.
+  */
+ export default function AiMealInput({ onConfirm }) {
+   const [text, setText] = useState('');
+@@ -35,23 +43,42 @@ export default function AiMealInput({ onConfirm }) {
+       setError('Non riesco a riconoscere questo alimento. Prova a riformulare (es. "150g pollo e riso").');
+       return;
+     }
+-    setParsed({ ...result, original: value });
++    // Le kcal vengono ricalcolate dai macro così i dati restano coerenti
++    setParsed({ ...result, calories: kcalFromMacros(result), caloriesSource: 'macro', original: value });
++  };
++
++  const setMacro = (key, value) => {
++    const next = { ...parsed, [key]: Math.max(0, Number(value) || 0) };
++    next.calories = kcalFromMacros(next);
++    next.caloriesSource = 'macro';
++    setParsed(next);
++  };
++
++  const setCaloriesManual = (value) => {
++    const k = Math.max(0, Number(value) || 0);
++    setParsed({ ...parsed, calories: k, caloriesSource: 'manual' });
+   };
+ 
+   const confirm = () => {
++    const final = { ...parsed };
++    // Coerenza: se l'utente ha forzato le kcal a mano, manteniamo il suo valore
++    // ma segnaliamo la differenza; altrimenti kcal === somma macro.
+     onConfirm({
+       mealType,
+-      description: parsed.description,
+-      calories: parsed.calories,
+-      protein: parsed.protein,
+-      carbs: parsed.carbs,
+-      fat: parsed.fat,
++      description: final.description,
++      calories: final.calories,
++      protein: final.protein,
++      carbs: final.carbs,
++      fat: final.fat,
++      caloriesSource: final.caloriesSource || 'macro',
+       parsedByAI: true,
+     });
+     setParsed(null);
+     setText('');
+   };
+ 
++  const breakdown = parsed ? macroKcalBreakdown(parsed) : null;
++
+   return (
+     <>
+       <div className="bg-surface-1 rounded-2xl p-4">
+@@ -62,7 +89,10 @@ export default function AiMealInput({ onConfirm }) {
+         <div className="flex items-end gap-2">
+           <textarea
+             value={text}
+-            onChange={(e) => { setText(e.target.value); setError(null); }}
++            onChange={(e) => {
++              setText(e.target.value);
++              setError(null);
++            }}
+             placeholder='es. "150g pollo e riso"'
+             rows={1}
+             className="flex-1 bg-surface-2 rounded-xl px-4 py-3 text-[15px] text-label placeholder:text-label-tertiary resize-none min-h-[44px]"
+@@ -90,7 +120,22 @@ export default function AiMealInput({ onConfirm }) {
+             )}
+           </motion.button>
+         </div>
+-        <button onClick={() => setParsed({ description: text.trim() || 'Pasto', calories: 0, protein: 0, carbs: 0, fat: 0, original: text.trim() })} className="mt-3 text-[13px] text-accent font-semibold min-h-8">Inserisci kcal e macro manualmente</button>
++        <button
++          onClick={() =>
++            setParsed({
++              description: text.trim() || 'Pasto',
++              calories: 0,
++              protein: 0,
++              carbs: 0,
++              fat: 0,
++              caloriesSource: 'macro',
++              original: text.trim(),
++            })
++          }
++          className="mt-3 text-[13px] text-accent font-semibold min-h-8"
++        >
++          Inserisci kcal e macro manualmente
++        </button>
+         {error && (
+           <div className="flex items-start gap-2 mt-3">
+             <AlertCircle size={14} className="text-sys-orange shrink-0 mt-0.5" />
+@@ -117,11 +162,75 @@ export default function AiMealInput({ onConfirm }) {
+               </>
+             }
+           >
+-            <input value={parsed.description} onChange={(e) => setParsed({...parsed, description:e.target.value})} className="w-full bg-surface-2 rounded-xl px-3 py-3 text-[15px] my-2" aria-label="Nome pasto" />
++            <input
++              value={parsed.description}
++              onChange={(e) => setParsed({ ...parsed, description: e.target.value })}
++              className="w-full bg-surface-2 rounded-xl px-3 py-3 text-[15px] my-2"
++              aria-label="Nome pasto"
++            />
+ 
+-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 my-4">
+-              {[['calories','kcal'],['protein','Proteine g'],['carbs','Carboidrati g'],['fat','Grassi g']].map(([key,label]) => <label key={key} className="bg-surface-2 rounded-xl p-2 text-[10px] text-label-tertiary"><input type="number" min="0" value={parsed[key]} onChange={(e) => setParsed({...parsed,[key]:Number(e.target.value)})} className="w-full bg-transparent text-[17px] font-bold text-label" />{label}</label>)}
++            {/* Macro: fonti di verità → kcal aggiornata in automatico */}
++            <div className="grid grid-cols-3 gap-2 my-4">
++              {MACRO_FIELDS.map((m) => (
++                <label key={m.key} className="bg-surface-2 rounded-xl p-2 text-[10px] text-label-tertiary">
++                  <span className="flex items-center gap-1.5 mb-1">
++                    <span className="w-2 h-2 rounded-full" style={{ backgroundColor: m.color }} />
++                    {m.label}
++                  </span>
++                  <span className="flex items-center gap-1">
++                    <button
++                      onClick={() => setMacro(m.key, parsed[m.key] - 1)}
++                      className="w-6 h-8 grid place-items-center text-label-tertiary active:text-accent"
++                      aria-label={`Riduci ${m.label}`}
++                    >
++                      <Minus size={11} />
++                    </button>
++                    <input
++                      type="number"
++                      min="0"
++                      value={parsed[m.key]}
++                      onChange={(e) => setMacro(m.key, e.target.value)}
++                      className="w-full bg-transparent text-[17px] font-bold text-label text-center"
++                    />
++                    <button
++                      onClick={() => setMacro(m.key, parsed[m.key] + 1)}
++                      className="w-6 h-8 grid place-items-center text-label-tertiary active:text-accent"
++                      aria-label={`Aumenta ${m.label}`}
++                    >
++                      <Plus size={11} />
++                    </button>
++                  </span>
++                </label>
++              ))}
++            </div>
++
++            {/* Kcal collegate ai macro */}
++            <div className="flex items-center gap-3 bg-surface-2 rounded-xl px-4 py-3 mb-2">
++              <Link2 size={16} className="text-accent shrink-0" />
++              <div className="flex-1 min-w-0">
++                <p className="text-[11px] text-label-tertiary">Kcal collegate ai macro</p>
++                <p className="text-[11px] text-label-tertiary tabular-nums">
++                  P·4 + C·4 + G·9 = {breakdown?.protein || 0} + {breakdown?.carbs || 0} + {breakdown?.fat || 0}
++                </p>
++              </div>
++              <input
++                type="number"
++                min="0"
++                step="1"
++                value={parsed.calories}
++                onChange={(e) => setCaloriesManual(e.target.value)}
++                className="w-24 bg-transparent text-right text-[20px] font-bold text-label tabular-nums"
++                aria-label="Kcal"
++              />
++              <span className="text-[12px] text-label-tertiary">kcal</span>
+             </div>
++            {parsed.caloriesSource === 'manual' && (
++              <p className="flex items-start gap-1.5 text-[11px] text-sys-orange mb-2">
++                <AlertCircle size={12} className="shrink-0 mt-0.5" />
++                Hai impostato le kcal a mano: differiscono di {Math.abs(parsed.calories - kcalFromMacros(parsed))} kcal dalla somma dei macro.
++                Consiglio: {kcalFromMacros(parsed)} kcal rende i dati coerenti.
++              </p>
++            )}
+ 
+             {/* Tipo pasto */}
+             <p className="text-[13px] text-label-secondary mb-2">Tipo pasto</p>
+@@ -145,12 +254,3 @@ export default function AiMealInput({ onConfirm }) {
+     </>
+   );
+ }
+-
+-function MacroTile({ label, value, color }) {
+-  return (
+-    <div className="bg-surface-2 rounded-xl py-3 flex flex-col items-center gap-0.5">
+-      <span className="text-[17px] font-bold tabular-nums" style={{ color }}>{value}</span>
+-      <span className="text-[10px] text-label-tertiary">{label}</span>
+-    </div>
+-  );
+-}
+diff --git a/src/components/nutrition/GoalPlannerDialog.jsx b/src/components/nutrition/GoalPlannerDialog.jsx
+new file mode 100644
+index 0000000..e699270
+--- /dev/null
++++ b/src/components/nutrition/GoalPlannerDialog.jsx
+@@ -0,0 +1,223 @@
++import { useMemo, useState } from 'react';
++import { Target, Scale, Flame } from 'lucide-react';
++import { Dialog } from '../ui/Dialog';
++import {
++  ACTIVITY_LEVELS, GOALS, GAIN_PACES, LOSE_PACES,
++  bmrMifflin, tdee, targetKcal, suggestMacros, proteinTarget,
++  expectedWeeklyChange, kcalFromMacros,
++} from '../../lib/nutritionMath';
++import { cn } from '../../lib/cn';
++
++/**
++ * GoalPlannerDialog — Calcola BMR/TDEE (Mifflin-St Jeor), obiettivo di peso
++ * (mantenere / aumentare / diminuire) e i macro giornalieri suggeriti.
++ * "Applica" salva i target usati dalla pagina Nutrizione.
++ */
++export default function GoalPlannerDialog({ isOpen, onClose, onApply, initial }) {
++  const [sex, setSex] = useState(initial?.sex || 'female');
++  const [age, setAge] = useState(initial?.age || 15);
++  const [weightKg, setWeightKg] = useState(initial?.weightKg || '');
++  const [heightCm, setHeightCm] = useState(initial?.heightCm || '');
++  const [activity, setActivity] = useState(initial?.activity || 'moderate');
++  const [goal, setGoal] = useState(initial?.goal || 'gain');
++  const [pace, setPace] = useState(initial?.pace || 'standard');
++
++  const bmr = useMemo(
++    () => bmrMifflin({ sex, weightKg: Number(weightKg), heightCm: Number(heightCm), age: Number(age) }),
++    [sex, weightKg, heightCm, age]
++  );
++  const tdeeValue = useMemo(() => {
++    const factor = ACTIVITY_LEVELS.find((a) => a.id === activity)?.factor || 1.55;
++    return tdee(bmr, factor);
++  }, [bmr, activity]);
++
++  const delta = useMemo(() => {
++    if (goal === 'maintain') return 0;
++    const paceList = goal === 'gain' ? GAIN_PACES : LOSE_PACES;
++    const p = paceList.find((x) => x.id === pace) ?? paceList[0];
++    return goal === 'gain' ? p.surplus : p.delta;
++  }, [goal, pace]);
++
++  const kcal = useMemo(() => targetKcal(tdeeValue, goal, Math.abs(delta)), [tdeeValue, goal, delta]);
++  const macros = useMemo(() => suggestMacros({ targetKcalValue: kcal, weightKg: Number(weightKg), goal }), [kcal, weightKg, goal]);
++  const weekly = useMemo(() => expectedWeeklyChange(delta), [delta]);
++  const protein = proteinTarget(Number(weightKg), goal);
++
++  const apply = () => {
++    if (!kcal || !macros) return;
++    onApply({
++      profile: { sex, age: Number(age), weightKg: Number(weightKg), heightCm: Number(heightCm), activity, goal, pace },
++      goals: { calories: kcal, protein: macros.protein, carbs: macros.carbs, fat: macros.fat },
++    });
++  };
++
++  return (
++    <Dialog
++      isOpen={isOpen}
++      onClose={onClose}
++      title="Obiettivo nutrizione"
++      actions={
++        <>
++          <button onClick={onClose} className="text-[17px] text-label-secondary font-medium active:opacity-60">Annulla</button>
++          <button
++            onClick={apply}
++            disabled={!kcal}
++            className="text-[17px] text-accent font-semibold active:opacity-60 disabled:opacity-40"
++          >
++            Applica
++          </button>
++        </>
++      }
++    >
++      <div className="flex flex-col gap-4 py-1">
++        {/* Profilo */}
++        <section>
++          <p className="text-[13px] font-semibold text-label-secondary uppercase tracking-wide mb-2">Profilo</p>
++          <div className="grid grid-cols-2 gap-2 mb-2">
++            <label className="bg-surface-2 rounded-xl px-3 py-2 text-[10px] text-label-tertiary">
++              Età
++              <input type="number" min="10" max="90" value={age || ''} onChange={(e) => setAge(e.target.value)} className="w-full bg-transparent text-[16px] font-semibold text-label" inputMode="numeric" />
++            </label>
++            <label className="bg-surface-2 rounded-xl px-3 py-2 text-[10px] text-label-tertiary">
++              Peso (kg)
++              <input type="number" min="20" max="300" step="0.1" value={weightKg} onChange={(e) => setWeightKg(e.target.value)} className="w-full bg-transparent text-[16px] font-semibold text-label" inputMode="decimal" placeholder="54" />
++            </label>
++            <label className="bg-surface-2 rounded-xl px-3 py-2 text-[10px] text-label-tertiary">
++              Altezza (cm)
++              <input type="number" min="50" max="250" value={heightCm} onChange={(e) => setHeightCm(e.target.value)} className="w-full bg-transparent text-[16px] font-semibold text-label" inputMode="numeric" placeholder="165" />
++            </label>
++            <div className="bg-surface-2 rounded-xl px-3 py-2 text-[10px] text-label-tertiary">
++              Sesso
++              <div className="flex gap-1 mt-1">
++                {['female', 'male'].map((s) => (
++                  <button
++                    key={s}
++                    onClick={() => setSex(s)}
++                    className={cn('h-8 flex-1 rounded-lg text-[12px] font-semibold', sex === s ? 'bg-accent text-white' : 'bg-fill-tertiary text-label-secondary')}
++                  >
++                    {s === 'female' ? 'F' : 'M'}
++                  </button>
++                ))}
++              </div>
++            </div>
++          </div>
++          <p className="text-[13px] text-label-secondary mb-2">Attività fisica</p>
++          <div className="flex flex-col gap-1">
++            {ACTIVITY_LEVELS.map((a) => (
++              <button
++                key={a.id}
++                onClick={() => setActivity(a.id)}
++                className={cn('flex items-center gap-3 px-3 py-2.5 rounded-xl text-left', activity === a.id ? 'bg-accent/15' : 'bg-surface-2 active:bg-surface-3')}
++              >
++                <span className={cn('w-[18px] h-[18px] rounded-full border-2 grid place-items-center shrink-0', activity === a.id ? 'border-accent' : 'border-label-quaternary')}>
++                  {activity === a.id && <span className="w-2.5 h-2.5 rounded-full bg-accent" />}
++                </span>
++                <span className="text-[14px] text-label">{a.label}</span>
++                <span className="ml-auto text-[12px] text-label-tertiary">×{a.factor}</span>
++              </button>
++            ))}
++          </div>
++        </section>
++
++        {/* Obiettivo */}
++        <section>
++          <p className="text-[13px] font-semibold text-label-secondary uppercase tracking-wide mb-2">Obiettivo di peso</p>
++          <div className="flex flex-col gap-1 mb-2">
++            {GOALS.map((g) => (
++              <button
++                key={g.id}
++                onClick={() => { setGoal(g.id); if (g.id === 'gain') setPace('standard'); if (g.id === 'lose') setPace('moderate'); }}
++                className={cn('flex items-center gap-3 px-3 py-2.5 rounded-xl text-left', goal === g.id ? 'bg-accent/15' : 'bg-surface-2 active:bg-surface-3')}
++              >
++                <span className={cn('w-[18px] h-[18px] rounded-full border-2 grid place-items-center shrink-0', goal === g.id ? 'border-accent' : 'border-label-quaternary')}>
++                  {goal === g.id && <span className="w-2.5 h-2.5 rounded-full bg-accent" />}
++                </span>
++                <span className="text-[14px] text-label">{g.label}</span>
++                <span className="ml-auto text-[12px] text-label-tertiary">{g.range}</span>
++              </button>
++            ))}
++          </div>
++
++          {goal === 'gain' && (
++            <>
++              <p className="text-[13px] text-label-secondary mb-2">Ritmo di aumento</p>
++              <div className="grid grid-cols-3 gap-1.5">
++                {GAIN_PACES.map((p) => (
++                  <button
++                    key={p.id}
++                    onClick={() => setPace(p.id)}
++                    className={cn('rounded-xl px-1 py-2 text-center', pace === p.id ? 'bg-accent text-white' : 'bg-surface-2 text-label-secondary')}
++                  >
++                    <span className="block text-[12px] font-semibold">{p.label}</span>
++                    <span className={cn('block text-[10px]', pace === p.id ? 'text-white/70' : 'text-label-tertiary')}>+{p.surplus} kcal</span>
++                  </button>
++                ))}
++              </div>
++            </>
++          )}
++          {goal === 'lose' && (
++            <div className="grid grid-cols-2 gap-1.5">
++              {LOSE_PACES.map((p) => (
++                <button
++                  key={p.id}
++                  onClick={() => setPace(p.id)}
++                  className={cn('rounded-xl px-1 py-2 text-center', pace === p.id ? 'bg-accent text-white' : 'bg-surface-2 text-label-secondary')}
++                >
++                  <span className="block text-[12px] font-semibold">{p.label}</span>
++                  <span className={cn('block text-[10px]', pace === p.id ? 'text-white/70' : 'text-label-tertiary')}>{p.delta} kcal</span>
++                </button>
++              ))}
++            </div>
++          )}
++        </section>
++
++        {/* Risultato */}
++        {bmr && tdeeValue && kcal && (
++          <section className="bg-surface-1 rounded-2xl p-4">
++            <div className="grid grid-cols-3 gap-2 mb-3">
++              <div className="bg-surface-2 rounded-xl p-2 text-center">
++                <Flame size={13} className="mx-auto text-sys-orange mb-1" />
++                <p className="text-[16px] font-bold text-label tabular-nums">{bmr}</p>
++                <p className="text-[10px] text-label-tertiary">BMR</p>
++              </div>
++              <div className="bg-surface-2 rounded-xl p-2 text-center">
++                <Target size={13} className="mx-auto text-accent mb-1" />
++                <p className="text-[16px] font-bold text-label tabular-nums">{tdeeValue}</p>
++                <p className="text-[10px] text-label-tertiary">TDEE</p>
++              </div>
++              <div className="bg-surface-2 rounded-xl p-2 text-center">
++                <Scale size={13} className="mx-auto text-sys-green mb-1" />
++                <p className="text-[16px] font-bold text-label tabular-nums">{kcal}</p>
++                <p className="text-[10px] text-label-tertiary">Target kcal</p>
++              </div>
++            </div>
++
++            {goal !== 'maintain' && (
++              <p className="text-[12px] text-label-secondary mb-3">
++                {goal === 'gain' ? 'Surplus' : 'Deficit'} di {Math.abs(delta)} kcal/giorno → circa {weekly} kg/settimana.
++                {goal === 'gain' && ' Parti da +200/+250 e aggiusta in base alla bilancia dopo 2–3 settimane.'}
++              </p>
++            )}
++
++            <p className="text-[13px] font-semibold text-label-secondary mb-2">Macro suggeriti (target)</p>
++            <div className="flex items-center gap-2">
++              {[
++                { label: 'Proteine', value: macros.protein, unit: 'g', color: '#30d158', note: protein ? `${protein} g (1,6–2 g/kg)` : '' },
++                { label: 'Carboidrati', value: macros.carbs, unit: 'g', color: '#ffd60a', note: 'il resto delle kcal' },
++                { label: 'Grassi', value: macros.fat, unit: 'g', color: '#ff375f', note: '~28% kcal' },
++              ].map((m) => (
++                <div key={m.label} className="flex-1 bg-surface-2 rounded-xl py-2 px-1 text-center">
++                  <span className="block text-[16px] font-bold text-label tabular-nums">{m.value}<span className="text-[10px] text-label-tertiary"> {m.unit}</span></span>
++                  <span className="block text-[9.5px] text-label-tertiary leading-tight mt-0.5">{m.label}</span>
++                </div>
++              ))}
++            </div>
++            <p className="text-[10px] text-label-tertiary mt-2 text-center tabular-nums">
++              Verifica: P·4 + C·4 + G·9 = {kcalFromMacros(macros)} kcal ≈ {kcal} kcal
++            </p>
++          </section>
++        )}
++      </div>
++    </Dialog>
++  );
++}
+diff --git a/src/components/school/AttachmentList.jsx b/src/components/school/AttachmentList.jsx
+new file mode 100644
+index 0000000..bed0239
+--- /dev/null
++++ b/src/components/school/AttachmentList.jsx
+@@ -0,0 +1,123 @@
++import { useRef, useState } from 'react';
++import { Paperclip, FileText, Image as ImageIcon, File, X, Download } from 'lucide-react';
++import { cn } from '../../lib/cn';
++
++const MAX_INLINE = 1_500_000; // ~1.5 MB per evitare overflow localStorage
++
++function fileToAttachment(file) {
++  return {
++    name: file.name,
++    type: file.type || 'application/octet-stream',
++    size: file.size,
++    dataUrl: undefined,
++  };
++}
++
++function readAsDataUrl(file) {
++  return new Promise((resolve, reject) => {
++    const fr = new FileReader();
++    fr.onload = () => resolve(fr.result);
++    fr.onerror = reject;
++    fr.readAsDataURL(file);
++  });
++}
++
++function iconFor(type) {
++  if (type?.startsWith('image/')) return ImageIcon;
++  if (type?.includes('pdf') || type?.includes('word') || type?.includes('text')) return FileText;
++  return File;
++}
++
++/**
++ * AttachmentList — "Allegato" (screenshot 12): aggiungi file da foto, documenti,
++ * PDF… I file piccoli vengono incorporati in base64 (persistono in demo mode),
++ * quelli più grandi restano come riferimento e si aprono solo dalla sessione.
++ */
++export default function AttachmentList({ attachments = [], onChange }) {
++  const inputRef = useRef(null);
++  const [warning, setWarning] = useState(null);
++
++  const addFiles = async (files) => {
++    const added = [];
++    let warned = false;
++    for (const file of Array.from(files || [])) {
++      const att = fileToAttachment(file);
++      if (file.size <= MAX_INLINE) {
++        try {
++          att.dataUrl = await readAsDataUrl(file);
++        } catch {
++          warned = true;
++        }
++      } else {
++        warned = true;
++      }
++      added.push(att);
++    }
++    onChange([...(attachments || []), ...added]);
++    setWarning(warned ? 'Alcuni file sono stati aggiunti solo come riferimento (troppo grandi per essere salvati).' : null);
++  };
++
++  const open = (att) => {
++    if (att.dataUrl) {
++      const a = document.createElement('a');
++      a.href = att.dataUrl;
++      a.download = att.name;
++      document.body.appendChild(a);
++      a.click();
++      a.remove();
++      return;
++    }
++    setWarning(`"${att.name}" è disponibile solo come riferimento: aggiungi di nuovo il file in questa sessione per aprirlo.`);
++  };
++
++  return (
++    <div className="w-full border-b border-separator">
++      <div className="flex items-center gap-3 px-1 py-3.5">
++        <Paperclip size={20} className="text-label-secondary shrink-0" />
++        <div className="flex-1 text-left">
++          <p className="text-[16px] text-label">Allegato</p>
++          {attachments.length > 0 && (
++            <div className="flex flex-col gap-1.5 mt-1.5">
++              {attachments.map((att, i) => {
++                const Icon = iconFor(att.type);
++                return (
++                  <div key={i} className="flex items-center gap-2 pl-1">
++                    <button
++                      onClick={() => open(att)}
++                      className="flex items-center gap-2 flex-1 min-w-0 text-left"
++                    >
++                      <Icon size={15} className="text-accent shrink-0" />
++                      <span className="text-[13px] text-label-secondary truncate">{att.name}</span>
++                      <Download size={12} className="text-label-tertiary shrink-0" />
++                    </button>
++                    <button
++                      onClick={() => onChange(attachments.filter((_, j) => j !== i))}
++                      className="w-9 h-9 grid place-items-center text-label-tertiary active:text-sys-red"
++                      aria-label="Rimuovi allegato"
++                    >
++                      <X size={15} />
++                    </button>
++                  </div>
++                );
++              })}
++            </div>
++          )}
++        </div>
++        <input
++          ref={inputRef}
++          type="file"
++          multiple
++          className="hidden"
++          onChange={(e) => {
++            addFiles(e.target.files);
++            e.target.value = '';
++          }}
++        />
++        <button onClick={() => inputRef.current?.click()} className="text-[14px] font-semibold text-accent min-h-10">
++          Aggiungi
++        </button>
++      </div>
++      {warning && <p className={cn('text-[12px] text-sys-orange px-1 pb-3 leading-snug')}>{warning}</p>}
++    </div>
++  );
++}
+diff --git a/src/components/school/ReminderPicker.jsx b/src/components/school/ReminderPicker.jsx
+new file mode 100644
+index 0000000..643bae6
+--- /dev/null
++++ b/src/components/school/ReminderPicker.jsx
+@@ -0,0 +1,107 @@
++import { useState } from 'react';
++import { Bell, BellOff, Plus, X } from 'lucide-react';
++import { Dialog } from '../ui/Dialog';
++import { REMINDER_OPTIONS, requestNotificationPermission, reminderDateTime } from '../../lib/notifications';
++import { cn } from '../../lib/cn';
++
++/**
++ * ReminderPicker — "Promemoria" (screenshot 12): aggiungi/scarica promemoria
++ * con prefissi (all'ora, 5/15/30 min prima, 1h/2h, giorno alle 09:00).
++ * Chiede il permesso notifiche (necessario su iOS/Android PWA).
++ */
++export default function ReminderPicker({ reminders = [], date, time, allDay, onChange }) {
++  const [open, setOpen] = useState(false);
++  const [permission, setPermission] = useState(() =>
++    typeof Notification !== 'undefined' ? Notification.permission : 'unsupported'
++  );
++
++  const add = async (option) => {
++    const at = reminderDateTime(date, allDay ? '09:00' : time, option.offsetMinutes);
++    onChange([
++      ...reminders,
++      { at: at.toISOString(), label: option.label, offsetKey: option.id, notified: false },
++    ]);
++    setOpen(false);
++  };
++
++  const ask = async () => {
++    const res = await requestNotificationPermission();
++    setPermission(res);
++    if (res === 'granted') alert('Notifiche attive! Riceverai i promemoria quando l’app è aperta.');
++  };
++
++  return (
++    <div className="border-b border-separator">
++      <div className="w-full flex items-center gap-3 px-1 py-3.5">
++        <Bell size={20} className="text-label-secondary shrink-0" />
++        <div className="flex-1 text-left">
++          <p className="text-[16px] text-label">Promemoria</p>
++          {reminders.length > 0 ? (
++            <div className="flex flex-col gap-1 mt-1.5">
++              {reminders.map((r, i) => (
++                <div key={i} className="flex items-center gap-2 pl-1">
++                  <span className="text-[13px] text-label-tertiary">⏰</span>
++                  <span className="text-[13px] text-label-secondary flex-1">{r.label}</span>
++                  <button
++                    onClick={() => onChange(reminders.filter((_, j) => j !== i))}
++                    className="w-9 h-9 grid place-items-center text-label-tertiary active:text-sys-red"
++                    aria-label="Rimuovi promemoria"
++                  >
++                    <X size={15} />
++                  </button>
++                </div>
++              ))}
++            </div>
++          ) : null}
++        </div>
++        <button
++          onClick={() => setOpen(true)}
++          className="text-[14px] font-semibold text-accent min-h-10 flex items-center gap-1"
++        >
++          <Plus size={14} /> Aggiungi
++        </button>
++      </div>
++
++      {(permission === 'default' || permission === 'denied') && (
++        <button
++          onClick={ask}
++          className="ml-1 mb-3 flex items-center gap-2 px-1 text-left"
++        >
++          <BellOff size={13} className="text-sys-orange shrink-0" />
++          <span className="text-[12px] text-sys-orange leading-snug">
++            {permission === 'denied'
++              ? 'Notifiche bloccate: abilitalo dalle impostazioni del browser per i promemoria.'
++              : 'Consenti le notifiche per ricevere i promemoria.'}
++          </span>
++        </button>
++      )}
++
++      <Dialog
++        isOpen={open}
++        onClose={() => setOpen(false)}
++        title="Promemoria"
++        actions={
++          <button onClick={() => setOpen(false)} className="text-[17px] text-label-secondary font-medium active:opacity-60">
++            Annulla
++          </button>
++        }
++      >
++        <div className="py-1">
++          {REMINDER_OPTIONS.map((opt) => (
++            <button
++              key={opt.id}
++              onClick={() => add(opt)}
++              className="w-full flex items-center gap-3 py-3 text-left active:opacity-70"
++            >
++              <Bell size={17} className="text-label-tertiary shrink-0" />
++              <span className="text-[15px] text-label flex-1">{opt.label}</span>
++              <span className="text-[13px] text-label-tertiary tabular-nums">
++                {opt.offsetMinutes ? `−${opt.offsetMinutes} min` : ''}
++              </span>
++            </button>
++          ))}
++        </div>
++      </Dialog>
++    </div>
++  );
++}
+diff --git a/src/components/school/RepeatPicker.jsx b/src/components/school/RepeatPicker.jsx
+new file mode 100644
+index 0000000..43535f0
+--- /dev/null
++++ b/src/components/school/RepeatPicker.jsx
+@@ -0,0 +1,145 @@
++import { useState } from 'react';
++import { Repeat, ChevronRight } from 'lucide-react';
++import { Dialog } from '../ui/Dialog';
++import { REPEAT_FREQUENCIES, WEEKDAY_OPTIONS, repeatLabel } from '../../lib/repeat';
++import { cn } from '../../lib/cn';
++
++/**
++ * RepeatPicker — "Ripeti" (screenshot 12): frequenza, giorni della settimana
++ * per la ripetizione settimanale e condizioni di fine (mai / dopo N / data).
++ */
++export default function RepeatPicker({ repeat, onChange }) {
++  const [open, setOpen] = useState(false);
++  const value = repeat && repeat.frequency ? repeat : { frequency: 'none' };
++
++  const set = (patch) => onChange({ ...value, ...patch });
++
++  const toggleWeekday = (id) => {
++    const days = value.weekdays || [];
++    const next = days.includes(id) ? days.filter((d) => d !== id) : [...days, id];
++    set({ weekdays: next.length ? next : undefined });
++  };
++
++  return (
++    <>
++      <button
++        onClick={() => setOpen(true)}
++        className="w-full flex items-center gap-3 px-1 py-3.5 border-b border-separator active:opacity-70"
++      >
++        <Repeat size={20} className="text-label-secondary shrink-0" />
++        <div className="flex-1 text-left">
++          <p className="text-[16px] text-label">Ripeti</p>
++          <p className="text-[13px] text-label-tertiary mt-0.5">{repeatLabel(value)}</p>
++        </div>
++        <ChevronRight size={18} className="text-label-tertiary" />
++      </button>
++
++      <Dialog
++        isOpen={open}
++        onClose={() => setOpen(false)}
++        title="Ripeti"
++        actions={
++          <button onClick={() => setOpen(false)} className="text-[17px] text-label-secondary font-medium active:opacity-60">
++            Fine
++          </button>
++        }
++      >
++        <p className="text-[13px] font-semibold text-label-secondary uppercase tracking-wide mb-2 mt-1">Frequenza</p>
++        <div className="flex flex-col gap-1 mb-4">
++          {REPEAT_FREQUENCIES.map((f) => (
++            <button
++              key={f.id}
++              onClick={() => set({ frequency: f.id, weekdays: f.id === 'weekly' && !value.weekdays?.length ? [new Date().getDay() === 0 ? 7 : new Date().getDay()] : value.weekdays })}
++              className="w-full flex items-center gap-3 py-2.5 text-left active:opacity-70"
++            >
++              <span
++                className={cn(
++                  'w-[22px] h-[22px] rounded-full border-2 flex items-center justify-center shrink-0',
++                  value.frequency === f.id ? 'border-accent' : 'border-label-quaternary'
++                )}
++              >
++                {value.frequency === f.id && <span className="w-3 h-3 rounded-full bg-accent" />}
++              </span>
++              <span className="text-[15px] text-label flex-1">{f.label}</span>
++            </button>
++          ))}
++        </div>
++
++        {value.frequency === 'weekly' && (
++          <>
++            <p className="text-[13px] font-semibold text-label-secondary uppercase tracking-wide mb-2">Giorni della settimana</p>
++            <div className="grid grid-cols-7 gap-1.5 mb-4">
++              {WEEKDAY_OPTIONS.map((w) => {
++                const active = (value.weekdays || []).includes(w.id);
++                return (
++                  <button
++                    key={w.id}
++                    onClick={() => toggleWeekday(w.id)}
++                    className={cn(
++                      'h-10 rounded-full text-[12px] font-semibold transition-colors',
++                      active ? 'bg-accent text-white' : 'bg-fill-tertiary text-label-secondary'
++                    )}
++                  >
++                    {w.label}
++                  </button>
++                );
++              })}
++            </div>
++          </>
++        )}
++
++        {value.frequency !== 'none' && value.frequency !== 'monthly' && (
++          <>
++            <p className="text-[13px] font-semibold text-label-secondary uppercase tracking-wide mb-2">Fine ripetizione</p>
++            <div className="flex flex-col gap-1">
++              {[
++                { id: 'never', label: 'Mai' },
++                { id: 'after', label: 'Dopo un numero di volte' },
++                { id: 'on', label: 'In una data' },
++              ].map((m) => (
++                <button
++                  key={m.id}
++                  onClick={() => set({ endMode: m.id })}
++                  className="flex items-center gap-3 py-2.5 text-left active:opacity-70"
++                >
++                  <span
++                    className={cn(
++                      'w-[22px] h-[22px] rounded-full border-2 flex items-center justify-center shrink-0',
++                      (value.endMode || 'never') === m.id ? 'border-accent' : 'border-label-quaternary'
++                    )}
++                  >
++                    {(value.endMode || 'never') === m.id && <span className="w-3 h-3 rounded-full bg-accent" />}
++                  </span>
++                  <span className="text-[15px] text-label flex-1">{m.label}</span>
++                  {m.id === 'after' && (value.endMode || 'never') === 'after' && (
++                    <label className="flex items-center gap-1.5">
++                      <input
++                        type="number"
++                        min="1"
++                        max="999"
++                        value={value.endAfter || 5}
++                        onChange={(e) => set({ endAfter: Number(e.target.value) || 1 })}
++                        onClick={(e) => e.stopPropagation()}
++                        className="w-16 h-10 bg-surface-2 rounded-lg px-2 text-right text-[15px]"
++                      />
++                      <span className="text-[12px] text-label-tertiary">volte</span>
++                    </label>
++                  )}
++                  {m.id === 'on' && (value.endMode || 'never') === 'on' && (
++                    <input
++                      type="date"
++                      value={value.endDate || ''}
++                      onChange={(e) => set({ endDate: e.target.value })}
++                      onClick={(e) => e.stopPropagation()}
++                      className="h-10 bg-surface-2 rounded-lg px-2 text-[14px]"
++                    />
++                  )}
++                </button>
++              ))}
++            </div>
++          </>
++        )}
++      </Dialog>
++    </>
++  );
++}
+diff --git a/src/components/school/TaskCard.jsx b/src/components/school/TaskCard.jsx
+index 7523de5..2c74830 100644
+--- a/src/components/school/TaskCard.jsx
++++ b/src/components/school/TaskCard.jsx
+@@ -1,6 +1,10 @@
+ import { motion } from 'framer-motion';
+-import { Check, BookOpen, PencilLine, FileText, Repeat, BookMarked, Copy, Presentation, MoreHorizontal } from 'lucide-react';
++import {
++  Check, BookOpen, PencilLine, FileText, Repeat, BookMarked, Copy, Presentation,
++  MoreHorizontal, Paperclip, Bell, Clock,
++} from 'lucide-react';
+ import { formatMinutes } from '../../lib/dates';
++import { repeatLabel } from '../../lib/repeat';
+ import { cn } from '../../lib/cn';
+ 
+ const CATEGORY_ICONS = [
+@@ -19,13 +23,16 @@ function categoryIcon(name) {
+ }
+ 
+ /**
+- * TaskCard — Riga compito stile screenshot 06/13:
+- * icona categoria colorata, titolo, meta, checkbox rotonda.
+- * Tap sulla card → menu contestuale (Modifica, Sposta a domani, Cambia data, Elimina).
++ * TaskCard — Riga compito stile screenshot 06/13: icona categoria colorata,
++ * titolo, meta (orario, ripetizione, promemoria, allegati), checkbox rotonda.
++ * Tap sulla card → menu contestuale (Modifica, Domani, Cambia data, Elimina).
+  */
+ export default function TaskCard({ task, onToggle, onOpenMenu }) {
+   const Icon = categoryIcon(task.category);
+   const color = task.categoryColor || '#0a84ff';
++  const hasRepeat = task.repeat && task.repeat.frequency && task.repeat.frequency !== 'none';
++  const reminders = task.reminders?.length || 0;
++  const attachments = task.attachments?.length || 0;
+ 
+   return (
+     <motion.div
+@@ -55,17 +62,33 @@ export default function TaskCard({ task, onToggle, onOpenMenu }) {
+         >
+           {task.title}
+         </p>
+-        <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+-          <span className="text-[12px] text-label-tertiary">{task.category}</span>
+-          {task.estimatedMinutes ? (
+-            <>
+-              <span className="text-[12px] text-label-tertiary">·</span>
+-              <span className="text-[12px] text-label-tertiary">~{formatMinutes(task.estimatedMinutes)}</span>
+-            </>
+-          ) : null}
++        <div className="flex items-center gap-1.5 mt-0.5 flex-wrap text-[12px] text-label-tertiary">
++          {!task.allDay && task.startTime && (
++            <span className="flex items-center gap-1 text-label-secondary">
++              <Clock size={11} /> {task.startTime}
++              {task.endTime ? `–${task.endTime}` : ''}
++            </span>
++          )}
++          <span>{task.category}</span>
++          {task.estimatedMinutes ? <>· ~{formatMinutes(task.estimatedMinutes)}</> : null}
+           {task.actualMinutes ? (
+-            <span className="text-[12px] text-sys-green font-medium">· {formatMinutes(task.actualMinutes)} fatte</span>
++            <span className="text-sys-green font-medium">· {formatMinutes(task.actualMinutes)} fatte</span>
+           ) : null}
++          {hasRepeat && (
++            <span className="flex items-center gap-1 text-label-tertiary" title={repeatLabel(task.repeat)}>
++              <Repeat size={11} /> {repeatLabel(task.repeat)}
++            </span>
++          )}
++          {reminders > 0 && (
++            <span className="flex items-center gap-1 text-label-tertiary" title={`${reminders} promemoria`}>
++              <Bell size={11} /> {reminders}
++            </span>
++          )}
++          {attachments > 0 && (
++            <span className="flex items-center gap-1 text-label-tertiary" title={`${attachments} allegati`}>
++              <Paperclip size={11} /> {attachments}
++            </span>
++          )}
+         </div>
+       </div>
+ 
+@@ -77,14 +100,14 @@ export default function TaskCard({ task, onToggle, onOpenMenu }) {
+         }}
+         aria-label={task.completed ? 'Segna come non completato' : 'Segna come completato'}
+         className={cn(
+-          'w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors',
++          'w-7 h-7 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors',
+           task.completed ? 'bg-accent border-accent' : 'border-label-quaternary active:border-label-secondary'
+         )}
+       >
+-        {task.completed && <Check size={14} className="text-white" strokeWidth={3.5} />}
++        {task.completed && <Check size={15} className="text-white" strokeWidth={3.5} />}
+       </button>
+     </motion.div>
+   );
+ }
+ 
+-export { categoryIcon };
++export { categoryIcon, MoreHorizontal };
+diff --git a/src/components/school/TaskFormSheet.jsx b/src/components/school/TaskFormSheet.jsx
+index 407cbe1..050722d 100644
+--- a/src/components/school/TaskFormSheet.jsx
++++ b/src/components/school/TaskFormSheet.jsx
+@@ -1,24 +1,35 @@
+ import { useState, useEffect, useMemo } from 'react';
+-import { motion } from 'framer-motion';
+-import { Check, Clock, ChevronRight, ListChecks, Loader2, Timer, Mic, Plus } from 'lucide-react';
++import { X, Clock, Sunrise, ListChecks, Loader2, Timer, Mic, Plus, Check } from 'lucide-react';
+ import { CATEGORY_COLORS } from '../../lib/constants';
+ import BottomSheet from '../ui/BottomSheet';
++import Toggle from '../ui/Toggle';
+ import DatePickerDialog from './DatePickerDialog';
+-import { formatDateDisplay, parseISO, formatMinutes } from '../../lib/dates';
++import ReminderPicker from './ReminderPicker';
++import RepeatPicker from './RepeatPicker';
++import AttachmentList from './AttachmentList';
++import { formatDateDisplay, parseISO } from '../../lib/dates';
+ import { Dialog } from '../ui/Dialog';
+ import { estimateStudyTime, hasGemini } from '../../lib/gemini';
+ import { cn } from '../../lib/cn';
+ 
++const DEFAULT_REPEAT = { frequency: 'none', weekdays: undefined, endMode: 'never', endAfter: undefined, endDate: undefined };
++
+ /**
+- * TaskFormSheet — Creazione/modifica attività (screenshot 07/08/09):
+- * titolo + descrizione, scadenza, categoria (elenco con radio colorate),
+- * conferma con pulsante check circolare blu. Stima tempi via Gemini AI.
++ * TaskFormSheet — Creazione/modifica attività/evento (screenshot 12):
++ * titolo + descrizione, scadenza, tutto il giorno + orari, promemoria,
++ * ripeti (giorni della settimana + fine), elenco attività, allegati.
+  */
+ export default function TaskFormSheet({ isOpen, onClose, onSave, editingTask, defaultDate, categories, onCreateCategory }) {
+   const [title, setTitle] = useState('');
+   const [description, setDescription] = useState('');
+   const [category, setCategory] = useState(null);
+   const [date, setDate] = useState(defaultDate);
++  const [allDay, setAllDay] = useState(true);
++  const [startTime, setStartTime] = useState('16:00');
++  const [endTime, setEndTime] = useState('17:00');
++  const [reminders, setReminders] = useState([]);
++  const [repeat, setRepeat] = useState(DEFAULT_REPEAT);
++  const [attachments, setAttachments] = useState([]);
+   const [estimate, setEstimate] = useState(null);
+   const [datePickerOpen, setDatePickerOpen] = useState(false);
+   const [categoryPickerOpen, setCategoryPickerOpen] = useState(false);
+@@ -30,7 +41,9 @@ export default function TaskFormSheet({ isOpen, onClose, onSave, editingTask, de
+   const dictate = () => {
+     const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+     if (!Recognition) return alert('La dettatura vocale non è supportata da questo browser.');
+-    const recognition = new Recognition(); recognition.lang = 'it-IT'; recognition.interimResults = false;
++    const recognition = new Recognition();
++    recognition.lang = 'it-IT';
++    recognition.interimResults = false;
+     recognition.onresult = (e) => setDescription((v) => `${v}${v ? ' ' : ''}${e.results[0][0].transcript}`);
+     recognition.start();
+   };
+@@ -44,12 +57,21 @@ export default function TaskFormSheet({ isOpen, onClose, onSave, editingTask, de
+         categories.find((c) => c.name === editingTask?.category) ?? categories[0] ?? null
+       );
+       setDate(editingTask?.date ?? defaultDate);
++      setAllDay(editingTask?.allDay ?? true);
++      setStartTime(editingTask?.startTime ?? '16:00');
++      setEndTime(editingTask?.endTime ?? '17:00');
++      setReminders(editingTask?.reminders ?? []);
++      setRepeat(editingTask?.repeat ?? DEFAULT_REPEAT);
++      setAttachments(editingTask?.attachments ?? []);
+       setEstimate(editingTask?.estimatedMinutes ?? null);
+       setEstimating(false);
+     }
+   }, [isOpen, editingTask, defaultDate, categories]);
+ 
+-  const canSave = title.trim().length > 0 && category && !estimating;
++  const canSave = useMemo(
++    () => title.trim().length > 0 && category && !estimating && (!startTime || startTime <= (endTime || '23:59')),
++    [title, category, estimating, startTime, endTime]
++  );
+ 
+   const handleSave = async () => {
+     if (!canSave) return;
+@@ -68,6 +90,12 @@ export default function TaskFormSheet({ isOpen, onClose, onSave, editingTask, de
+       category: category.name,
+       categoryColor: category.color,
+       date,
++      allDay,
++      startTime: allDay ? undefined : startTime,
++      endTime: allDay ? undefined : endTime || undefined,
++      reminders,
++      repeat,
++      attachments,
+       estimatedMinutes: estimatedMinutes || undefined,
+     });
+     onClose();
+@@ -75,7 +103,24 @@ export default function TaskFormSheet({ isOpen, onClose, onSave, editingTask, de
+ 
+   return (
+     <>
+-      <BottomSheet isOpen={isOpen} onClose={onClose} title={editingTask ? 'Modifica attività' : undefined}>
++      <BottomSheet isOpen={isOpen} onClose={onClose}>
++        {/* Header: X + Salva (screenshot 12) */}
++        <div className="flex items-center justify-between px-5 pb-3">
++          <button onClick={onClose} className="w-10 h-10 grid place-items-center text-label-secondary active:opacity-60" aria-label="Chiudi">
++            <X size={22} />
++          </button>
++          <button
++            onClick={handleSave}
++            disabled={!canSave}
++            className={cn(
++              'h-10 px-5 rounded-full text-[15px] font-semibold transition-colors',
++              canSave ? 'bg-accent text-white active:bg-accent-pressed' : 'bg-fill-secondary text-label-tertiary'
++            )}
++          >
++            {estimating ? <Loader2 size={16} className="animate-spin mx-auto" /> : 'Salva'}
++          </button>
++        </div>
++
+         {/* Titolo + descrizione */}
+         <div className="bg-surface-2 rounded-xl px-4 py-3.5 mb-4">
+           <textarea
+@@ -86,7 +131,21 @@ export default function TaskFormSheet({ isOpen, onClose, onSave, editingTask, de
+             autoFocus={!editingTask}
+             className="w-full bg-transparent text-[17px] font-medium text-label placeholder:text-label-tertiary resize-none"
+           />
+-          <div className="flex items-center gap-2"><input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Spiega brevemente cosa devi fare" className="flex-1 bg-transparent text-[14px] text-label-secondary placeholder:text-label-tertiary mt-1" /><button onClick={dictate} className="w-10 h-10 rounded-full bg-fill-tertiary grid place-items-center text-accent" aria-label="Detta descrizione"><Mic size={17}/></button></div>
++          <div className="flex items-center gap-2">
++            <input
++              value={description}
++              onChange={(e) => setDescription(e.target.value)}
++              placeholder="Descrizione"
++              className="flex-1 bg-transparent text-[14px] text-label-secondary placeholder:text-label-tertiary mt-1"
++            />
++            <button
++              onClick={dictate}
++              className="w-10 h-10 rounded-full bg-fill-tertiary grid place-items-center text-accent"
++              aria-label="Detta descrizione"
++            >
++              <Mic size={17} />
++            </button>
++          </div>
+         </div>
+ 
+         {/* Scadenza */}
+@@ -98,9 +157,41 @@ export default function TaskFormSheet({ isOpen, onClose, onSave, editingTask, de
+           <span className="flex-1 text-left text-[16px] text-label">
+             {date ? <span className="capitalize">{formatDateDisplay(parseISO(date))}</span> : 'Nessuna data'}
+           </span>
+-          <ChevronRight size={18} className="text-label-tertiary" />
++          <span className="text-[13px] text-label-tertiary">›</span>
+         </button>
+ 
++        {/* Tutto il giorno + orari */}
++        <div className="w-full flex items-center gap-3 px-1 py-3.5 border-b border-separator">
++          <Sunrise size={20} className="text-label-secondary shrink-0" />
++          <span className="flex-1 text-left text-[16px] text-label">Tutto il giorno</span>
++          {!allDay && (
++            <div className="flex items-center gap-1.5">
++              <input
++                type="time"
++                value={startTime}
++                onChange={(e) => setStartTime(e.target.value)}
++                className="h-10 bg-surface-2 rounded-lg px-2 text-[14px]"
++                aria-label="Ora inizio"
++              />
++              <span className="text-label-tertiary text-[13px]">→</span>
++              <input
++                type="time"
++                value={endTime}
++                onChange={(e) => setEndTime(e.target.value)}
++                className="h-10 bg-surface-2 rounded-lg px-2 text-[14px]"
++                aria-label="Ora fine"
++              />
++            </div>
++          )}
++          <Toggle value={allDay} onChange={setAllDay} />
++        </div>
++
++        {/* Promemoria */}
++        <ReminderPicker reminders={reminders} date={date} time={startTime} allDay={allDay} onChange={setReminders} />
++
++        {/* Ripeti */}
++        <RepeatPicker repeat={repeat} onChange={setRepeat} />
++
+         {/* Categoria (elenco attività) */}
+         <button
+           onClick={() => setCategoryPickerOpen(true)}
+@@ -114,40 +205,34 @@ export default function TaskFormSheet({ isOpen, onClose, onSave, editingTask, de
+               {category.name}
+             </span>
+           )}
+-          <ChevronRight size={18} className="text-label-tertiary" />
++          <span className="text-[13px] text-label-tertiary">›</span>
+         </button>
+ 
++        {/* Allegati */}
++        <AttachmentList attachments={attachments} onChange={setAttachments} />
++
+         {/* Stima AI */}
+         <div className="w-full flex items-center gap-3 px-1 py-3.5">
+           <Timer size={20} className="text-label-secondary shrink-0" />
+           <span className="flex-1 text-left text-[16px] text-label">Tempo stimato</span>
+-          {estimating ? <Loader2 size={16} className="animate-spin text-accent" /> : (
++          {estimating ? (
++            <Loader2 size={16} className="animate-spin text-accent" />
++          ) : (
+             <label className="flex items-center gap-2">
+-              <input type="number" min="1" max="600" value={estimate ?? ''} onChange={(e) => setEstimate(e.target.value ? Number(e.target.value) : null)} placeholder="Auto" className="w-20 h-9 rounded-lg bg-surface-2 px-2 text-right text-[15px]" aria-label="Tempo stimato in minuti" />
++              <input
++                type="number"
++                min="1"
++                max="600"
++                value={estimate ?? ''}
++                onChange={(e) => setEstimate(e.target.value ? Number(e.target.value) : null)}
++                placeholder="Auto"
++                className="w-20 h-9 rounded-lg bg-surface-2 px-2 text-right text-[15px]"
++                aria-label="Tempo stimato in minuti"
++              />
+               <span className="text-[13px] text-label-tertiary">min</span>
+             </label>
+           )}
+         </div>
+-
+-        {/* Conferma: check circolare blu (screenshot 03/07) */}
+-        <div className="flex items-center justify-center py-4">
+-          <motion.button
+-            whileTap={{ scale: 0.88 }}
+-            onClick={handleSave}
+-            disabled={!canSave}
+-            className={cn(
+-              'w-16 h-16 rounded-full flex items-center justify-center transition-colors',
+-              canSave ? 'bg-accent shadow-lg shadow-accent/30' : 'bg-fill-secondary'
+-            )}
+-            aria-label="Salva attività"
+-          >
+-            {estimating ? (
+-              <Loader2 size={26} className="text-white animate-spin" />
+-            ) : (
+-              <Check size={28} className={canSave ? 'text-white' : 'text-label-tertiary'} strokeWidth={3} />
+-            )}
+-          </motion.button>
+-        </div>
+       </BottomSheet>
+ 
+       <DatePickerDialog
+@@ -162,9 +247,24 @@ export default function TaskFormSheet({ isOpen, onClose, onSave, editingTask, de
+         onClose={() => setCategoryPickerOpen(false)}
+         categories={categories}
+         selected={category}
+-        onSelect={(cat) => { setCategory(cat); setCategoryPickerOpen(false); }}
+-        listCreating={listCreating} setListCreating={setListCreating} listName={listName} setListName={setListName} listColor={listColor} setListColor={setListColor}
+-        onCreate={async () => { if (!listName.trim()) return; await onCreateCategory?.(listName.trim(), listColor); setCategory({name:listName.trim(),color:listColor}); setListName(''); setListCreating(false); setCategoryPickerOpen(false); }}
++        onSelect={(cat) => {
++          setCategory(cat);
++          setCategoryPickerOpen(false);
++        }}
++        listCreating={listCreating}
++        setListCreating={setListCreating}
++        listName={listName}
++        setListName={setListName}
++        listColor={listColor}
++        setListColor={setListColor}
++        onCreate={async () => {
++          if (!listName.trim()) return;
++          await onCreateCategory?.(listName.trim(), listColor);
++          setCategory({ name: listName.trim(), color: listColor });
++          setListName('');
++          setListCreating(false);
++          setCategoryPickerOpen(false);
++        }}
+       />
+     </>
+   );
+@@ -201,7 +301,41 @@ function CategoryPickerDialog({ isOpen, onClose, categories, selected, onSelect,
+             </button>
+           );
+         })}
+-        {!listCreating ? <button onClick={() => setListCreating(true)} className="w-full flex items-center gap-3 py-3 text-accent font-semibold"><Plus size={20}/> Crea nuovo elenco</button> : <div className="border-t border-separator pt-4 mt-2"><input autoFocus maxLength={50} value={listName} onChange={(e)=>setListName(e.target.value)} placeholder="Nome elenco" className="w-full bg-surface-2 rounded-xl px-4 py-3 mb-4"/><div className="grid grid-cols-6 gap-3">{CATEGORY_COLORS.slice(0,24).map(color=><button key={color} onClick={()=>setListColor(color)} className="aspect-square rounded-full grid place-items-center" style={{backgroundColor:color}}>{listColor===color&&<Check size={16} className="text-white" strokeWidth={3}/>}</button>)}</div><button onClick={onCreate} disabled={!listName.trim()} className="w-full h-11 rounded-full bg-accent text-white font-semibold mt-5 disabled:opacity-40">Crea elenco</button></div>}
++        {!listCreating ? (
++          <button onClick={() => setListCreating(true)} className="w-full flex items-center gap-3 py-3 text-accent font-semibold">
++            <Plus size={20} /> Crea nuovo elenco
++          </button>
++        ) : (
++          <div className="border-t border-separator pt-4 mt-2">
++            <input
++              autoFocus
++              maxLength={50}
++              value={listName}
++              onChange={(e) => setListName(e.target.value)}
++              placeholder="Nome elenco"
++              className="w-full bg-surface-2 rounded-xl px-4 py-3 mb-4"
++            />
++            <div className="grid grid-cols-6 gap-3">
++              {CATEGORY_COLORS.slice(0, 24).map((color) => (
++                <button
++                  key={color}
++                  onClick={() => setListColor(color)}
++                  className="aspect-square rounded-full grid place-items-center"
++                  style={{ backgroundColor: color }}
++                >
++                  {listColor === color && <Check size={16} className="text-white" strokeWidth={3} />}
++                </button>
++              ))}
++            </div>
++            <button
++              onClick={onCreate}
++              disabled={!listName.trim()}
++              className="w-full h-11 rounded-full bg-accent text-white font-semibold mt-5 disabled:opacity-40"
++            >
++              Crea elenco
++            </button>
++          </div>
++        )}
+       </div>
+     </Dialog>
+   );
+diff --git a/src/hooks/useData.js b/src/hooks/useData.js
+index 9a038b8..9e1b647 100644
+--- a/src/hooks/useData.js
++++ b/src/hooks/useData.js
+@@ -3,7 +3,9 @@ import { useQuery, useMutation } from 'convex/react';
+ import { api } from '../../convex/_generated/api';
+ import { HAS_CONVEX } from '../lib/db';
+ import { useLocalState, localMutations } from '../lib/localStore';
+-import { DEFAULT_TASK_CATEGORIES } from '../lib/constants';
++import { DEFAULT_TASK_CATEGORIES, DEFAULT_ROUTINE_TEMPLATES } from '../lib/constants';
++import { expandEventsForDate } from '../lib/repeat';
++import { addDays, getMonday, toDateKey } from '../lib/dates';
+ 
+ /**
+  * Layer dati unificato: ogni hook espone { data, isLoading, ...azioni }.
+@@ -65,6 +67,22 @@ export function useTasks(dateKey) {
+   };
+ }
+ 
++/**
++ * Compiti/eventi della giornata, incluse le occorrenze ripetute.
++ * Carica un anno indietro + la settimana per espandere le ripetizioni.
++ */
++export function useExpandedTasks(dateKey) {
++  const weekStart = toDateKey(getMonday(new Date(`${dateKey}T12:00:00`)));
++  const rangeStart = toDateKey(addDays(new Date(`${weekStart}T12:00:00`), -365));
++  const rangeEnd = toDateKey(addDays(new Date(`${weekStart}T12:00:00`), 6));
++  const { data: weekTasks, isLoading } = useTasksBetween(rangeStart, rangeEnd);
++  const data = useMemo(
++    () => expandEventsForDate(weekTasks ?? [], dateKey),
++    [weekTasks, dateKey]
++  );
++  return { data, isLoading };
++}
++
+ export function useTaskCategories() {
+   if (HAS_CONVEX) {
+     const raw = useQuery(api.tasks.listCategories, {});
+@@ -122,6 +140,44 @@ export function useRoutine(dateKey) {
+   return { data, isLoading: false, saveRoutine: localMutations.saveRoutine };
+ }
+ 
++export function useRoutineTemplates() {
++  if (HAS_CONVEX) {
++    const raw = useQuery(api.routineTemplates.listAll, {});
++    const createM = useMutation(api.routineTemplates.create);
++    const updateM = useMutation(api.routineTemplates.update);
++    const removeM = useMutation(api.routineTemplates.remove);
++    const seededRef = useRef(false);
++
++    useEffect(() => {
++      if (!seededRef.current && raw !== undefined && raw.length === 0) {
++        seededRef.current = true;
++        DEFAULT_ROUTINE_TEMPLATES.forEach((t) => createM({ ...t, steps: t.steps.map((s) => ({ ...s })) }));
++      }
++    }, [raw, createM]);
++
++    return {
++      data: raw ?? [],
++      isLoading: raw === undefined,
++      createTemplate: (fields) => createM(fields),
++      updateTemplate: (id, patch) => updateM({ id, ...patch }),
++      removeTemplate: (id) => removeM({ id }),
++    };
++  }
++
++  const state = useLocalState();
++  const data = useMemo(() => state.routineTemplates, [state.routineTemplates]);
++  return {
++    data,
++    isLoading: false,
++    createTemplate: (fields) => {
++      const doc = localMutations.createRoutineTemplate(fields);
++      return doc._id;
++    },
++    updateTemplate: (id, patch) => localMutations.updateRoutineTemplate({ id, ...patch }),
++    removeTemplate: (id) => localMutations.removeRoutineTemplate({ id }),
++  };
++}
++
+ // ═══════════════════ TAB 3 — NUTRIZIONE ═══════════════════
+ 
+ export function useMeals(dateKey) {
+@@ -214,3 +270,38 @@ export function useBudget(weekStartKey) {
+   );
+   return { data, isLoading: false, setBudget: (amount) => localMutations.setBudget({ weekStart: weekStartKey, budgetAmount: amount }) };
+ }
++
++// ═══════════════════ TAB 5 — NOTE ═══════════════════
++
++export function useNotes() {
++  if (HAS_CONVEX) {
++    const raw = useQuery(api.notes.listAll, {});
++    const createM = useMutation(api.notes.create);
++    const updateM = useMutation(api.notes.update);
++    const removeM = useMutation(api.notes.remove);
++    return {
++      data: raw ?? [],
++      isLoading: raw === undefined,
++      createNote: (fields) => createM(fields),
++      updateNote: (id, patch) => updateM({ id, ...patch }),
++      removeNote: (id) => removeM({ id }),
++    };
++  }
++
++  const state = useLocalState();
++  const data = useMemo(
++    () =>
++      state.notes.slice().sort((a, b) => {
++        if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
++        return (b.updatedAt || 0) - (a.updatedAt || 0);
++      }),
++    [state.notes]
++  );
++  return {
++    data,
++    isLoading: false,
++    createNote: (fields) => localMutations.createNote(fields),
++    updateNote: (id, patch) => localMutations.updateNote({ id, ...patch }),
++    removeNote: (id) => localMutations.removeNote({ id }),
++  };
++}
+diff --git a/src/index.css b/src/index.css
+index 2003732..787fc05 100644
+--- a/src/index.css
++++ b/src/index.css
+@@ -142,6 +142,19 @@ input, textarea, select {
+   font-family: inherit;
+ }
+ 
++/* Mobile: niente auto-zoom iOS, controlli nativi a 44px */
++@media (max-width: 640px) {
++  input, textarea, select { font-size: 16px !important; }
++}
++input[type="time"], input[type="date"], input[type="datetime-local"] {
++  min-height: 44px;
++  -webkit-appearance: none;
++  appearance: none;
++}
++input[type="number"]::-webkit-inner-spin-button,
++input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
++input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
++
+ input::placeholder, textarea::placeholder {
+   color: var(--color-label-tertiary);
+ }
+@@ -223,8 +236,8 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
+   .month-day { min-height: 54px; }
+   .month-number { width: 34px; height: 34px; font-size: 14px; }
+   #root > div > .flex-1 > div { max-width: 1100px; margin-inline: auto; }
+-  #root > div > nav { justify-content: center; gap: 80px; }
+-  #root > div > nav button { min-width: 100px; }
++  #root > div > nav { justify-content: center; gap: 20px; max-width: 1100px; margin-inline: auto; }
++  #root > div > nav button { min-width: 84px; }
+ }
+ 
+ /* Progress ring */
+diff --git a/src/lib/constants.js b/src/lib/constants.js
+index 1a7f332..33c545b 100644
+--- a/src/lib/constants.js
++++ b/src/lib/constants.js
+@@ -4,9 +4,11 @@
+ 
+ // ── Tab di navigazione ──
+ export const TABS = [
+-  { id: 'scuola', label: 'Scuola', icon: 'BookOpen' },
++  { id: 'calendario', label: 'Calendario', icon: 'CalendarDays' },
++  { id: 'scuola', label: 'Compiti', icon: 'ListChecks' },
+   { id: 'routine', label: 'Routine', icon: 'Dumbbell' },
+   { id: 'nutrizione', label: 'Nutrizione', icon: 'UtensilsCrossed' },
++  { id: 'note', label: 'Note', icon: 'StickyNote' },
+   { id: 'wallet', label: 'Wallet', icon: 'Wallet' },
+ ];
+ 
+@@ -38,6 +40,45 @@ export const DEFAULT_ROUTINE_STEPS = [
+   { name: 'Cena', targetMinutes: 30 },
+ ];
+ 
++// ── Template routine (più "schede" personalizzabili) ──
++export const DEFAULT_ROUTINE_TEMPLATES = [
++  {
++    id: 'post-volley',
++    name: 'Post-volley',
++    emoji: '🏐',
++    color: '#0a84ff',
++    steps: DEFAULT_ROUTINE_STEPS,
++  },
++  {
++    id: 'mattina',
++    name: 'Mattina',
++    emoji: '🌅',
++    color: '#ffd60a',
++    steps: [
++      { name: 'Sveglia e stretch', targetMinutes: 5 },
++      { name: 'Colazione', targetMinutes: 20 },
++      { name: 'Denti', targetMinutes: 3 },
++      { name: 'Prep zaino', targetMinutes: 5 },
++    ],
++  },
++  {
++    id: 'sera',
++    name: 'Sera',
++    emoji: '🌙',
++    color: '#bf5af2',
++    steps: [
++      { name: 'Doccia', targetMinutes: 10 },
++      { name: 'Skincare', targetMinutes: 5 },
++      { name: 'Preparazione per domani', targetMinutes: 10 },
++      { name: 'Lettura', targetMinutes: 20 },
++    ],
++  },
++];
++
++// ── Colori/emoji per routine personalizzate ──
++export const ROUTINE_COLORS = ['#0a84ff', '#30d158', '#ffd60a', '#ff375f', '#bf5af2', '#64d2ff', '#ff9f0a', '#66d4cf', '#5e5ce6', '#ff2d55'];
++export const ROUTINE_EMOJIS = ['🏐', '💪', '🌅', '🌙', '🧘', '🏃', '📚', '🦷', '🧖', '🥗', '🎯', '⭐'];
++
+ // ── Tipi pasto ──
+ export const MEAL_TYPES = ['Colazione', 'Pranzo', 'Cena', 'Spuntino'];
+ 
+@@ -78,3 +119,18 @@ export const DEFAULT_WEEK_PLAN = [
+ 
+ // ── Categorie spese ──
+ export const EXPENSE_CATEGORIES = ['Mensa', 'Trasporti', 'Scuola', 'Svago', 'Regali', 'Altro'];
++
++// ── Note ──
++export const NOTE_COLORS = ['#0a84ff', '#30d158', '#ffd60a', '#ff375f', '#bf5af2', '#64d2ff', '#ff9f0a', '#8e8e93'];
++
++/** Tipo di nota: testo libero oppure checklist (stile Notion). */
++export function emptyNote() {
++  return {
++    title: '',
++    body: '',
++    type: 'note', // note | todo
++    todos: [],
++    pinned: false,
++    color: NOTE_COLORS[0],
++  };
++}
+diff --git a/src/lib/localStore.js b/src/lib/localStore.js
+index a4b5f15..856f119 100644
+--- a/src/lib/localStore.js
++++ b/src/lib/localStore.js
+@@ -1,6 +1,11 @@
+ import { useSyncExternalStore } from 'react';
+ import { toDateKey, addDays, getMonday } from './dates';
+-import { DEFAULT_TASK_CATEGORIES, DEFAULT_ROUTINE_STEPS, DEFAULT_WEEK_PLAN } from './constants';
++import {
++  DEFAULT_TASK_CATEGORIES,
++  DEFAULT_ROUTINE_TEMPLATES,
++  DEFAULT_WEEK_PLAN,
++  emptyNote,
++} from './constants';
+ 
+ /**
+  * Store locale reattivo (localStorage) che replica le shape dei documenti Convex.
+@@ -62,6 +67,55 @@ function buildSeed() {
+       { _id: uid(), date: toDateKey(addDays(today, -2)), description: 'Cinema con amiche', amount: 8.5, category: 'Svago', createdAt: 4 },
+     ],
+     budgets: [{ _id: uid(), weekStart, budgetAmount: 35 }],
++    notes: [
++      {
++        _id: uid(),
++        title: 'Idee regali',
++        body: 'Regalo mamma: candela profumata + pianta. Regalo Leo: fumetti.',
++        type: 'note',
++        todos: [],
++        pinned: true,
++        color: '#bf5af2',
++        createdAt: 1,
++        updatedAt: 1,
++      },
++      {
++        _id: uid(),
++        title: 'Da fare questo weekend',
++        body: '',
++        type: 'todo',
++        todos: [
++          { id: uid(), text: 'Ripassare inglese', done: false },
++          { id: uid(), text: 'Comprare regalo nonna', done: false },
++          { id: uid(), text: 'Lavare la divisa', done: true },
++        ],
++        pinned: false,
++        color: '#30d158',
++        createdAt: 2,
++        updatedAt: 2,
++      },
++    ],
++    routineTemplates: DEFAULT_ROUTINE_TEMPLATES.map((r) => ({
++      _id: uid(),
++      ...r,
++      steps: r.steps.map((s) => ({ ...s })),
++    })),
++  };
++}
++
++/** Normalizza lo stato: garantisce la presenza di tutte le chiavi (migrazione). */
++function normalize(state = {}) {
++  return {
++    tasks: state.tasks ?? [],
++    taskCategories: state.taskCategories ?? [],
++    routines: state.routines ?? [],
++    meals: state.meals ?? [],
++    mealPlans: state.mealPlans ?? [],
++    bodyMetrics: state.bodyMetrics ?? [],
++    expenses: state.expenses ?? [],
++    budgets: state.budgets ?? [],
++    notes: state.notes ?? [],
++    routineTemplates: state.routineTemplates ?? [],
+   };
+ }
+ 
+@@ -70,29 +124,20 @@ function buildSeed() {
+ function load() {
+   try {
+     const raw = localStorage.getItem(STORAGE_KEY);
+-    if (raw) return JSON.parse(raw);
++    if (raw) return normalize(JSON.parse(raw));
+   } catch (err) {
+     console.warn('[localStore] impossibile leggere lo stato:', err);
+   }
+   // Prima apertura: seed demo (solo se non mai inizializzato)
+   const seeded = localStorage.getItem(SEED_FLAG);
+-  const state = seeded ? emptyState() : buildSeed();
++  const state = normalize(seeded ? emptyState() : buildSeed());
+   localStorage.setItem(SEED_FLAG, '1');
+   persist(state);
+   return state;
+ }
+ 
+ function emptyState() {
+-  return {
+-    tasks: [],
+-    taskCategories: [],
+-    routines: [],
+-    meals: [],
+-    mealPlans: [],
+-    bodyMetrics: [],
+-    expenses: [],
+-    budgets: [],
+-  };
++  return normalize({});
+ }
+ 
+ function persist(state) {
+@@ -170,16 +215,30 @@ export const localMutations = {
+     return doc;
+   },
+   // Routine
+-  saveRoutine({ date, steps, startedAt, completedAt }) {
++  saveRoutine({ date, steps, startedAt, completedAt, routineId, routineName }) {
+     update((s) => {
+       const existing = s.routines.find((r) => r.date === date);
+-      const patch = { steps, startedAt, completedAt };
++      const patch = { steps, startedAt, completedAt, routineId, routineName };
+       if (existing) {
+         return { routines: s.routines.map((r) => (r.date === date ? { ...r, ...patch } : r)) };
+       }
+       return { routines: [...s.routines, { _id: uid(), date, ...patch }] };
+     });
+   },
++  // Template routine (schede personalizzabili)
++  createRoutineTemplate(fields) {
++    const doc = { ...fields, _id: uid() };
++    update((s) => ({ routineTemplates: [...s.routineTemplates, doc] }));
++    return doc;
++  },
++  updateRoutineTemplate({ id, ...patch }) {
++    update((s) => ({
++      routineTemplates: s.routineTemplates.map((r) => (r._id === id ? { ...r, ...patch } : r)),
++    }));
++  },
++  removeRoutineTemplate({ id }) {
++    update((s) => ({ routineTemplates: s.routineTemplates.filter((r) => r._id !== id) }));
++  },
+   // Pasti
+   addMeal(fields) {
+     const doc = { ...fields, _id: uid(), createdAt: fields.createdAt ?? Date.now() };
+@@ -210,6 +269,22 @@ export const localMutations = {
+   removeBodyMetric({ id }) {
+     update((s) => ({ bodyMetrics: s.bodyMetrics.filter((m) => m._id !== id) }));
+   },
++  // Note
++  createNote(fields) {
++    const doc = { ...emptyNote(), ...fields, _id: uid(), createdAt: Date.now(), updatedAt: Date.now() };
++    update((s) => ({ notes: [...s.notes, doc] }));
++    return doc._id;
++  },
++  updateNote({ id, ...patch }) {
++    update((s) => ({
++      notes: s.notes.map((n) =>
++        n._id === id ? { ...n, ...patch, updatedAt: Date.now() } : n
++      ),
++    }));
++  },
++  removeNote({ id }) {
++    update((s) => ({ notes: s.notes.filter((n) => n._id !== id) }));
++  },
+   // Wallet
+   addExpense(fields) {
+     const doc = { ...fields, _id: uid(), createdAt: fields.createdAt ?? Date.now() };
+diff --git a/src/lib/notifications.js b/src/lib/notifications.js
+new file mode 100644
+index 0000000..d33c753
+--- /dev/null
++++ b/src/lib/notifications.js
+@@ -0,0 +1,90 @@
++/**
++ * Promemoria / notifiche per eventi e compiti (stile "Promemoria" iOS).
++ *
++ * Su web/PWA le notifiche locali programmate non esistono: quando l'app è
++ * aperta un motore interno controlla ogni 30 secondi i promemoria scaduti e
++ * mostra una notifica di sistema (se autorizzata) + un banner in-app.
++ * Si chiede il permesso al primo utilizzo (necessario anche su iOS: l'app
++ * deve essere installata in home per mostrare notifiche).
++ */
++
++export const REMINDER_OPTIONS = [
++  { id: 'atTime', label: "All'ora dell'attività", offsetMinutes: 0 },
++  { id: '5m', label: '5 min prima', offsetMinutes: 5 },
++  { id: '15m', label: '15 min prima', offsetMinutes: 15 },
++  { id: '30m', label: '30 min prima', offsetMinutes: 30 },
++  { id: '1h', label: '1 ora prima', offsetMinutes: 60 },
++  { id: '2h', label: '2 ore prima', offsetMinutes: 120 },
++  { id: '9am', label: 'Il giorno del compito 09:00', offsetMinutes: null },
++];
++
++export function reminderLabel(reminder) {
++  if (!reminder) return '';
++  return reminder.label || REMINDER_OPTIONS.find((o) => o.id === reminder.offsetKey)?.label || '';
++}
++
++export function canNotify() {
++  return typeof window !== 'undefined' && 'Notification' in window;
++}
++
++export async function requestNotificationPermission() {
++  if (!canNotify()) return 'unsupported';
++  if (Notification.permission === 'granted') return 'granted';
++  try {
++    return await Notification.requestPermission();
++  } catch {
++    return 'unsupported';
++  }
++}
++
++export function notify({ title, body }) {
++  if (!canNotify() || Notification.permission !== 'granted') return false;
++  try {
++    const n = new Notification(title, {
++      body,
++      icon: '/favicon.svg',
++      badge: '/favicon.svg',
++      tag: `app1-${Date.now()}`,
++      requireInteraction: false,
++      silent: false,
++    });
++    n.onclick = () => {
++      window.focus();
++      n.close();
++    };
++    return true;
++  } catch {
++    return false;
++  }
++}
++
++/** Evento custom interno per il banner in-app. */
++export function showInAppToast(title, body) {
++  window.dispatchEvent(new CustomEvent('app1-toast', { detail: { title, body, at: Date.now() } }));
++}
++
++/** Avvia il motore di controllo promemoria (intervallo in % 30 s). */
++export function startReminderEngine(check) {
++  const run = () => {
++    try {
++      check();
++    } catch (err) {
++      console.warn('[notifiche] errore check promemoria:', err);
++    }
++  };
++  run();
++  const id = setInterval(run, 30000);
++  return () => clearInterval(id);
++}
++
++/**
++ * Calcola la data/ora effettiva di un promemoria a partire da data e orario
++ * dell'attività. `time` in "HH:mm" (opzionale, se all-day usa 09:00).
++ */
++export function reminderDateTime(dateKey, time, offsetMinutes) {
++  const [y, m, d] = dateKey.split('-').map(Number);
++  const [hh, mm] = (time || '09:00').split(':').map(Number);
++  const dt = new Date(y, (m || 1) - 1, d || 1, hh || 9, mm || 0, 0, 0);
++  if (offsetMinutes) dt.setMinutes(dt.getMinutes() - offsetMinutes);
++  return dt;
++}
+diff --git a/src/lib/nutritionMath.js b/src/lib/nutritionMath.js
+new file mode 100644
+index 0000000..77c04f8
+--- /dev/null
++++ b/src/lib/nutritionMath.js
+@@ -0,0 +1,136 @@
++/**
++ * Nutrizione — matematica kcal ↔ macro e obiettivi di peso.
++ *
++ * Regola Atwater "4-4-9": proteine 4 kcal/g, carboidrati 4 kcal/g, grassi 9 kcal/g.
++ * Per aumentare peso: surplus di ~250–500 kcal/giorno → ~0,25–0,5 kg/settimana
++ * (≈7700 kcal per 1 kg di massa; 3500 kcal ≈ 0,45 kg). Proteine 1,6–2,2 g/kg.
++ * BMR/TDEE: Mifflin-St Jeor (10·kg + 6,25·cm − 5·età ± costante) × fattore attività.
++ *
++ * Fonti: regola 4-4-9 (USDA/Atwater), Mifflin-St Jeor + fattori attività,
++ * surplus 250–500 kcal per lean gain, ~7700 kcal/kg.
++ */
++
++export const MACRO_KCAL = { protein: 4, carbs: 4, fat: 9 };
++export const KCAL_PER_KG = 7700; // surplus cumulato per ~1 kg di peso
++export const KCAL_PER_LB = 3500;
++
++export const ACTIVITY_LEVELS = [
++  { id: 'sedentary', label: 'Sedentario', factor: 1.2, note: 'Poco movimento, studio/PC' },
++  { id: 'light', label: 'Leggero', factor: 1.375, note: '1–3 allenamenti a settimana' },
++  { id: 'moderate', label: 'Moderato', factor: 1.55, note: '3–5 allenamenti a settimana' },
++  { id: 'very', label: 'Molto attivo', factor: 1.725, note: '6–7 allenamenti o sport intenso' },
++];
++
++export const GOALS = [
++  { id: 'maintain', label: 'Mantenere', surplus: 0, range: 'TDEE' },
++  { id: 'gain', label: 'Aumentare peso', surplus: 250, range: '+250/+500 kcal' },
++  { id: 'lose', label: 'Diminuire peso', surplus: -300, range: '−250/−500 kcal' },
++];
++
++export const GAIN_PACES = [
++  { id: 'lean', label: 'Leggero', surplus: 200, perWeek: '~0,2 kg/sett.' },
++  { id: 'standard', label: 'Standard', surplus: 375, perWeek: '~0,3–0,4 kg/sett.' },
++  { id: 'strong', label: 'Sostenuto', surplus: 500, perWeek: '~0,45 kg/sett.' },
++];
++
++export const LOSE_PACES = [
++  { id: 'gentle', label: 'Gentile', delta: -250, perWeek: '~0,2 kg/sett.' },
++  { id: 'moderate', label: 'Moderato', delta: -400, perWeek: '~0,35 kg/sett.' },
++];
++
++/** kcal derivate dai macro (regola 4-4-9). */
++export function kcalFromMacros({ protein = 0, carbs = 0, fat = 0 } = {}) {
++  return Math.round((protein || 0) * 4 + (carbs || 0) * 4 + (fat || 0) * 9);
++}
++
++/** Ripartizione kcal per singolo macro. */
++export function macroKcalBreakdown({ protein = 0, carbs = 0, fat = 0 } = {}) {
++  return {
++    protein: Math.round((protein || 0) * 4),
++    carbs: Math.round((carbs || 0) * 4),
++    fat: Math.round((fat || 0) * 9),
++  };
++}
++
++/**
++ * Distribuisce un target kcal sui 3 macro in base alle % (somma 100).
++ * @returns {protein, carbs, fat} grammi
++ */
++export function macrosFromKcal(calories, pct = { protein: 25, carbs: 45, fat: 30 }) {
++  const k = Math.max(0, calories || 0);
++  const protein = (k * (pct.protein / 100)) / 4;
++  const carbs = (k * (pct.carbs / 100)) / 4;
++  const fat = (k * (pct.fat / 100)) / 9;
++  return {
++    protein: Math.round(protein),
++    carbs: Math.round(carbs),
++    fat: Math.round(fat),
++  };
++}
++
++/** BMR Mifflin-St Jeor. sex: 'female' | 'male' | 'other' (other → media). */
++export function bmrMifflin({ sex = 'female', weightKg, heightCm, age }) {
++  const w = Number(weightKg) || 0;
++  const h = Number(heightCm) || 0;
++  const a = Number(age) || 0;
++  if (!w || !h || !a) return null;
++  const female = 10 * w + 6.25 * h - 5 * a - 161;
++  const male = 10 * w + 6.25 * h - 5 * a + 5;
++  if (sex === 'male') return Math.round(male);
++  if (sex === 'female') return Math.round(female);
++  return Math.round((female + male) / 2);
++}
++
++/** TDEE = BMR × fattore attività. */
++export function tdee(bmr, factor = 1.375) {
++  if (!bmr) return null;
++  return Math.round(bmr * factor);
++}
++
++/** Target kcal giornaliere per obiettivo di peso. */
++export function targetKcal(tdeeValue, goal = 'maintain', delta = 250) {
++  if (!tdeeValue) return null;
++  if (goal === 'gain') return Math.round(tdeeValue + Math.abs(delta));
++  if (goal === 'lose') return Math.round(tdeeValue - Math.abs(delta));
++  return Math.round(tdeeValue);
++}
++
++/** Variazione di peso attesa (kg/settimana) per un surplus/deficit giornaliero. */
++export function expectedWeeklyChange(deltaKcalPerDay) {
++  return Math.round((Math.abs(deltaKcalPerDay) * 7 * 10) / KCAL_PER_KG) / 10;
++}
++
++/**
++ * Grammi di proteine consigliati in base al peso e all'obiettivo
++ * (range sport-nutrition 1,6–2,2 g/kg; per mantenimento ~1,6).
++ */
++export function proteinTarget(weightKg, goal = 'maintain') {
++  const w = Number(weightKg) || 0;
++  if (!w) return null;
++  const gPerKg = goal === 'gain' ? 2.0 : goal === 'lose' ? 1.8 : 1.6;
++  return Math.round(w * gPerKg);
++}
++
++/**
++ * Suggerisce i 3 macro a partire da target kcal, peso e obiettivo:
++ * proteine in g/kg, grassi ~28% kcal, carboidrati = resto.
++ */
++export function suggestMacros({ targetKcalValue, weightKg, goal = 'maintain' }) {
++  const k = Number(targetKcalValue) || 0;
++  const protein = proteinTarget(weightKg, goal) ?? Math.round((k * 0.25) / 4);
++  const proteinKcal = protein * 4;
++  const fat = Math.round(((k - proteinKcal) * 0.28) / 9);
++  const fatKcal = fat * 9;
++  const carbs = Math.max(0, Math.round((k - proteinKcal - fatKcal) / 4));
++  return { protein, carbs, fat };
++}
++
++/** Se kcal "riportate" ≠ somma dei macro, mostra lo scostamento. */
++export function kcalMismatch(reported, macros) {
++  const derived = kcalFromMacros(macros);
++  return Math.abs(derived - (Number(reported) || 0)) > 1;
++}
++
++export function round1(n) {
++  return Math.round(n * 10) / 10;
++}
+diff --git a/src/lib/repeat.js b/src/lib/repeat.js
+new file mode 100644
+index 0000000..ca41f63
+--- /dev/null
++++ b/src/lib/repeat.js
+@@ -0,0 +1,153 @@
++/**
++ * Logica di ripetizione degli eventi/compiti (stile "Ripeti" iOS):
++ * - nessuna, giornaliera, feriali (Lun–Ven), settimanale (giorni scelti), mensile
++ * - fine: mai, dopo N occorrenze, in una data
++ *
++ * L'evento è salvato sul database solo con la data di partenza; le occorrenze
++ * vengono "espanse" lato client per la data richiesta.
++ */
++import { addDays, addMonths, differenceInCalendarDays, getDay, isSameDay, parseISO, format } from 'date-fns';
++import { it } from 'date-fns/locale';
++import { toDateKey } from './dates';
++
++/** giorno della settimana in stile lun=1 … dom=7 (come date-fns weekStartsOn:1) */
++export function isoWeekday(date) {
++  return getDay(date) === 0 ? 7 : getDay(date);
++}
++
++const FREQ_LABELS = {
++  none: 'Nessuno',
++  daily: 'Ogni giorno',
++  weekdays: 'Ogni giorno (Lun–Ven)',
++  weekly: 'Ogni settimana',
++  monthly: 'Ogni mese',
++};
++
++export const REPEAT_FREQUENCIES = [
++  { id: 'none', label: 'Nessuno' },
++  { id: 'daily', label: 'Ogni giorno' },
++  { id: 'weekdays', label: 'Giorni feriali (Lun–Ven)' },
++  { id: 'weekly', label: 'Ogni settimana' },
++  { id: 'monthly', label: 'Ogni mese' },
++];
++
++export const WEEKDAY_OPTIONS = [
++  { id: 1, label: 'Lun' },
++  { id: 2, label: 'Mar' },
++  { id: 3, label: 'Mer' },
++  { id: 4, label: 'Gio' },
++  { id: 5, label: 'Ven' },
++  { id: 6, label: 'Sab' },
++  { id: 7, label: 'Dom' },
++];
++
++export function repeatLabel(repeat) {
++  if (!repeat || !repeat.frequency || repeat.frequency === 'none') return 'Nessuno';
++  let label = FREQ_LABELS[repeat.frequency] || 'Nessuno';
++  if (repeat.frequency === 'weekly' && Array.isArray(repeat.weekdays) && repeat.weekdays.length > 0) {
++    const days = repeat.weekdays
++      .slice()
++      .sort((a, b) => a - b)
++      .map((d) => WEEKDAY_OPTIONS.find((w) => w.id === d)?.label || '')
++      .join(', ');
++    label += ` · ${days}`;
++  }
++  if (repeat.endMode === 'after' && repeat.endAfter > 0) {
++    label += ` · per ${repeat.endAfter} volte`;
++  } else if (repeat.endMode === 'on' && repeat.endDate) {
++    label += ` · fino al ${format(parseISO(repeat.endDate), 'd MMM yyyy', { locale: it })}`;
++  }
++  return label;
++}
++
++function occurrencesBetween(base, from, to, repeat) {
++  const out = [];
++  if (!repeat || !repeat.frequency || repeat.frequency === 'none') return out;
++  const baseDate = parseISO(base);
++  const freq = repeat.frequency;
++
++  for (let d = from; d <= to; d = addDays(d, 1)) {
++    const key = toDateKey(d);
++    if (key === base) continue; // la data base è già salvata come evento separato
++
++    let match = false;
++    let occurrence = 1; // occorrenza #1 = data base
++
++    if (freq === 'daily') {
++      match = true;
++      occurrence = differenceInCalendarDays(d, baseDate) + 1;
++    } else if (freq === 'weekdays') {
++      const wd = isoWeekday(d);
++      match = wd >= 1 && wd <= 5;
++      if (match) {
++        occurrence = 1;
++        for (let cursor = addDays(baseDate, 1); cursor <= d; cursor = addDays(cursor, 1)) {
++          const cwd = isoWeekday(cursor);
++          if (cwd >= 1 && cwd <= 5) occurrence++;
++        }
++      }
++    } else if (freq === 'weekly') {
++      const days = repeat.weekdays?.length ? repeat.weekdays : [isoWeekday(baseDate)];
++      match = days.includes(isoWeekday(d));
++      if (match) {
++        const diff = differenceInCalendarDays(d, baseDate);
++        // numero di date tra base (esclusa) e d che cadono nei giorni scelti
++        occurrence = 1;
++        for (let cursor = addDays(baseDate, 1); cursor <= d; cursor = addDays(cursor, 1)) {
++          if (days.includes(isoWeekday(cursor))) occurrence++;
++        }
++        // se la data base non è uno dei giorni scelti, non conta come #1
++        if (!days.includes(isoWeekday(baseDate))) occurrence = 0;
++        void diff;
++      }
++    } else if (freq === 'monthly') {
++      match = format(d, 'd') === format(baseDate, 'd');
++      if (match) {
++        occurrence = 1;
++        let cursor = addMonths(baseDate, 1);
++        while (cursor <= d) {
++          occurrence++;
++          cursor = addMonths(cursor, 1);
++        }
++      }
++    }
++
++    if (!match) continue;
++    if (repeat.endMode === 'after' && repeat.endAfter > 0 && occurrence > repeat.endAfter) continue;
++    if (repeat.endMode === 'on' && repeat.endDate && toDateKey(d) > repeat.endDate) continue;
++    out.push(key);
++  }
++  return out;
++}
++
++/**
++ * Restituisce l'elenco di eventi (con la loro data originale) che cadono nella
++ * data richiesta, incluse le occorrenze ripetute.
++ * eventi: array di task/eventi con { date?, startDate?, repeat? }
++ */
++export function expandEventsForDate(events, dateKey) {
++  const target = parseISO(dateKey);
++  return (events || []).filter((ev) => {
++    if (!ev.date) return false;
++    if (ev.date === dateKey) return true;
++    const hasRepeat = ev.repeat && ev.repeat.frequency && ev.repeat.frequency !== 'none';
++    if (!hasRepeat) return false;
++    return occurrencesBetween(ev.date, target, target, ev.repeat).length > 0;
++  });
++}
++
++/** Range di date base necessario per coprire le occorrenze nel range richiesto. */
++export function baseDateRange(startKey, endKey, repeat) {
++  if (!repeat || !repeat.frequency || repeat.frequency === 'none') return { start: startKey, end: endKey };
++  if (repeat.frequency === 'monthly') {
++    // risali al massimo 24 mesi per coprire occorrenze mensili
++    const d = parseISO(startKey);
++    return { start: toDateKey(addMonths(d, -24)), end: endKey };
++  }
++  if (repeat.endMode === 'on' && repeat.endDate) {
++    return { start: startKey, end: endKey };
++  }
++  const d = parseISO(startKey);
++  const lookback = repeat.frequency === 'daily' ? 365 : repeat.frequency === 'weekdays' ? 365 : 730;
++  return { start: toDateKey(addDays(d, -lookback)), end: endKey };
++}
+diff --git a/src/pages/CalendarPage.jsx b/src/pages/CalendarPage.jsx
+index 3d1a09a..2038d1c 100644
+--- a/src/pages/CalendarPage.jsx
++++ b/src/pages/CalendarPage.jsx
+@@ -1,21 +1,81 @@
+ import { useState } from 'react';
+ import { format } from 'date-fns';
+ import { it } from 'date-fns/locale';
+-import { ArrowRight, CheckCircle2, Circle } from 'lucide-react';
++import { ArrowRight, CheckCircle2, Circle, Plus, Repeat, Bell, Paperclip, Clock } from 'lucide-react';
+ import CalendarHeader from '../components/layout/CalendarHeader';
+ import WeekStrip from '../components/layout/WeekStrip';
+-import { useTasks } from '../hooks/useData';
++import FAB from '../components/ui/FAB';
++import { useExpandedTasks } from '../hooks/useData';
+ import { toDateKey } from '../lib/dates';
+ 
++/**
++ * Home — Calendario mese/settimana (screenshot home): eventi e attività nei
++ * giorni, agenda del giorno selezionato con orari/badge, FAB per aggiungere.
++ */
+ export default function CalendarPage({ selectedDate, selectDate, mode, setMode, goPrev, goNext, goToToday, weekDates, weekLabel, goToPrevWeek, goToNextWeek, onOpenTasks }) {
+   const [inspected, setInspected] = useState(false);
+-  const { data: tasks = [] } = useTasks(toDateKey(selectedDate));
+-  const choose = (date) => { selectDate(date); setInspected(true); };
+-  return <div className="h-full overflow-y-auto scrollable pb-28">
+-    <CalendarHeader mode={mode} onModeChange={setMode} selectedDate={selectedDate} onSelectDate={choose} onPrev={() => {goPrev(); setInspected(false)}} onNext={() => {goNext(); setInspected(false)}} onToday={() => {goToToday(); setInspected(false)}} weekStrip={<WeekStrip embedded weekDates={weekDates} selectedDate={selectedDate} weekLabel={weekLabel} onSelectDate={choose} onPrevWeek={goToPrevWeek} onNextWeek={goToNextWeek} onToday={goToToday}/>} />
+-    {inspected && <section className="max-w-[900px] mx-auto px-4 pt-5">
+-      <div className="flex items-center justify-between mb-3"><div><p className="text-[12px] uppercase tracking-wide text-label-tertiary">Agenda</p><h2 className="text-[20px] font-semibold capitalize">{format(selectedDate,'EEEE d MMMM',{locale:it})}</h2></div><button onClick={onOpenTasks} className="h-10 px-4 rounded-full bg-accent text-white text-[13px] font-semibold flex items-center gap-2">Apri compiti <ArrowRight size={15}/></button></div>
+-      {tasks.length === 0 ? <div className="rounded-2xl bg-surface-1 p-5 text-label-secondary text-[15px]">Niente da fare in questo giorno.</div> : <div className="rounded-2xl bg-surface-1 overflow-hidden">{tasks.slice(0,5).map(t => <div key={t._id} className="flex items-center gap-3 px-4 py-3 border-b border-separator last:border-0">{t.completed?<CheckCircle2 size={18} className="text-sys-green"/>:<Circle size={18} style={{color:t.categoryColor}}/>}<span className={t.completed?'line-through text-label-tertiary':'text-label'}>{t.title}</span><span className="ml-auto text-[12px] text-label-tertiary">{t.estimatedMinutes ? `${t.estimatedMinutes} min` : ''}</span></div>)}</div>}
+-    </section>}
+-  </div>;
++  const { data: tasks = [] } = useExpandedTasks(toDateKey(selectedDate));
++
++  const choose = (date) => {
++    selectDate(date);
++    setInspected(true);
++  };
++
++  return (
++    <div className="h-full overflow-y-auto scrollable pb-28">
++      <CalendarHeader
++        mode={mode}
++        onModeChange={setMode}
++        selectedDate={selectedDate}
++        onSelectDate={choose}
++        onPrev={() => { goPrev(); setInspected(false); }}
++        onNext={() => { goNext(); setInspected(false); }}
++        onToday={() => { goToToday(); setInspected(false); }}
++        weekStrip={<WeekStrip embedded weekDates={weekDates} selectedDate={selectedDate} weekLabel={weekLabel} onSelectDate={choose} onPrevWeek={goToPrevWeek} onNextWeek={goToNextWeek} onToday={goToToday} />}
++      />
++
++      {inspected && (
++        <section className="max-w-[900px] mx-auto px-4 pt-5">
++          <div className="flex items-center justify-between mb-3">
++            <div>
++              <p className="text-[12px] uppercase tracking-wide text-label-tertiary">Agenda</p>
++              <h2 className="text-[20px] font-semibold capitalize">{format(selectedDate, 'EEEE d MMMM', { locale: it })}</h2>
++            </div>
++            <button onClick={onOpenTasks} className="h-10 px-4 rounded-full bg-accent text-white text-[13px] font-semibold flex items-center gap-2">
++              Apri compiti <ArrowRight size={15} />
++            </button>
++          </div>
++
++          {tasks.length === 0 ? (
++            <div className="rounded-2xl bg-surface-1 p-5 text-label-secondary text-[15px]">
++              Niente da fare in questo giorno.
++            </div>
++          ) : (
++            <div className="rounded-2xl bg-surface-1 overflow-hidden">
++              {tasks.slice(0, 12).map((t) => {
++                const done = t.completed;
++                const meta = [];
++                if (!t.allDay && t.startTime) meta.push(<span key="time" className="flex items-center gap-1"><Clock size={11} /> {t.startTime}{t.endTime ? `–${t.endTime}` : ''}</span>);
++                if (t.repeat?.frequency && t.repeat.frequency !== 'none') meta.push(<span key="rep"><Repeat size={11} /></span>);
++                if (t.reminders?.length) meta.push(<span key="rem"><Bell size={11} /></span>);
++                if (t.attachments?.length) meta.push(<span key="att"><Paperclip size={11} /></span>);
++                return (
++                  <div key={t._id} className="flex items-center gap-3 px-4 py-3 border-b border-separator last:border-0">
++                    {done ? <CheckCircle2 size={18} className="text-sys-green" /> : <Circle size={18} style={{ color: t.categoryColor || '#0a84ff' }} />}
++                    <div className="flex-1 min-w-0">
++                      <span className={done ? 'line-through text-label-tertiary' : 'text-label'}>{t.title}</span>
++                      <div className="flex items-center gap-1.5 text-[11px] text-label-tertiary mt-0.5">{meta}</div>
++                    </div>
++                    <span className="text-[12px] text-label-tertiary">{t.estimatedMinutes ? `${t.estimatedMinutes} min` : ''}</span>
++                  </div>
++                );
++              })}
++            </div>
++          )}
++        </section>
++      )}
++
++      <FAB onClick={onOpenTasks} icon={Plus} label="Nuova attività" />
++    </div>
++  );
+ }
+diff --git a/src/pages/NotesPage.jsx b/src/pages/NotesPage.jsx
+new file mode 100644
+index 0000000..eeadb04
+--- /dev/null
++++ b/src/pages/NotesPage.jsx
+@@ -0,0 +1,191 @@
++import { useMemo, useState } from 'react';
++import { StickyNote, Search, Pin, ListTodo, FileText, CheckCircle2, Circle, Plus } from 'lucide-react';
++import { useNotes } from '../hooks/useData';
++import NoteEditorSheet from '../components/notes/NoteEditorSheet';
++import SegmentedControl from '../components/ui/SegmentedControl';
++import EmptyState from '../components/ui/EmptyState';
++import FAB from '../components/ui/FAB';
++import { cn } from '../lib/cn';
++
++/**
++ * Tab — Note: appunti rapidi e checklist (stile Notion), con pin, colori,
++ * ricerca e modalità testo/to-do.
++ */
++export default function NotesPage() {
++  const { data: notes, isLoading, createNote, updateNote, removeNote } = useNotes();
++  const [query, setQuery] = useState('');
++  const [filter, setFilter] = useState('all');
++  const [editingNote, setEditingNote] = useState(null);
++  const [sheetOpen, setSheetOpen] = useState(false);
++
++  const filtered = useMemo(() => {
++    const q = query.trim().toLowerCase();
++    return (notes ?? []).filter((n) => {
++      if (filter === 'note' && n.type !== 'note') return false;
++      if (filter === 'todo' && n.type !== 'todo') return false;
++      if (!q) return true;
++      return (
++        n.title?.toLowerCase().includes(q) ||
++        n.body?.toLowerCase().includes(q) ||
++        (n.todos || []).some((t) => t.text.toLowerCase().includes(q))
++      );
++    });
++  }, [notes, query, filter]);
++
++  const openNew = () => {
++    setEditingNote(null);
++    setSheetOpen(true);
++  };
++
++  return (
++    <div className="h-full overflow-y-auto scrollable px-4 pt-2 pb-32">
++      <div className="mb-4">
++        <h1 className="text-[28px] font-bold text-label tracking-tight leading-tight">Note</h1>
++        <p className="text-[13px] text-label-secondary">Appunti e to-do list veloci</p>
++      </div>
++
++      {/* Ricerca */}
++      <div className="flex items-center gap-2 bg-surface-2 rounded-full px-4 h-11 mb-3">
++        <Search size={16} className="text-label-tertiary shrink-0" />
++        <input
++          value={query}
++          onChange={(e) => setQuery(e.target.value)}
++          placeholder="Cerca nelle note…"
++          className="flex-1 bg-transparent text-[15px] text-label placeholder:text-label-tertiary"
++        />
++      </div>
++
++      <div className="mb-4">
++        <SegmentedControl
++          segments={[
++            { id: 'all', label: 'Tutte' },
++            { id: 'note', label: 'Note' },
++            { id: 'todo', label: 'To-do' },
++          ]}
++          value={filter}
++          onChange={setFilter}
++        />
++      </div>
++
++      {!isLoading && filtered.length === 0 ? (
++        <EmptyState
++          title={query ? 'Nessuna nota trovata' : 'Nessuna nota'}
++          subtitle={query ? 'Prova con un altro termine' : 'Tocca + per appuntare un’idea o creare una checklist'}
++          icon={StickyNote}
++        />
++      ) : (
++        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
++          {filtered.map((note) => (
++            <NoteCard
++              key={note._id}
++              note={note}
++              onOpen={() => {
++                setEditingNote(note);
++                setSheetOpen(true);
++              }}
++              onToggleTodo={(todoId) => {
++                const todos = (note.todos || []).map((t) =>
++                  t.id === todoId ? { ...t, done: !t.done } : t
++                );
++                updateNote(note._id, { todos });
++              }}
++              onTogglePin={() => updateNote(note._id, { pinned: !note.pinned })}
++              onDelete={() => removeNote(note._id)}
++            />
++          ))}
++        </div>
++      )}
++
++      <FAB onClick={openNew} icon={Plus} label="Nuova nota" />
++
++      <NoteEditorSheet
++        isOpen={sheetOpen}
++        onClose={() => {
++          setSheetOpen(false);
++          setEditingNote(null);
++        }}
++        note={editingNote}
++        onSave={(fields) => {
++          if (editingNote) updateNote(editingNote._id, fields);
++          else createNote(fields);
++          setSheetOpen(false);
++          setEditingNote(null);
++        }}
++        onDelete={editingNote ? () => removeNote(editingNote._id) : null}
++      />
++    </div>
++  );
++}
++
++function NoteCard({ note, onOpen, onToggleTodo, onTogglePin, onDelete }) {
++  const todos = note.todos || [];
++  const doneCount = todos.filter((t) => t.done).length;
++  const isTodo = note.type === 'todo';
++
++  return (
++    <div
++      onClick={onOpen}
++      className="bg-surface-1 rounded-2xl p-4 cursor-pointer active:bg-surface-2 transition-colors border-t-2"
++      style={{ borderTopColor: note.color || '#0a84ff' }}
++    >
++      <div className="flex items-start gap-2 mb-1.5">
++        <span className="text-[14px] font-semibold text-label flex-1 leading-snug">{note.title || 'Senza titolo'}</span>
++        <button
++          onClick={(e) => {
++            e.stopPropagation();
++            onTogglePin();
++          }}
++          className={cn('w-9 h-9 -mr-1 -mt-1 grid place-items-center shrink-0', note.pinned ? 'text-sys-yellow' : 'text-label-tertiary')}
++          aria-label={note.pinned ? 'Rimuovi dal pin' : 'Fissa nota'}
++        >
++          <Pin size={15} fill={note.pinned ? 'currentColor' : 'none'} />
++        </button>
++      </div>
++
++      {isTodo ? (
++        <div className="flex flex-col gap-1.5">
++          {todos.slice(0, 4).map((t) => (
++            <button
++              key={t.id}
++              onClick={(e) => {
++                e.stopPropagation();
++                onToggleTodo(t.id);
++              }}
++              className="flex items-center gap-2 text-left min-h-8"
++            >
++              {t.done ? (
++                <CheckCircle2 size={17} className="text-sys-green shrink-0" />
++              ) : (
++                <Circle size={17} className="text-label-quaternary shrink-0" />
++              )}
++              <span className={cn('text-[13.5px] leading-snug', t.done ? 'line-through text-label-tertiary' : 'text-label-secondary')}>
++                {t.text}
++              </span>
++            </button>
++          ))}
++          {todos.length > 4 && <span className="text-[12px] text-label-tertiary">+{todos.length - 4} altre</span>}
++          {todos.length === 0 && <span className="text-[13px] text-label-tertiary">Checklist vuota</span>}
++          <div className="flex items-center gap-2 mt-1">
++            <div className="flex-1 h-1.5 rounded-full bg-fill-tertiary overflow-hidden">
++              <div className="h-full rounded-full bg-sys-green" style={{ width: `${todos.length ? (doneCount / todos.length) * 100 : 0}%` }} />
++            </div>
++            <span className="text-[11px] tabular-nums text-label-tertiary">{doneCount}/{todos.length}</span>
++          </div>
++        </div>
++      ) : (
++        <p className="text-[13.5px] text-label-secondary leading-relaxed line-clamp-4 whitespace-pre-wrap">
++          {note.body || 'Nota vuota'}
++        </p>
++      )}
++
++      <div className="flex items-center gap-2 mt-3 text-[11px] text-label-tertiary">
++        <span className="flex items-center gap-1">
++          {isTodo ? <ListTodo size={11} /> : <FileText size={11} />}
++          {isTodo ? 'Checklist' : 'Nota'}
++        </span>
++        <span>·</span>
++        <span>{new Date(note.updatedAt || Date.now()).toLocaleDateString('it-IT', { day: 'numeric', month: 'short' })}</span>
++      </div>
++    </div>
++  );
++}
+diff --git a/src/pages/NutritionPage.jsx b/src/pages/NutritionPage.jsx
+index f8041b6..08bbe67 100644
+--- a/src/pages/NutritionPage.jsx
++++ b/src/pages/NutritionPage.jsx
+@@ -1,32 +1,54 @@
+-import { useState, useMemo, useEffect, useRef } from 'react';
++import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+ import { motion, AnimatePresence } from 'framer-motion';
+ import { format } from 'date-fns';
+ import { it } from 'date-fns/locale';
+-import { Flame, Trash2, UtensilsCrossed, CalendarRange } from 'lucide-react';
++import { Flame, Trash2, UtensilsCrossed, CalendarRange, Target, Link2, Scale } from 'lucide-react';
+ import { useMeals, useMealPlan, useBodyMetrics } from '../hooks/useData';
+ import SegmentedControl from '../components/ui/SegmentedControl';
+ import AiMealInput from '../components/nutrition/AiMealInput';
+ import WeeklyPlanTable from '../components/nutrition/WeeklyPlanTable';
+ import MetricsCharts from '../components/nutrition/MetricsCharts';
++import GoalPlannerDialog from '../components/nutrition/GoalPlannerDialog';
+ import EmptyState from '../components/ui/EmptyState';
+ import { toDateKey, getMonday, formatDateDisplay, parseISO } from '../lib/dates';
+ import { DEFAULT_WEEK_PLAN, MEAL_TYPES } from '../lib/constants';
++import { kcalFromMacros, macroKcalBreakdown } from '../lib/nutritionMath';
+ import { cn } from '../lib/cn';
+ 
+ const MACROS = [
+-  { key: 'protein', label: 'Proteine', color: '#30d158' },
+-  { key: 'carbs', label: 'Carboidrati', color: '#ffd60a' },
+-  { key: 'fat', label: 'Grassi', color: '#ff375f' },
++  { key: 'protein', label: 'Proteine', short: 'P', color: '#30d158', goal: 'protein' },
++  { key: 'carbs', label: 'Carboidrati', short: 'C', color: '#ffd60a', goal: 'carbs' },
++  { key: 'fat', label: 'Grassi', short: 'G', color: '#ff375f', goal: 'fat' },
+ ];
+ 
++const DEFAULT_GOALS = { calories: 2000, protein: 100, carbs: 250, fat: 65, source: 'macro' };
++const GOALS_KEY = 'app1_nutrition_goals_v2';
++const PROFILE_KEY = 'app1_nutrition_profile_v1';
++
++function loadGoals() {
++  try {
++    return JSON.parse(localStorage.getItem(GOALS_KEY)) || DEFAULT_GOALS;
++  } catch {
++    return DEFAULT_GOALS;
++  }
++}
++
+ /**
+- * Tab 3 — Nutrizione: log macro/calorie via Gemini AI, rotazione pasti
+- * settimanale con swap rapido, grafici peso/altezza.
++ * Tab — Nutrizione: macro e kcal SEMPRE collegati (regola 4-4-9: P·4 + C·4 + G·9).
++ * Obiettivo giornaliero calcolato da BMR/TDEE + surplus (aumento peso) o deficit.
+  */
+ export default function NutritionPage({ selectedDate }) {
+   const [view, setView] = useState('oggi');
+-  const [goals, setGoals] = useState(() => { try { return JSON.parse(localStorage.getItem('app1_nutrition_goals')) || {calories:2000,protein:100,carbs:250,fat:65}; } catch { return {calories:2000,protein:100,carbs:250,fat:65}; } });
+-  const updateGoal = (key, value) => { const next={...goals,[key]:Number(value)}; setGoals(next); localStorage.setItem('app1_nutrition_goals',JSON.stringify(next)); };
++  const [goals, setGoals] = useState(loadGoals);
++  const [profile, setProfile] = useState(() => {
++    try {
++      return JSON.parse(localStorage.getItem(PROFILE_KEY)) || null;
++    } catch {
++      return null;
++    }
++  });
++  const [plannerOpen, setPlannerOpen] = useState(false);
++
+   const dateKey = toDateKey(selectedDate);
+   const weekStartKey = toDateKey(getMonday(selectedDate));
+ 
+@@ -43,18 +65,49 @@ export default function NutritionPage({ selectedDate }) {
+     }
+   }, [plan, planLoading, savePlan, weekStartKey]);
+ 
++  const updateGoal = useCallback((key, value) => {
++    setGoals((g) => {
++      const next = { ...g, [key]: Number(value) || 0 };
++      // kcal sempre = somma macro (4-4-9)
++      next.calories = kcalFromMacros(next);
++      next.source = 'macro';
++      localStorage.setItem(GOALS_KEY, JSON.stringify(next));
++      return next;
++    });
++  }, []);
++
++  const applyPlan = ({ profile: p, goals: g }) => {
++    setGoals(g);
++    setProfile(p);
++    localStorage.setItem(GOALS_KEY, JSON.stringify(g));
++    localStorage.setItem(PROFILE_KEY, JSON.stringify(p));
++  };
++
++  // Totali: kcal SEMPRE derivate dai macro dei pasti
+   const totals = useMemo(() => {
+-    return (meals ?? []).reduce(
++    const sum = (meals ?? []).reduce(
+       (acc, m) => ({
+-        calories: acc.calories + (m.calories || 0),
+         protein: acc.protein + (m.protein || 0),
+         carbs: acc.carbs + (m.carbs || 0),
+         fat: acc.fat + (m.fat || 0),
+       }),
+-      { calories: 0, protein: 0, carbs: 0, fat: 0 }
++      { protein: 0, carbs: 0, fat: 0 }
+     );
++    return { ...sum, calories: kcalFromMacros(sum) };
+   }, [meals]);
+ 
++  const kcalBreakdown = useMemo(() => macroKcalBreakdown(totals), [totals]);
++  const remainingKcal = Math.max(0, (goals.calories || 0) - totals.calories);
++  const kcalRatio = goals.calories > 0 ? Math.min(totals.calories / goals.calories, 1) : 0;
++
++  // Ultimo peso/altezza per prefill del planner
++  const lastMetric = useMemo(() => {
++    const sorted = [...(metrics ?? [])].sort((a, b) => a.date.localeCompare(b.date));
++    const weight = [...sorted].reverse().find((m) => m.weightKg != null);
++    const height = [...sorted].reverse().find((m) => m.heightCm != null);
++    return { weightKg: weight?.weightKg, heightCm: height?.heightCm };
++  }, [metrics]);
++
+   const groupedMeals = useMemo(
+     () =>
+       MEAL_TYPES.map((type) => ({
+@@ -64,6 +117,13 @@ export default function NutritionPage({ selectedDate }) {
+     [meals]
+   );
+ 
++  const goalLabel = useMemo(() => {
++    if (!profile) return '';
++    const g = profile.goal === 'gain' ? 'Aumento' : profile.goal === 'lose' ? 'Diminuzione' : 'Mantenimento';
++    const p = profile.pace === 'lean' || profile.pace === 'gentle' ? 'leggero' : profile.pace === 'strong' ? 'sostenuto' : 'standard';
++    return `${g} peso (${p})`;
++  }, [profile]);
++
+   return (
+     <div className="h-full overflow-y-auto scrollable px-4 pt-2 pb-32">
+       {/* Header */}
+@@ -94,31 +154,100 @@ export default function NutritionPage({ selectedDate }) {
+         >
+           {view === 'oggi' && (
+             <div className="flex flex-col gap-4">
+-              <AiMealInput
+-                onConfirm={(fields) => addMeal({ ...fields, date: dateKey })}
+-              />
++              <AiMealInput onConfirm={(fields) => addMeal({ ...fields, date: dateKey })} />
++
++              {/* Obiettivi giornalieri: macro = fonte, kcal collegata */}
++              <div className="bg-surface-1 rounded-2xl p-4">
++                <div className="flex items-center gap-2 mb-3">
++                  <Target size={15} className="text-accent" />
++                  <span className="text-[13px] font-semibold text-label-secondary flex-1">Obiettivi giornalieri</span>
++                  <button onClick={() => setPlannerOpen(true)} className="text-[13px] font-semibold text-accent min-h-9 flex items-center gap-1">
++                    <Scale size={13} /> Obiettivo {goalLabel ? '· ' + goalLabel : ''}
++                  </button>
++                </div>
++                <div className="grid grid-cols-3 gap-2 mb-3">
++                  {MACROS.map((m) => (
++                    <label key={m.key} className="bg-surface-2 rounded-xl p-2 text-[10px] text-label-tertiary">
++                      <span className="flex items-center justify-center gap-1.5 mb-1">
++                        <span className="w-2 h-2 rounded-full" style={{ backgroundColor: m.color }} />
++                        {m.label}
++                      </span>
++                      <input
++                        type="number"
++                        min="0"
++                        value={goals[m.goal] ?? 0}
++                        onChange={(e) => updateGoal(m.goal, e.target.value)}
++                        className="w-full bg-transparent text-[16px] font-semibold text-label text-center"
++                        inputMode="numeric"
++                      />
++                      <span className="block text-center">g</span>
++                    </label>
++                  ))}
++                </div>
++                {/* Kcal = P·4 + C·4 + G·9 (sola lettura, aggiornata in automatico) */}
++                <div className="flex items-center gap-2.5 bg-surface-2 rounded-xl px-3 py-2.5">
++                  <Link2 size={15} className="text-accent shrink-0" />
++                  <div className="flex-1">
++                    <p className="text-[14px] font-bold text-label tabular-nums">{goals.calories} <span className="text-[11px] font-normal text-label-tertiary">kcal</span></p>
++                    <p className="text-[10px] text-label-tertiary">kcal collegate ai macro (P·4 + C·4 + G·9)</p>
++                  </div>
++                </div>
++              </div>
+ 
+-              <div className="bg-surface-1 rounded-2xl p-4"><p className="text-[13px] font-semibold text-label-secondary mb-3">Obiettivi giornalieri</p><div className="grid grid-cols-4 gap-2">{[['calories','kcal'],['protein','P g'],['carbs','C g'],['fat','G g']].map(([key,label])=><label key={key} className="bg-surface-2 rounded-xl p-2 text-[10px] text-label-tertiary"><input type="number" min="0" value={goals[key]} onChange={(e)=>updateGoal(key,e.target.value)} className="w-full bg-transparent text-[16px] font-semibold"/>{label}</label>)}</div></div>
+-              {/* Riepilogo giorno */}
++              {/* Riepilogo giornata: kcal calcolata dai macro */}
+               <div className="bg-surface-1 rounded-2xl p-5">
+                 <div className="flex items-center gap-2 mb-4">
+                   <Flame size={18} className="text-accent" />
+                   <span className="text-[15px] font-semibold text-label">Riepilogo giornata</span>
++                  {goals.calories > 0 && (
++                    <span className="ml-auto text-[12px] text-label-tertiary tabular-nums">
++                      restano {remainingKcal} kcal
++                    </span>
++                  )}
+                 </div>
+-                <div className="flex items-baseline gap-1.5 mb-4">
++                <div className="flex items-baseline gap-1.5 mb-1">
+                   <span className="text-[40px] leading-none font-bold text-label tracking-tight tabular-nums">{totals.calories}</span>
+                   <span className="text-[14px] text-label-tertiary">kcal</span>
++                  {goals.calories > 0 && (
++                    <span className="text-[12px] text-label-tertiary">/ {goals.calories}</span>
++                  )}
+                 </div>
++                {goals.calories > 0 && (
++                  <div className="w-full h-2 rounded-full bg-fill-tertiary overflow-hidden mb-3">
++                    <motion.div
++                      className="h-full rounded-full"
++                      animate={{ width: `${kcalRatio * 100}%` }}
++                      transition={{ type: 'spring', damping: 25, stiffness: 200 }}
++                      style={{ backgroundColor: kcalRatio >= 1 ? '#ff375f' : kcalRatio >= 0.8 ? '#ff9f0a' : '#0a84ff' }}
++                    />
++                  </div>
++                )}
++                <p className="text-[10px] text-label-tertiary mb-3 tabular-nums">
++                  Calcolata dai macro: P {totals.protein}g ×4 = {kcalBreakdown.protein} · C {totals.carbs}g ×4 = {kcalBreakdown.carbs} · G {totals.fat}g ×9 = {kcalBreakdown.fat}
++                </p>
+                 <div className="grid grid-cols-3 gap-2">
+-                  {MACROS.map((macro) => (
+-                    <div key={macro.key} className="bg-surface-2 rounded-xl py-3 px-2">
+-                      <div className="flex items-center gap-1.5 mb-1">
+-                        <span className="w-2 h-2 rounded-full" style={{ backgroundColor: macro.color }} />
+-                        <span className="text-[10px] text-label-tertiary uppercase tracking-wide">{macro.label}</span>
++                  {MACROS.map((macro) => {
++                    const eaten = totals[macro.key] ?? 0;
++                    const goal = goals[macro.goal] || 0;
++                    const ratio = goal > 0 ? Math.min(eaten / goal, 1) : 0;
++                    return (
++                      <div key={macro.key} className="bg-surface-2 rounded-xl py-3 px-2">
++                        <div className="flex items-center gap-1.5 mb-1">
++                          <span className="w-2 h-2 rounded-full" style={{ backgroundColor: macro.color }} />
++                          <span className="text-[10px] text-label-tertiary uppercase tracking-wide">{macro.label}</span>
++                        </div>
++                        <span className="text-[17px] font-bold text-label tabular-nums">{Math.round(eaten)}g</span>
++                        {goal > 0 && (
++                          <>
++                            <div className="w-full h-1 rounded-full bg-fill-tertiary overflow-hidden mt-2 mb-1">
++                              <div className="h-full rounded-full" style={{ width: `${ratio * 100}%`, backgroundColor: macro.color }} />
++                            </div>
++                            <span className="text-[10px] text-label-tertiary tabular-nums">{Math.round(eaten)} / {goal} g</span>
++                          </>
++                        )}
+                       </div>
+-                      <span className="text-[17px] font-bold text-label tabular-nums">{totals[macro.key]}g</span>
+-                    </div>
+-                  ))}
++                    );
++                  })}
+                 </div>
+               </div>
+ 
+@@ -142,19 +271,19 @@ export default function NutritionPage({ selectedDate }) {
+                           >
+                             <div className="flex-1 min-w-0">
+                               <p className="text-[15px] text-label leading-snug">{meal.description}</p>
+-                              {meal.parsedByAI && (
+-                                <span className="text-[11px] text-accent mt-0.5 inline-block">✦ analizzato da Gemini</span>
+-                              )}
++                              <span className="text-[11px] text-label-tertiary tabular-nums">
++                                P·4 {Math.round((meal.protein || 0) * 4)} + C·4 {Math.round((meal.carbs || 0) * 4)} + G·9 {Math.round((meal.fat || 0) * 9)} = {kcalFromMacros(meal)} kcal
++                              </span>
+                             </div>
+                             <div className="text-right shrink-0">
+-                              <p className="text-[15px] font-semibold text-label tabular-nums">{meal.calories ?? '—'} <span className="text-[11px] text-label-tertiary font-normal">kcal</span></p>
++                              <p className="text-[15px] font-semibold text-label tabular-nums">{kcalFromMacros(meal)} <span className="text-[11px] text-label-tertiary font-normal">kcal</span></p>
+                               <p className="text-[11px] text-label-tertiary tabular-nums">
+                                 P{meal.protein ?? 0} · C{meal.carbs ?? 0} · G{meal.fat ?? 0}
+                               </p>
+                             </div>
+                             <button
+                               onClick={() => removeMeal(meal._id)}
+-                              className="w-8 h-8 rounded-full flex items-center justify-center text-label-tertiary active:text-sys-red shrink-0"
++                              className="w-9 h-9 rounded-full flex items-center justify-center text-label-tertiary active:text-sys-red shrink-0"
+                               aria-label="Elimina pasto"
+                             >
+                               <Trash2 size={15} />
+@@ -189,6 +318,17 @@ export default function NutritionPage({ selectedDate }) {
+           )}
+         </motion.div>
+       </AnimatePresence>
++
++      <GoalPlannerDialog
++        isOpen={plannerOpen}
++        onClose={() => setPlannerOpen(false)}
++        onApply={applyPlan}
++        initial={{
++          ...(profile || {}),
++          weightKg: profile?.weightKg || lastMetric.weightKg || '',
++          heightCm: profile?.heightCm || lastMetric.heightCm || '',
++        }}
++      />
+     </div>
+   );
+ }
+diff --git a/src/pages/RoutinePage.jsx b/src/pages/RoutinePage.jsx
+index 04eafeb..f8b4507 100644
+--- a/src/pages/RoutinePage.jsx
++++ b/src/pages/RoutinePage.jsx
+@@ -2,32 +2,45 @@ import { useEffect, useMemo, useRef, useState } from 'react';
+ import { motion, AnimatePresence } from 'framer-motion';
+ import { format } from 'date-fns';
+ import { it } from 'date-fns/locale';
+-import { Play, Check, RotateCcw, Dumbbell, Clock3, Trash2, Plus } from 'lucide-react';
+-import { useRoutine } from '../hooks/useData';
++import { Play, Check, RotateCcw, Clock3, Trash2, Plus, ChevronUp, ChevronDown, Pencil, X, Layers } from 'lucide-react';
++import { useRoutine, useRoutineTemplates } from '../hooks/useData';
+ import { useRoutineSession, routineSession } from '../store/routineSession';
+ import RoutineCarousel from '../components/routine/RoutineCarousel';
+-import { DEFAULT_ROUTINE_STEPS } from '../lib/constants';
++import { ROUTINE_COLORS, ROUTINE_EMOJIS } from '../lib/constants';
+ import { toDateKey, formatSeconds, formatMinutes } from '../lib/dates';
+ import { cn } from '../lib/cn';
++import { Dialog } from '../components/ui/Dialog';
+ 
+ /**
+- * Tab 2 — Routine: sequence post-volley (Doccia, Capelli, Skincare, Denti, Cena)
+- * con timer a scorrimento e tracciamento dei tempi effettivi.
++ * Tab — Routine: più "schede" (template) con attività personalizzabili;
++ * ogni scheda ha una sequenza di step con timer e tempi effettivi.
+  */
+ export default function RoutinePage({ selectedDate }) {
+   const dateKey = toDateKey(selectedDate);
+   const { data: savedRoutine, isLoading, saveRoutine } = useRoutine(dateKey);
++  const { data: templates, isLoading: templatesLoading, createTemplate, updateTemplate, removeTemplate } = useRoutineTemplates();
+   const session = useRoutineSession();
+   const [savedFlash, setSavedFlash] = useState(false);
+   const [editing, setEditing] = useState(false);
+-  const [routineSteps, setRoutineSteps] = useState(() => {
+-    try { return JSON.parse(localStorage.getItem('app1_routine_steps')) || DEFAULT_ROUTINE_STEPS; } catch { return DEFAULT_ROUTINE_STEPS; }
+-  });
+-  const saveSteps = (steps) => { setRoutineSteps(steps); localStorage.setItem('app1_routine_steps', JSON.stringify(steps)); };
++  const [activeTemplateId, setActiveTemplateId] = useState(() => localStorage.getItem('app1_routine_active') || null);
++  const [newTemplateOpen, setNewTemplateOpen] = useState(false);
++  const [confirmDelete, setConfirmDelete] = useState(false);
++
++  const activeTemplate = useMemo(() => {
++    const list = templates ?? [];
++    if (!list.length) return null;
++    return list.find((t) => t._id === activeTemplateId) ?? list[0];
++  }, [templates, activeTemplateId]);
++
++  useEffect(() => {
++    if (activeTemplate) localStorage.setItem('app1_routine_active', activeTemplate._id);
++  }, [activeTemplate]);
++
++  const saveTemplate = (id, patch) => updateTemplate(id, patch);
+ 
+   const isActiveSession = session.dateKey === dateKey && session.steps.length > 0 && session.status !== 'idle';
+   const showSummary = !isActiveSession && savedRoutine && savedRoutine.completedAt;
+-  const showIntro = !isActiveSession && !showSummary && !isLoading;
++  const showIntro = !isActiveSession && !showSummary && !isLoading && !templatesLoading && !!activeTemplate;
+ 
+   // Persistenza automatica: ad ogni step completato e al termine sessione
+   const prevCompletedRef = useRef(0);
+@@ -40,6 +53,8 @@ export default function RoutinePage({ selectedDate }) {
+       prevCompletedRef.current = completedCount;
+       saveRoutine({
+         date: dateKey,
++        routineId: session.routineId,
++        routineName: session.routineName,
+         steps: session.steps.map(({ name, targetMinutes, actualSeconds, status }) => ({
+           name,
+           targetMinutes,
+@@ -62,18 +77,50 @@ export default function RoutinePage({ selectedDate }) {
+     [savedRoutine]
+   );
+ 
+-  const begin = () => routineSession.begin(dateKey, routineSteps);
++  const begin = () => {
++    if (!activeTemplate) return;
++    routineSession.begin(dateKey, activeTemplate.steps, {
++      routineId: activeTemplate._id,
++      routineName: activeTemplate.name,
++      routineEmoji: activeTemplate.emoji,
++    });
++  };
+ 
+   return (
+     <div className="h-full overflow-y-auto scrollable px-4 pt-2 pb-32">
+       {/* Header */}
+-      <div className="flex items-end justify-between mb-4">
+-        <div>
+-          <h1 className="text-[28px] font-bold text-label tracking-tight leading-tight">Routine</h1>
+-          <p className="text-[13px] text-label-secondary capitalize">
+-            {format(selectedDate, 'EEEE d MMMM', { locale: it })} · Post-volley
+-          </p>
+-        </div>
++      <div className="mb-3">
++        <h1 className="text-[28px] font-bold text-label tracking-tight leading-tight">Routine</h1>
++        <p className="text-[13px] text-label-secondary capitalize">
++          {format(selectedDate, 'EEEE d MMMM', { locale: it })}
++        </p>
++      </div>
++
++      {/* Selettore schede routine */}
++      <div className="flex gap-2 overflow-x-auto scrollable-x pb-2 mb-4 -mx-1 px-1">
++        {(templates ?? []).map((t) => {
++          const active = activeTemplate?._id === t._id;
++          return (
++            <button
++              key={t._id}
++              onClick={() => setActiveTemplateId(t._id)}
++              className={cn(
++                'flex items-center gap-2 h-11 px-4 rounded-full text-[14px] font-semibold shrink-0 transition-colors',
++                active ? 'text-white' : 'bg-surface-2 text-label-secondary'
++              )}
++              style={active ? { backgroundColor: t.color } : undefined}
++            >
++              <span>{t.emoji}</span>
++              {t.name}
++            </button>
++          );
++        })}
++        <button
++          onClick={() => setNewTemplateOpen(true)}
++          className="flex items-center gap-1.5 h-11 px-4 rounded-full bg-surface-2 text-label-secondary text-[14px] font-semibold shrink-0 border border-dashed border-label-quaternary"
++        >
++          <Plus size={15} /> Nuova scheda
++        </button>
+       </div>
+ 
+       {/* Flash salvataggio */}
+@@ -111,50 +158,329 @@ export default function RoutinePage({ selectedDate }) {
+       )}
+ 
+       {/* Intro / avvio */}
+-      {showIntro && (
++      {showIntro && activeTemplate && (
+         <div>
+           <div className="bg-surface-1 rounded-2xl p-5 mb-4">
+             <div className="flex items-center gap-2 mb-4">
+-              <Dumbbell size={18} className="text-accent" />
+-              <span className="text-[15px] font-semibold text-label">La mia sequenza</span>
+-              <button onClick={() => setEditing(!editing)} className="ml-auto text-[13px] text-accent min-h-9">{editing ? 'Fine' : 'Personalizza'}</button>
++              <div
++                className="w-9 h-9 rounded-xl grid place-items-center shrink-0"
++                style={{ backgroundColor: `${activeTemplate.color}22` }}
++              >
++                <span className="text-[18px]">{activeTemplate.emoji}</span>
++              </div>
++              <div className="flex-1 min-w-0">
++                {editing ? (
++                  <input
++                    value={activeTemplate.name}
++                    onChange={(e) => saveTemplate(activeTemplate._id, { name: e.target.value })}
++                    className="text-[16px] bg-surface-2 rounded-lg px-2 py-1 w-full"
++                    aria-label="Nome routine"
++                  />
++                ) : (
++                  <span className="text-[16px] font-semibold text-label">{activeTemplate.name}</span>
++                )}
++                <p className="text-[12px] text-label-tertiary">{activeTemplate.steps.length} attività</p>
++              </div>
++              <button
++                onClick={() => setEditing(!editing)}
++                className="text-[13px] text-accent min-h-10 flex items-center gap-1.5"
++              >
++                <Pencil size={14} />
++                {editing ? 'Fine' : 'Personalizza'}
++              </button>
+             </div>
+-            <div className="flex flex-col gap-1">
+-              {routineSteps.map((step, i) => (
+-                <div key={step.name} className="flex items-center justify-between py-2.5 border-b border-separator last:border-0">
+-                  <div className="flex items-center gap-3">
+-                    <span className="w-6 h-6 rounded-full bg-fill-tertiary text-label-secondary text-[12px] font-semibold flex items-center justify-center">
+-                      {i + 1}
+-                    </span>
+-                    {editing ? <input value={step.name} onChange={(e) => saveSteps(routineSteps.map((s,j) => j === i ? {...s,name:e.target.value} : s))} className="text-[16px] bg-surface-2 rounded-lg px-2 py-1 w-36" aria-label={`Nome attività ${i+1}`} /> : <span className="text-[16px] text-label">{step.name}</span>}
++
++            {/* Selettore colore/emoji in modalità modifica */}
++            {editing && (
++              <div className="mb-4">
++                <div className="flex gap-2 mb-3">
++                  <div className="flex gap-1.5 flex-wrap">
++                    {ROUTINE_EMOJIS.map((e) => (
++                      <button
++                        key={e}
++                        onClick={() => saveTemplate(activeTemplate._id, { emoji: e })}
++                        className={cn('w-9 h-9 rounded-full bg-surface-2 grid place-items-center text-[15px]', activeTemplate.emoji === e && 'ring-2 ring-accent')}
++                      >
++                        {e}
++                      </button>
++                    ))}
+                   </div>
+-                  {editing ? <div className="flex items-center gap-1"><label className="flex items-center gap-1 text-[12px] text-label-tertiary"><input type="number" min="1" max="180" value={step.targetMinutes} onChange={(e) => saveSteps(routineSteps.map((s,j) => j === i ? {...s,targetMinutes:Number(e.target.value)} : s))} className="w-14 bg-surface-2 rounded-lg px-2 py-1 text-right" /> min</label><button onClick={()=>saveSteps(routineSteps.filter((_,j)=>j!==i))} className="w-9 h-9 grid place-items-center text-sys-red" aria-label="Rimuovi attività"><Trash2 size={15}/></button></div> : <span className="text-[13px] text-label-tertiary tabular-nums">~{step.targetMinutes} min</span>}
+                 </div>
+-              ))}
++                <div className="flex gap-2 flex-wrap">
++                  {ROUTINE_COLORS.map((c) => (
++                    <button
++                      key={c}
++                      onClick={() => saveTemplate(activeTemplate._id, { color: c })}
++                      className={cn('w-8 h-8 rounded-full grid place-items-center', activeTemplate.color === c && 'ring-2 ring-offset-2 ring-offset-surface-1')}
++                      style={{ backgroundColor: c, boxShadow: activeTemplate.color === c ? `0 0 0 2px ${c}` : undefined }}
++                      aria-label={`Colore ${c}`}
++                    >
++                      {activeTemplate.color === c && <Check size={14} className="text-white" strokeWidth={3} />}
++                    </button>
++                  ))}
++                </div>
++              </div>
++            )}
++
++            {/* Attività della scheda */}
++            <div className="flex flex-col">
++              <AnimatePresence initial={false}>
++                {activeTemplate.steps.map((step, i) => (
++                  <motion.div
++                    key={`${activeTemplate._id}-${i}`}
++                    layout
++                    initial={{ opacity: 0, y: 6 }}
++                    animate={{ opacity: 1, y: 0 }}
++                    exit={{ opacity: 0, height: 0 }}
++                    className="flex items-center justify-between py-2.5 border-b border-separator last:border-0"
++                  >
++                    <div className="flex items-center gap-3 min-w-0">
++                      <span className="w-6 h-6 rounded-full bg-fill-tertiary text-label-secondary text-[12px] font-semibold flex items-center justify-center shrink-0">
++                        {i + 1}
++                      </span>
++                      {editing ? (
++                        <input
++                          value={step.name}
++                          onChange={(e) => {
++                            const steps = activeTemplate.steps.map((s, j) => (j === i ? { ...s, name: e.target.value } : s));
++                            saveTemplate(activeTemplate._id, { steps });
++                          }}
++                          className="text-[16px] bg-surface-2 rounded-lg px-2 py-1 w-32 min-w-0"
++                          aria-label={`Nome attività ${i + 1}`}
++                        />
++                      ) : (
++                        <span className="text-[16px] text-label truncate">{step.name}</span>
++                      )}
++                    </div>
++                    {editing ? (
++                      <div className="flex items-center gap-1">
++                        <button onClick={() => {
++                          const steps = activeTemplate.steps.map((s, j) => (j === i ? { ...s, targetMinutes: Math.max(1, s.targetMinutes - 1) } : s));
++                          saveTemplate(activeTemplate._id, { steps });
++                        }} className="w-9 h-9 rounded-full bg-surface-2 text-label-secondary grid place-items-center" aria-label="Riduci tempo">−</button>
++                        <span className="w-10 text-center text-[14px] text-label tabular-nums">{step.targetMinutes} min</span>
++                        <button onClick={() => {
++                          const steps = activeTemplate.steps.map((s, j) => (j === i ? { ...s, targetMinutes: Math.min(180, s.targetMinutes + 1) } : s));
++                          saveTemplate(activeTemplate._id, { steps });
++                        }} className="w-9 h-9 rounded-full bg-surface-2 text-label-secondary grid place-items-center" aria-label="Aumenta tempo">+</button>
++                        <button
++                          onClick={() => {
++                            if (i === 0) return;
++                            const steps = [...activeTemplate.steps];
++                            [steps[i - 1], steps[i]] = [steps[i], steps[i - 1]];
++                            saveTemplate(activeTemplate._id, { steps });
++                          }}
++                          disabled={i === 0}
++                          className="w-9 h-9 rounded-full bg-surface-2 grid place-items-center text-label-secondary disabled:opacity-30"
++                          aria-label="Sposta su"
++                        >
++                          <ChevronUp size={15} />
++                        </button>
++                        <button
++                          onClick={() => {
++                            if (i === activeTemplate.steps.length - 1) return;
++                            const steps = [...activeTemplate.steps];
++                            [steps[i], steps[i + 1]] = [steps[i + 1], steps[i]];
++                            saveTemplate(activeTemplate._id, { steps });
++                          }}
++                          disabled={i === activeTemplate.steps.length - 1}
++                          className="w-9 h-9 rounded-full bg-surface-2 grid place-items-center text-label-secondary disabled:opacity-30"
++                          aria-label="Sposta giù"
++                        >
++                          <ChevronDown size={15} />
++                        </button>
++                        <button
++                          onClick={() => saveTemplate(activeTemplate._id, { steps: activeTemplate.steps.filter((_, j) => j !== i) })}
++                          className="w-9 h-9 grid place-items-center text-sys-red"
++                          aria-label="Rimuovi attività"
++                        >
++                          <Trash2 size={15} />
++                        </button>
++                      </div>
++                    ) : (
++                      <span className="text-[13px] text-label-tertiary tabular-nums">~{step.targetMinutes} min</span>
++                    )}
++                  </motion.div>
++                ))}
++              </AnimatePresence>
+             </div>
+-            {editing && <button onClick={()=>saveSteps([...routineSteps,{name:'Nuova attività',targetMinutes:10}])} className="w-full h-11 mt-3 rounded-full border border-accent text-accent text-[14px] font-semibold flex items-center justify-center gap-2"><Plus size={16}/> Aggiungi attività</button>}
++
++            {editing && (
++              <button
++                onClick={() =>
++                  saveTemplate(activeTemplate._id, {
++                    steps: [...activeTemplate.steps, { name: 'Nuova attività', targetMinutes: 10 }],
++                  })
++                }
++                className="w-full h-11 mt-3 rounded-full border border-accent text-accent text-[14px] font-semibold flex items-center justify-center gap-2"
++              >
++                <Plus size={16} /> Aggiungi attività
++              </button>
++            )}
++
+             <div className="flex items-center justify-center gap-1.5 mt-4 text-[13px] text-label-secondary">
+               <Clock3 size={13} />
+-              Durata totale stimata: {formatMinutes(routineSteps.reduce((s, st) => s + st.targetMinutes, 0))}
++              Durata totale: {formatMinutes(activeTemplate.steps.reduce((s, st) => s + st.targetMinutes, 0))}
+             </div>
++
++            {!editing && (
++              <button onClick={() => setConfirmDelete(true)} className="mx-auto mt-3 flex items-center gap-1 text-[12px] text-label-tertiary min-h-8">
++                <Trash2 size={12} /> Elimina questa scheda
++              </button>
++            )}
+           </div>
+ 
+-          <motion.button
+-            whileTap={{ scale: 0.97 }}
+-            onClick={begin}
+-            className="w-full h-14 rounded-2xl bg-accent text-white text-[17px] font-semibold flex items-center justify-center gap-2 shadow-lg shadow-accent/25 active:bg-accent-pressed transition-colors"
+-          >
+-            <Play size={20} fill="currentColor" /> Avvia routine
+-          </motion.button>
+-          <p className="text-[12px] text-label-tertiary text-center mt-3">
+-            Il timer scorre automaticamente da uno step al successivo registrando i tempi reali
+-          </p>
++          {!editing && (
++            <>
++              <motion.button
++                whileTap={{ scale: 0.97 }}
++                onClick={begin}
++                className="w-full h-14 rounded-2xl bg-accent text-white text-[17px] font-semibold flex items-center justify-center gap-2 shadow-lg shadow-accent/25 active:bg-accent-pressed transition-colors"
++              >
++                <Play size={20} fill="currentColor" /> Avvia routine
++              </motion.button>
++              <p className="text-[12px] text-label-tertiary text-center mt-3">
++                Il timer scorre automaticamente da uno step al successivo registrando i tempi reali
++              </p>
++            </>
++          )}
++        </div>
++      )}
++
++      {/* Nessuna scheda */}
++      {!templatesLoading && (templates ?? []).length === 0 && (
++        <div className="bg-surface-1 rounded-2xl p-8 text-center">
++          <Layers size={32} className="text-label-tertiary mx-auto mb-3" />
++          <p className="text-[15px] text-label">Nessuna routine</p>
++          <p className="text-[13px] text-label-tertiary mt-1 mb-4">Crea la tua prima scheda con le attività che preferisci.</p>
++          <button onClick={() => setNewTemplateOpen(true)} className="h-11 px-5 rounded-full bg-accent text-white text-[14px] font-semibold">
++            <Plus size={16} className="inline mr-1" /> Crea routine
++          </button>
+         </div>
+       )}
++
++      <NewTemplateDialog
++        isOpen={newTemplateOpen}
++        onClose={() => setNewTemplateOpen(false)}
++        onCreate={async (fields) => {
++          const doc = await createTemplate(fields);
++          setActiveTemplateId(doc || undefined);
++        }}
++      />
++
++      <Dialog
++        isOpen={confirmDelete}
++        onClose={() => setConfirmDelete(false)}
++        title="Eliminare la scheda?"
++        actions={
++          <>
++            <button onClick={() => setConfirmDelete(false)} className="text-[17px] text-label-secondary font-medium active:opacity-60">Annulla</button>
++            <button
++              onClick={() => {
++                if (activeTemplate) removeTemplate(activeTemplate._id);
++                setConfirmDelete(false);
++              }}
++              className="text-[17px] text-sys-red font-semibold active:opacity-60"
++            >
++              Elimina
++            </button>
++          </>
++        }
++      >
++        <p className="text-[14px] text-label-secondary leading-relaxed">
++          Eliminerai «{activeTemplate?.name}» con le sue {activeTemplate?.steps?.length || 0} attività. I tempi già registrati restano salvati.
++        </p>
++      </Dialog>
+     </div>
+   );
+ }
+ 
++function NewTemplateDialog({ isOpen, onClose, onCreate }) {
++  const [name, setName] = useState('');
++  const [emoji, setEmoji] = useState('⭐');
++  const [color, setColor] = useState(ROUTINE_COLORS[0]);
++  const [steps, setSteps] = useState([
++    { name: 'Attività 1', targetMinutes: 10 },
++  ]);
++
++  const addStep = () => setSteps((s) => [...s, { name: `Attività ${s.length + 1}`, targetMinutes: 10 }]);
++  const removeStep = (i) => setSteps((s) => s.filter((_, j) => j !== i));
++
++  const create = async () => {
++    if (!name.trim()) return;
++    await onCreate({ name: name.trim(), emoji, color, steps });
++    setName('');
++    setSteps([{ name: 'Attività 1', targetMinutes: 10 }]);
++    onClose();
++  };
++
++  return (
++    <Dialog
++      isOpen={isOpen}
++      onClose={onClose}
++      title="Nuova scheda routine"
++      actions={
++        <>
++          <button onClick={onClose} className="text-[17px] text-label-secondary font-medium active:opacity-60">Annulla</button>
++          <button onClick={create} disabled={!name.trim()} className="text-[17px] text-accent font-semibold active:opacity-60 disabled:opacity-40">Crea</button>
++        </>
++      }
++    >
++      <input
++        autoFocus
++        value={name}
++        onChange={(e) => setName(e.target.value)}
++        placeholder="Nome routine (es. Allenamento)"
++        className="w-full bg-surface-2 rounded-xl px-4 py-3 text-[16px] text-label placeholder:text-label-tertiary my-2"
++      />
++      <p className="text-[13px] text-label-secondary mb-2">Emoji e colore</p>
++      <div className="flex flex-wrap gap-1.5 mb-3">
++        {ROUTINE_EMOJIS.map((e) => (
++          <button key={e} onClick={() => setEmoji(e)} className={cn('w-9 h-9 rounded-full bg-surface-2 grid place-items-center text-[15px]', emoji === e && 'ring-2 ring-accent')}>
++            {e}
++          </button>
++        ))}
++      </div>
++      <div className="flex gap-2 flex-wrap mb-4">
++        {ROUTINE_COLORS.map((c) => (
++          <button
++            key={c}
++            onClick={() => setColor(c)}
++            className={cn('w-8 h-8 rounded-full grid place-items-center', color === c && 'ring-2 ring-offset-2 ring-offset-surface-2')}
++            style={{ backgroundColor: c }}
++          >
++            {color === c && <Check size={14} className="text-white" strokeWidth={3} />}
++          </button>
++        ))}
++      </div>
++      <p className="text-[13px] font-semibold text-label-secondary mb-2">Attività</p>
++      <div className="flex flex-col gap-2 mb-3 max-h-56 overflow-y-auto scrollable pr-1">
++        {steps.map((step, i) => (
++          <div key={i} className="flex items-center gap-2">
++            <input
++              value={step.name}
++              onChange={(e) => setSteps(steps.map((s, j) => (j === i ? { ...s, name: e.target.value } : s)))}
++              className="flex-1 bg-surface-2 rounded-lg px-3 h-11 text-[15px]"
++              aria-label={`Attività ${i + 1}`}
++            />
++            <div className="flex items-center gap-1">
++              <button onClick={() => setSteps(steps.map((s, j) => (j === i ? { ...s, targetMinutes: Math.max(1, s.targetMinutes - 1) } : s)))} className="w-9 h-9 rounded-full bg-surface-2 text-label-secondary">−</button>
++              <span className="w-9 text-center text-[13px] tabular-nums text-label-secondary">{step.targetMinutes}</span>
++              <button onClick={() => setSteps(steps.map((s, j) => (j === i ? { ...s, targetMinutes: Math.min(180, s.targetMinutes + 1) } : s)))} className="w-9 h-9 rounded-full bg-surface-2 text-label-secondary">+</button>
++            </div>
++            <button onClick={() => removeStep(i)} className="w-9 h-9 grid place-items-center text-sys-red" aria-label="Rimuovi">
++              <X size={15} />
++            </button>
++          </div>
++        ))}
++      </div>
++      <button onClick={addStep} className="w-full h-11 rounded-full border border-accent text-accent text-[14px] font-semibold">
++        <Plus size={15} className="inline mr-1" /> Aggiungi attività
++      </button>
++    </Dialog>
++  );
++}
++
+ function CompletionSummary({ session }) {
+   const total = session.steps.reduce((s, st) => s + (st.actualSeconds || 0), 0);
+   return (
+@@ -171,7 +497,9 @@ function CompletionSummary({ session }) {
+       >
+         <Check size={40} className="text-sys-green" strokeWidth={3} />
+       </motion.div>
+-      <h2 className="text-[22px] font-bold text-label tracking-tight">Routine completata!</h2>
++      <h2 className="text-[22px] font-bold text-label tracking-tight">
++        {session.routineName ? `${session.routineName} completata!` : 'Routine completata!'}
++      </h2>
+       <p className="text-[14px] text-label-secondary mt-1 mb-5">
+         Tempo totale: {formatSeconds(total)}
+       </p>
+@@ -185,7 +513,9 @@ function SavedSummary({ routine, totalActual, onRepeat }) {
+     <div>
+       <div className="bg-surface-1 rounded-2xl p-5 mb-4">
+         <div className="flex items-center justify-between mb-4">
+-          <span className="text-[15px] font-semibold text-label">Tempi effettivi di oggi</span>
++          <span className="text-[15px] font-semibold text-label">
++            {routine.routineName ? `${routine.routineName} — tempi effettivi` : 'Tempi effettivi di oggi'}
++          </span>
+           <span className="text-[13px] text-label-secondary tabular-nums">{formatSeconds(totalActual)}</span>
+         </div>
+         <StepList steps={routine.steps} />
+diff --git a/src/pages/SchoolPage.jsx b/src/pages/SchoolPage.jsx
+index ba5f237..c5fd4f0 100644
+--- a/src/pages/SchoolPage.jsx
++++ b/src/pages/SchoolPage.jsx
+@@ -2,25 +2,27 @@ import { useState, useMemo, useCallback } from 'react';
+ import { motion, AnimatePresence } from 'framer-motion';
+ import { format } from 'date-fns';
+ import { it } from 'date-fns/locale';
+-import { ClipboardList, Plus } from 'lucide-react';
+-import { useTasks, useTaskCategories } from '../hooks/useData';
++import { ClipboardList, Plus, Timer } from 'lucide-react';
++import { useTasks, useExpandedTasks, useTaskCategories } from '../hooks/useData';
+ import TaskCard from '../components/school/TaskCard';
+ import TaskFormSheet from '../components/school/TaskFormSheet';
+ import StudyTimerCard from '../components/school/StudyTimerCard';
+ import LoadInsightCard from '../components/school/LoadInsightCard';
+ import DatePickerDialog from '../components/school/DatePickerDialog';
++import WeekStrip from '../components/layout/WeekStrip';
+ import ContextMenu from '../components/ui/ContextMenu';
+ import EmptyState from '../components/ui/EmptyState';
+ import FAB from '../components/ui/FAB';
+ import { toDateKey, addDays } from '../lib/dates';
+ 
+ /**
+- * Tab 1 — Scuola: timer studio (15:00–20:00), task categorizzati con
+- * menu contestuale, stima tempi e carico via Gemini AI.
++ * Tab — Compiti (screenshot 06): strip settimanale, lista attività/eventi
++ * con orari, ripetizione, promemoria e allegati; timer studio e AI sotto.
+  */
+-export default function SchoolPage({ selectedDate }) {
++export default function SchoolPage({ selectedDate, weekDates, weekLabel, goToPrevWeek, goToNextWeek, goToToday, onSelectDate }) {
+   const dateKey = toDateKey(selectedDate);
+-  const { data: tasks, isLoading, createTask, updateTask, toggleTask, removeTask, moveTaskToDate, addTaskMinutes } = useTasks(dateKey);
++  const { data: tasks /* mutazioni */, createTask, updateTask, toggleTask, removeTask, moveTaskToDate, addTaskMinutes } = useTasks(dateKey);
++  const { data: expandedTasks, isLoading } = useExpandedTasks(dateKey);
+   const { data: categories, createCategory } = useTaskCategories();
+ 
+   const [formOpen, setFormOpen] = useState(false);
+@@ -28,9 +30,10 @@ export default function SchoolPage({ selectedDate }) {
+   const [menuTask, setMenuTask] = useState(null);
+   const [menuPos, setMenuPos] = useState(null);
+   const [dateChangeTask, setDateChangeTask] = useState(null);
++  const [showStudy, setShowStudy] = useState(false);
+ 
+-  const openTasks = useMemo(() => (tasks ?? []).filter((t) => !t.completed), [tasks]);
+-  const doneTasks = useMemo(() => (tasks ?? []).filter((t) => t.completed), [tasks]);
++  const openTasks = useMemo(() => (expandedTasks ?? []).filter((t) => !t.completed), [expandedTasks]);
++  const doneTasks = useMemo(() => (expandedTasks ?? []).filter((t) => t.completed), [expandedTasks]);
+ 
+   const openMenu = useCallback((task, e) => {
+     setMenuPos({ y: Math.min(e.clientY ?? 200, window.innerHeight - 260) });
+@@ -50,23 +53,24 @@ export default function SchoolPage({ selectedDate }) {
+   const handleMoveTomorrow = (task) => moveTaskToDate(task._id, toDateKey(addDays(selectedDate, 1)));
+ 
+   return (
+-    <div className="h-full overflow-y-auto scrollable px-4 pt-2 pb-32">
++    <div className="h-full overflow-y-auto scrollable px-4 pt-3 pb-32">
+       {/* Header pagina */}
+-      <div className="flex items-end justify-between mb-4">
+-        <div>
+-          <h1 className="text-[28px] font-bold text-label tracking-tight leading-tight">Scuola</h1>
+-          <p className="text-[13px] text-label-secondary capitalize">{format(selectedDate, 'EEEE d MMMM', { locale: it })}</p>
+-        </div>
++      <div className="mb-1">
++        <h1 className="text-[28px] font-bold text-label tracking-tight leading-tight">Compiti</h1>
++        <p className="text-[13px] text-label-secondary capitalize">{format(selectedDate, 'EEEE d MMMM', { locale: it })}</p>
+       </div>
+ 
+-      {/* Timer studio */}
+-      <div className="mb-4">
+-        <StudyTimerCard
+-          selectedDate={selectedDate}
+-          tasks={tasks ?? []}
+-          onAssignMinutes={(taskId, minutes) => addTaskMinutes(taskId, minutes)}
+-        />
+-      </div>
++      {/* Strip settimanale (screenshot 06) */}
++      <WeekStrip
++        embedded
++        weekDates={weekDates}
++        selectedDate={selectedDate}
++        weekLabel={weekLabel}
++        onSelectDate={onSelectDate}
++        onPrevWeek={goToPrevWeek}
++        onNextWeek={goToNextWeek}
++        onToday={goToToday}
++      />
+ 
+       {/* Carico AI */}
+       <div className="mb-4">
+@@ -77,7 +81,7 @@ export default function SchoolPage({ selectedDate }) {
+       {(openTasks.length > 0 || doneTasks.length > 0) && (
+         <div>
+           <div className="flex items-center justify-between mb-2.5 px-1">
+-            <h2 className="text-[15px] font-semibold text-label-secondary">Compiti con data ({tasks.length})</h2>
++            <h2 className="text-[15px] font-semibold text-label-secondary">Attività del giorno ({openTasks.length})</h2>
+           </div>
+           <div className="flex flex-col gap-2">
+             <AnimatePresence initial={false}>
+@@ -115,7 +119,7 @@ export default function SchoolPage({ selectedDate }) {
+       )}
+ 
+       {/* Vuoto */}
+-      {!isLoading && tasks.length === 0 && (
++      {!isLoading && expandedTasks.length === 0 && (
+         <EmptyState
+           title="Nessuna attività in questo giorno"
+           subtitle="Tocca + per aggiungere un compito"
+@@ -123,6 +127,25 @@ export default function SchoolPage({ selectedDate }) {
+         />
+       )}
+ 
++      {/* Timer studio (collassabile, per non appesantire la lista) */}
++      <div className="mt-5">
++        <button
++          onClick={() => setShowStudy((s) => !s)}
++          className="w-full flex items-center gap-2 px-1 mb-2 text-[14px] font-semibold text-label-secondary"
++        >
++          <Timer size={15} className="text-accent" />
++          Timer di studio (15:00–20:00)
++          <span className="ml-auto text-[13px] text-accent">{showStudy ? 'Nascondi' : 'Mostra'}</span>
++        </button>
++        {showStudy && (
++          <StudyTimerCard
++            selectedDate={selectedDate}
++            tasks={tasks ?? []}
++            onAssignMinutes={(taskId, minutes) => addTaskMinutes(taskId, minutes)}
++          />
++        )}
++      </div>
++
+       {/* FAB nuovo compito */}
+       <FAB
+         onClick={() => {
+diff --git a/src/store/routineSession.js b/src/store/routineSession.js
+index 20b2528..c2d5767 100644
+--- a/src/store/routineSession.js
++++ b/src/store/routineSession.js
+@@ -12,6 +12,9 @@ const STORAGE_KEY = 'app1_routine_session_v1';
+ function blank() {
+   return {
+     dateKey: null,
++    routineId: null,
++    routineName: null,
++    routineEmoji: null,
+     steps: [],
+     currentIndex: 0,
+     status: 'idle', // idle | running | paused | done
+@@ -69,11 +72,14 @@ try {
+ notify();
+ 
+ export const routineSession = {
+-  /** Avvia una nuova sessione per la data indicata. */
+-  begin(dateKey, stepTemplates) {
++  /** Avvia una nuova sessione per la data indicata (template = scheda routine). */
++  begin(dateKey, stepTemplates, meta = {}) {
+     internal = {
+       ...blank(),
+       dateKey,
++      routineId: meta.routineId ?? null,
++      routineName: meta.routineName ?? null,
++      routineEmoji: meta.routineEmoji ?? null,
+       startedAt: new Date().toISOString(),
+       currentIndex: 0,
+       status: 'running',
