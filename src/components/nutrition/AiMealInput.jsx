@@ -90,6 +90,7 @@ export default function AiMealInput({ onConfirm }) {
             )}
           </motion.button>
         </div>
+        <button onClick={() => setParsed({ description: text.trim() || 'Pasto', calories: 0, protein: 0, carbs: 0, fat: 0, original: text.trim() })} className="mt-3 text-[13px] text-accent font-semibold min-h-8">Inserisci kcal e macro manualmente</button>
         {error && (
           <div className="flex items-start gap-2 mt-3">
             <AlertCircle size={14} className="text-sys-orange shrink-0 mt-0.5" />
@@ -116,14 +117,10 @@ export default function AiMealInput({ onConfirm }) {
               </>
             }
           >
-            <p className="text-[15px] text-label leading-snug py-2">{parsed.description}</p>
+            <input value={parsed.description} onChange={(e) => setParsed({...parsed, description:e.target.value})} className="w-full bg-surface-2 rounded-xl px-3 py-3 text-[15px] my-2" aria-label="Nome pasto" />
 
-            {/* Macro grid */}
-            <div className="grid grid-cols-4 gap-2 my-4">
-              <MacroTile label="kcal" value={parsed.calories} color="#0a84ff" />
-              <MacroTile label="Proteine" value={`${parsed.protein}g`} color="#30d158" />
-              <MacroTile label="Carboidrati" value={`${parsed.carbs}g`} color="#ffd60a" />
-              <MacroTile label="Grassi" value={`${parsed.fat}g`} color="#ff375f" />
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 my-4">
+              {[['calories','kcal'],['protein','Proteine g'],['carbs','Carboidrati g'],['fat','Grassi g']].map(([key,label]) => <label key={key} className="bg-surface-2 rounded-xl p-2 text-[10px] text-label-tertiary"><input type="number" min="0" value={parsed[key]} onChange={(e) => setParsed({...parsed,[key]:Number(e.target.value)})} className="w-full bg-transparent text-[17px] font-bold text-label" />{label}</label>)}
             </div>
 
             {/* Tipo pasto */}

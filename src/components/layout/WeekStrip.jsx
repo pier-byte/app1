@@ -16,13 +16,14 @@ export default function WeekStrip({
   onPrevWeek,
   onNextWeek,
   onToday,
+  embedded = false,
 }) {
   const swipeHandlers = useSwipeNavigation(onNextWeek, onPrevWeek);
 
   return (
-    <div className="bg-canvas px-4 pt-2 pb-3" {...swipeHandlers}>
+    <div className={embedded ? 'bg-transparent pb-3' : 'bg-canvas px-4 pt-2 pb-3'} {...swipeHandlers}>
       {/* Riga navigazione settimana */}
-      <div className="flex items-center justify-between mb-3">
+      {!embedded && <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <button
             onClick={onPrevWeek}
@@ -57,7 +58,7 @@ export default function WeekStrip({
         >
           Oggi
         </button>
-      </div>
+      </div>}
 
       {/* Griglia giorni */}
       <div className="grid grid-cols-7 gap-1">

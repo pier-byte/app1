@@ -14,6 +14,16 @@ import { DEFAULT_TASK_CATEGORIES } from '../lib/constants';
 
 // ═══════════════════ TAB 1 — SCUOLA ═══════════════════
 
+export function useTasksBetween(startKey, endKey) {
+  if (HAS_CONVEX) {
+    const data = useQuery(api.tasks.listBetween, { start: startKey, end: endKey });
+    return { data, isLoading: data === undefined };
+  }
+  const state = useLocalState();
+  const data = useMemo(() => state.tasks.filter((t) => t.date >= startKey && t.date <= endKey), [state.tasks, startKey, endKey]);
+  return { data, isLoading: false };
+}
+
 export function useTasks(dateKey) {
   if (HAS_CONVEX) {
     const data = useQuery(api.tasks.listByDate, { date: dateKey });
@@ -79,7 +89,8 @@ export function useTaskCategories() {
       return [...defaults, ...custom].sort((a, b) => (a.order ?? 99) - (b.order ?? 99));
     }, [raw]);
 
-    return { data, isLoading: raw === undefined };
+    const createCategoryMutation = useMutation(api.tasks.createCategory);
+    return { data, isLoading: raw === undefined, createCategory: (name, color) => createCategoryMutation({ name, color, order: data.length }) };
   }
 
   const state = useLocalState();
@@ -94,7 +105,7 @@ export function useTaskCategories() {
     }));
     return [...defaults, ...custom].sort((a, b) => (a.order ?? 99) - (b.order ?? 99));
   }, [state.taskCategories]);
-  return { data, isLoading: false };
+  return { data, isLoading: false, createCategory: (name, color) => localMutations.createCategory({ name, color, order: data.length }) };
 }
 
 // ═══════════════════ TAB 2 — ROUTINE ═══════════════════

@@ -1,8 +1,9 @@
 import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { isToday, isSameDay, addDays, format, parseISO } from 'date-fns';
+import { isToday, isSameDay, addDays, format, parseISO, startOfMonth, startOfWeek, addMonths } from 'date-fns';
 import { it } from 'date-fns/locale';
-import { getWeekDates, toDateKey } from '../../lib/dates';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { toDateKey } from '../../lib/dates';
 import { Dialog } from '../ui/Dialog';
 import { cn } from '../../lib/cn';
 
@@ -16,15 +17,13 @@ function label(date) {
  */
 export default function DatePickerDialog({ isOpen, onClose, value, onConfirm }) {
   const [selected, setSelected] = useState(() => (value ? parseISO(value) : new Date()));
+  const [shownMonth, setShownMonth] = useState(() => (value ? parseISO(value) : new Date()));
 
-  // Rigenera la griglia quando si apre
   const days = useMemo(() => {
     if (!isOpen) return [];
-    const base = value ? parseISO(value) : new Date();
-    const week1 = getWeekDates(base);
-    const week2 = getWeekDates(addDays(base, 7));
-    return [...week1, ...week2];
-  }, [isOpen, value]);
+    const start = startOfWeek(startOfMonth(shownMonth), { weekStartsOn: 1 });
+    return Array.from({length:42}, (_,i) => addDays(start,i));
+  }, [isOpen, shownMonth]);
 
   const quickOptions = useMemo(
     () => [
@@ -41,7 +40,6 @@ export default function DatePickerDialog({ isOpen, onClose, value, onConfirm }) 
     onClose();
   };
 
-  const weeks = [days.slice(0, 7), days.slice(7, 14)];
   const dayHeaders = ['L', 'M', 'M', 'G', 'V', 'S', 'D'];
 
   return (
@@ -81,15 +79,14 @@ export default function DatePickerDialog({ isOpen, onClose, value, onConfirm }) 
 
       {/* Griglia 2 settimane */}
       <div className="py-2">
-        <p className="text-[13px] text-label-secondary capitalize mb-2">{format(selected, 'MMMM yyyy', { locale: it })}</p>
+        <div className="flex items-center justify-between mb-3"><button onClick={() => setShownMonth(addMonths(shownMonth,-1))} className="control-button"><ChevronLeft size={18}/></button><p className="text-[15px] font-semibold capitalize">{format(shownMonth, 'MMMM yyyy', { locale: it })}</p><button onClick={() => setShownMonth(addMonths(shownMonth,1))} className="control-button"><ChevronRight size={18}/></button></div>
         <div className="grid grid-cols-7 gap-y-1 mb-1">
           {dayHeaders.map((d, i) => (
             <span key={i} className="text-center text-[11px] text-label-tertiary font-medium">{d}</span>
           ))}
         </div>
-        {weeks.map((week, wi) => (
-          <div key={wi} className="grid grid-cols-7 gap-y-1 mb-1">
-            {week.map((date) => {
+          <div className="grid grid-cols-7 gap-y-1 mb-1">
+            {days.map((date) => {
               const active = isSameDay(date, selected);
               const today = isToday(date);
               return (
@@ -112,7 +109,6 @@ export default function DatePickerDialog({ isOpen, onClose, value, onConfirm }) 
               );
             })}
           </div>
-        ))}
       </div>
 
       <p className="text-[13px] text-label-secondary capitalize pb-3">{label(selected)}</p>

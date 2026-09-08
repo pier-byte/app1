@@ -164,6 +164,11 @@ export const localMutations = {
       ),
     }));
   },
+  createCategory(fields) {
+    const doc = { ...fields, _id: uid() };
+    update((s) => ({ taskCategories: [...s.taskCategories, doc] }));
+    return doc;
+  },
   // Routine
   saveRoutine({ date, steps, startedAt, completedAt }) {
     update((s) => {
