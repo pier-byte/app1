@@ -159,7 +159,7 @@ export default function RepeatPicker({ repeat, onChange, baseDate }) {
             </div>
 
             {preview && (
-              <p className="text-[13px] text-accent font-medium mt-3 leading-snug">
+              <p className="text-[13px] text-sky font-medium mt-3 leading-snug">
                 Verranno create {preview.count} {preview.count === 1 ? 'attività' : 'attività'}
                 {preview.count > 1 && (
                   <> · dal {preview.first.split('-').reverse().slice(0, 2).join('/')} al {preview.last.split('-').reverse().slice(0, 2).join('/')}</>

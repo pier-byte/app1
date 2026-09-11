@@ -77,9 +77,9 @@ export default function MonthGrid({ selectedDate, onSelectDate }) {
                 className={cn(
                   'mx-auto w-7 h-7 shrink-0 grid place-items-center rounded-full text-[14px] font-medium tabular-nums',
                   today
-                    ? 'bg-accent text-white font-semibold'
+                    ? 'bg-accent text-white font-semibold shadow-sm shadow-blue-600/40'
                     : selected
-                      ? 'ring-1 ring-accent text-label'
+                      ? 'ring-[1.5px] ring-sky text-sky font-semibold'
                       : 'text-label'
                 )}
               >
@@ -88,7 +88,7 @@ export default function MonthGrid({ selectedDate, onSelectDate }) {
 
               <span className="flex flex-col gap-[2px] min-h-0 flex-1 overflow-hidden">
                 {dayTasks.slice(0, maxPills).map((t) => {
-                  const color = t.categoryColor || '#0a84ff';
+                  const color = t.categoryColor || '#2997ff';
                   return (
                     <span
                       key={t._id}

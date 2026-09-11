@@ -42,11 +42,11 @@ export default function StudyTimerCard({ selectedDate, tasks, onAssignMinutes })
 
   return (
     <>
-      <div className="bg-surface-1 rounded-2xl p-5">
+      <div className="card p-5">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <GraduationCap size={18} className="text-accent" />
+            <GraduationCap size={18} className="text-sky" />
             <span className="text-[15px] font-semibold text-label">Sessione di studio</span>
           </div>
           <span className="text-[12px] text-label-tertiary tabular-nums">15:00 – 20:00</span>
@@ -217,7 +217,7 @@ function AssignTimeDialog({ minutes, tasks, onClose, onAssign }) {
             disabled={!selected}
             className={cn(
               'flex items-center gap-1.5 text-[17px] font-semibold active:opacity-60',
-              selected ? 'text-accent' : 'text-label-tertiary'
+              selected ? 'text-sky' : 'text-label-tertiary'
             )}
           >
             <Check size={17} /> Attribuisci

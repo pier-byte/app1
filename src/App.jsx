@@ -114,9 +114,14 @@ function ToastHost() {
   return (
     <AnimatePresence>
       {toast && (
-        <div className="fixed left-4 right-4 z-[60] rounded-2xl bg-surface-dialog backdrop-blur-dialog p-4 shadow-2xl border border-separator"
-          style={{ bottom: 'calc(88px + env(safe-area-inset-bottom, 8px))' }}>
-          <p className="text-[13px] text-accent font-semibold mb-0.5">🔔 Promemoria</p>
+        <div
+          className="fixed left-1/2 -translate-x-1/2 z-[60] w-[min(calc(100vw-32px),398px)] rounded-2xl bg-surface-dialog backdrop-blur-dialog border border-white/[0.12] p-4"
+          style={{
+            bottom: 'calc(92px + env(safe-area-inset-bottom, 8px))',
+            boxShadow: '0 20px 60px -10px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255,255,255,0.16)',
+          }}
+        >
+          <p className="text-[13px] text-sky font-semibold mb-0.5">🔔 Promemoria</p>
           <p className="text-[14px] text-label font-medium">{toast.title}</p>
           <p className="text-[12px] text-label-secondary">{toast.body}</p>
         </div>

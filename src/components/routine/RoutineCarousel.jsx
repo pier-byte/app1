@@ -65,7 +65,7 @@ export default function RoutineCarousel({ session, onPause, onResume, onComplete
               ref={(el) => (cardRefs.current[i] = el)}
               className={cn(
                 'snap-center shrink-0 w-[78%] rounded-2xl p-5 transition-colors',
-                isActive ? 'bg-surface-2 ring-1 ring-accent/50' : 'bg-surface-1',
+                isActive ? 'bg-surface-2 ring-1 ring-sky/60' : 'bg-surface-1',
                 !isActive && !isDone && 'opacity-60'
               )}
               onClick={() => isActive && (session.status === 'running' ? onPause() : onResume())}
@@ -87,7 +87,7 @@ export default function RoutineCarousel({ session, onPause, onResume, onComplete
                 )}
               </div>
 
-              <h3 className="text-[24px] font-bold text-label tracking-tight mb-1">{step.name}</h3>
+              <h3 className="text-[24px] font-semibold text-label tracking-tight mb-1">{step.name}</h3>
               <p className="text-[13px] text-label-secondary mb-6">Obiettivo: {step.targetMinutes} min</p>
 
               <p

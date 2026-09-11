@@ -61,7 +61,7 @@ function TimePickerContent({ onClose, value, onConfirm, onToggleAllDay, title = 
         <div className="relative z-10 w-full flex items-center justify-center px-2">
           <DrumColumn values={hours} value={hour} onChange={setHour} label="Ore" format={pad} />
           <div className="w-8 flex items-center justify-center z-20 select-none">
-            <span className="text-[30px] font-bold text-label leading-none">:</span>
+            <span className="text-[30px] font-semibold text-label leading-none">:</span>
           </div>
           <DrumColumn values={minutes} value={minute} onChange={setMinute} label="Minuti" format={pad} />
         </div>

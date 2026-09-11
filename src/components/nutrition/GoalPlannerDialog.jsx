@@ -65,7 +65,7 @@ export default function GoalPlannerDialog({ isOpen, onClose, onApply, initial })
           <button
             onClick={apply}
             disabled={!kcal}
-            className="text-[17px] text-accent font-semibold active:opacity-60 disabled:opacity-40"
+            className="text-[17px] text-sky font-semibold active:opacity-60 disabled:opacity-40"
           >
             Applica
           </button>
@@ -176,21 +176,21 @@ export default function GoalPlannerDialog({ isOpen, onClose, onApply, initial })
 
         {/* Risultato */}
         {bmr && tdeeValue && kcal && (
-          <section className="bg-surface-1 rounded-2xl p-4">
+          <section className="card p-4">
             <div className="grid grid-cols-3 gap-2 mb-3">
               <div className="bg-surface-2 rounded-xl p-2 text-center">
                 <Flame size={13} className="mx-auto text-sys-orange mb-1" />
-                <p className="text-[16px] font-bold text-label tabular-nums">{bmr}</p>
+                <p className="text-[16px] font-semibold text-label tabular-nums">{bmr}</p>
                 <p className="text-[10px] text-label-tertiary">BMR</p>
               </div>
               <div className="bg-surface-2 rounded-xl p-2 text-center">
-                <Target size={13} className="mx-auto text-accent mb-1" />
-                <p className="text-[16px] font-bold text-label tabular-nums">{tdeeValue}</p>
+                <Target size={13} className="mx-auto text-sky mb-1" />
+                <p className="text-[16px] font-semibold text-label tabular-nums">{tdeeValue}</p>
                 <p className="text-[10px] text-label-tertiary">TDEE</p>
               </div>
               <div className="bg-surface-2 rounded-xl p-2 text-center">
                 <Scale size={13} className="mx-auto text-sys-green mb-1" />
-                <p className="text-[16px] font-bold text-label tabular-nums">{kcal}</p>
+                <p className="text-[16px] font-semibold text-label tabular-nums">{kcal}</p>
                 <p className="text-[10px] text-label-tertiary">Target kcal</p>
               </div>
             </div>
@@ -210,7 +210,7 @@ export default function GoalPlannerDialog({ isOpen, onClose, onApply, initial })
                 { label: 'Grassi', value: macros.fat, unit: 'g', color: '#ff375f', note: '~28% kcal' },
               ].map((m) => (
                 <div key={m.label} className="flex-1 bg-surface-2 rounded-xl py-2 px-1 text-center">
-                  <span className="block text-[16px] font-bold text-label tabular-nums">{m.value}<span className="text-[10px] text-label-tertiary"> {m.unit}</span></span>
+                  <span className="block text-[16px] font-semibold text-label tabular-nums">{m.value}<span className="text-[10px] text-label-tertiary"> {m.unit}</span></span>
                   <span className="block text-[9.5px] text-label-tertiary leading-tight mt-0.5">{m.label}</span>
                 </div>
               ))}

@@ -1,7 +1,7 @@
 # app1 — PWA Gestione Personale
 
 PWA ad alte prestazioni per la gestione personale: **Calendario**, **Compiti**, **Routine**, **Nutrizione**, **Note** e **Wallet**.
-Design Apple Dark Mode, realtime con Convex DB, AI con Gemini 2.5 Flash, installabile su iOS/Android/Desktop.
+Design **Liquid Glass su dark** (token da `DESIGN.md`: Action Blue #0066cc come unico colore interattivo, Sky Link Blue #2997ff per link/testi accesi su dark, SF Pro con tracking negativo, pesi max 600, card 18px con hairline, press scale 0.97, frosted blur saturate 180%) allineato alle schermate di `ui-references/`. Layout a colonna singola **max 430px** (visione standard smartphone). Realtime con Convex DB, AI con Gemini 2.5 Flash, installabile su iOS/Android/Desktop.
 
 ![Stack](https://img.shields.io/badge/React_19-Vite_6-61dafb) ![PWA](https://img.shields.io/badge/PWA-vite--plugin--pwa-5a0fc8) ![DB](https://img.shields.io/badge/Convex-Realtime-f3b331) ![AI](https://img.shields.io/badge/Gemini-2.5_Flash-8e75b2) ![Hosting](https://img.shields.io/badge/Cloudflare_Pages-€0/mese-f38020)
 

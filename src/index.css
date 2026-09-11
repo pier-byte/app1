@@ -6,21 +6,25 @@
    ═══════════════════════════════════════════════════ */
 
 @theme {
-  /* ── Surfaces ── */
-  --color-canvas: #000000;
-  --color-surface-1: #1c1c1e;
+  /* ── Surfaces (ui-references: phone bg #0e0e10, glass #1c1c1e) ── */
+  --color-canvas: #0e0e10;
+  --color-void: #000000;            /* global-nav, scrim profondi (DESIGN.md surface-black) */
+  --color-frame: #050506;           /* fondo fuori dal frame smartphone */
+  --color-surface-1: #1c1c1e;       /* tile dark (glass base) */
   --color-surface-2: #2c2c2e;
   --color-surface-3: #3a3a3c;
   --color-surface-4: #48484a;
   --color-surface-elevated: #1c1c1e;
-  --color-surface-sheet: #1c1c1e;
-  --color-surface-dialog: rgba(44, 44, 46, 0.97);
+  --color-surface-sheet: rgba(28, 28, 30, 0.86);
+  --color-surface-dialog: rgba(30, 30, 32, 0.9);
   --color-surface-input: #1c1c1e;
+  --color-glass-border: rgba(255, 255, 255, 0.14);
 
-  /* ── Accent ── */
-  --color-accent: #0a84ff;
-  --color-accent-hover: #409cff;
-  --color-accent-pressed: #0071e3;
+  /* ── Accent (DESIGN.md: Action Blue unico colore interattivo) ── */
+  --color-accent: #0066cc;          /* Action Blue — pill CTA, selezioni */
+  --color-accent-hover: #0077ee;
+  --color-accent-pressed: #0051a8;
+  --color-sky: #2997ff;             /* Sky Link Blue — link/accenti su dark */
 
   /* ── System Colors ── */
   --color-sys-green: #30d158;
@@ -46,9 +50,9 @@
   --color-fill-secondary: rgba(120, 120, 128, 0.32);
   --color-fill-tertiary: rgba(118, 118, 128, 0.24);
 
-  /* ── Separators ── */
-  --color-separator: rgba(84, 84, 88, 0.65);
-  --color-separator-opaque: #38383a;
+  /* ── Separators (hairline chiare come i reference) ── */
+  --color-separator: rgba(255, 255, 255, 0.1);
+  --color-separator-opaque: #26262a;
 
   /* ── Budget Thresholds ── */
   --color-budget-ok: #30d158;
@@ -71,8 +75,8 @@
   --radius-sheet: 14px;
   --radius-pill: 9999px;
 
-  /* ── Typography ── */
-  --font-sans: "Inter", "SF Pro Display", "SF Pro Text", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  /* ── Typography (DESIGN.md: SF Pro primo nell'stack, Inter fallback) ── */
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", system-ui, sans-serif;
 
   /* ── Animations ── */
   --ease-spring: cubic-bezier(0.25, 0.46, 0.45, 0.94);
@@ -89,7 +93,7 @@
 }
 
 html {
-  background-color: #000000;
+  background-color: var(--color-frame);
   color-scheme: dark;
   overscroll-behavior: none;
 }
@@ -166,7 +170,7 @@ input::placeholder, textarea::placeholder {
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  border: 2px solid var(--color-label-secondary);
+  border: 2px solid rgba(255, 255, 255, 0.35);
   transition: all 0.15s ease;
 }
 .pin-dot.filled {
@@ -212,6 +216,34 @@ input::placeholder, textarea::placeholder {
   transform: translateX(20px);
 }
 
+/* Frame smartphone (visione standard ~390–430px): su schermi larghi la colonna
+   app resta centrata con hairline laterali, come i reference 390px */
+.phone-frame {
+  position: relative;
+}
+@media (min-width: 480px) {
+  .phone-frame {
+    border-left: 1px solid rgba(255, 255, 255, 0.07);
+    border-right: 1px solid rgba(255, 255, 255, 0.07);
+    box-shadow: 0 0 80px rgba(0, 0, 0, 0.8);
+  }
+}
+
+/* ── Card (DESIGN.md store-utility-card: raggio 18px + hairline) ── */
+@layer components {
+  .card {
+    background-color: var(--color-surface-1);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 18px;
+  }
+}
+
+/* ── Press state di sistema (DESIGN.md: scale on active) ── */
+button:active { transform: scale(0.97); }
+@media (prefers-reduced-motion: reduce) {
+  button:active { transform: none; }
+}
+
 /* Context menu backdrop blur */
 .backdrop-blur-dialog {
   backdrop-filter: saturate(180%) blur(20px);
@@ -224,17 +256,12 @@ input::placeholder, textarea::placeholder {
 }
 
 /* Calendario mensile e controlli accessibili */
-.control-button { width: 44px; height: 44px; border-radius: 9999px; display: grid; place-items: center; background: var(--color-surface-2); color: var(--color-label-secondary); }
-.control-button:active { transform: scale(.95); color: var(--color-accent); }
+.control-button { width: 44px; height: 44px; border-radius: 9999px; display: grid; place-items: center; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.1); color: rgba(255, 255, 255, 0.8); }
+.control-button:active { transform: scale(.95); color: var(--color-sky); }
 .color-input { width: 44px; height: 36px; padding: 3px; border-radius: 999px; background: var(--color-surface-2); cursor: pointer; }
 button { cursor: pointer; }
-button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid #0071e3; outline-offset: 2px; }
 
-@media (min-width: 800px) {
-  #root > div > .flex-1 > div { max-width: 1100px; margin-inline: auto; }
-  #root > div > nav { justify-content: center; gap: 20px; max-width: 1100px; margin-inline: auto; }
-  #root > div > nav button { min-width: 84px; }
-}
 
 /* Progress ring */
 .progress-ring-circle {

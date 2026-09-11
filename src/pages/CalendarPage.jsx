@@ -76,11 +76,11 @@ export default function CalendarPage({ selectedDate, selectDate, mode, setMode, 
             </div>
 
             {dayTasks.length === 0 ? (
-              <div className="rounded-2xl bg-surface-1 p-5 text-label-secondary text-[15px]">
+              <div className="card p-5 text-label-secondary text-[15px]">
                 Niente da fare in questo giorno.
               </div>
             ) : (
-              <div className="rounded-2xl bg-surface-1 overflow-hidden">
+              <div className="card overflow-hidden">
                 {dayTasks.slice(0, 30).map((t) => {
                   const done = t.completed;
                   const meta = [];
@@ -95,7 +95,7 @@ export default function CalendarPage({ selectedDate, selectDate, mode, setMode, 
                         aria-label={done ? 'Segna come non completato' : 'Segna come completato'}
                         className="w-10 h-10 grid place-items-center shrink-0 -ml-2"
                       >
-                        {done ? <CheckCircle2 size={20} className="text-sys-green" /> : <Circle size={20} style={{ color: t.categoryColor || '#0a84ff' }} />}
+                        {done ? <CheckCircle2 size={20} className="text-sys-green" /> : <Circle size={20} style={{ color: t.categoryColor || '#2997ff' }} />}
                       </button>
                       <button onClick={() => openDay(selectedDate)} className="flex-1 min-w-0 text-left">
                         <span className={done ? 'line-through text-label-tertiary' : 'text-label'}>{t.title}</span>

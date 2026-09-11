@@ -27,7 +27,7 @@ export default function WeekStrip({
         <div className="flex items-center gap-2">
           <button
             onClick={onPrevWeek}
-            className="p-1 text-label-secondary active:text-accent transition-colors"
+            className="p-1 text-label-secondary active:text-sky transition-colors"
             aria-label="Settimana precedente"
           >
             <ChevronLeft size={20} />
@@ -46,7 +46,7 @@ export default function WeekStrip({
           </AnimatePresence>
           <button
             onClick={onNextWeek}
-            className="p-1 text-label-secondary active:text-accent transition-colors"
+            className="p-1 text-label-secondary active:text-sky transition-colors"
             aria-label="Settimana successiva"
           >
             <ChevronRight size={20} />
@@ -54,7 +54,7 @@ export default function WeekStrip({
         </div>
         <button
           onClick={onToday}
-          className="text-[13px] font-semibold text-accent active:opacity-70 transition-opacity"
+          className="text-[13px] font-semibold text-sky active:opacity-70 transition-opacity"
         >
           Oggi
         </button>
@@ -75,8 +75,8 @@ export default function WeekStrip({
               <span
                 className={cn(
                   'text-[11px] uppercase tracking-wide',
-                  isSelected ? 'text-accent font-semibold' :
-                  isTodayDate ? 'text-accent' :
+                  isSelected ? 'text-sky font-semibold' :
+                  isTodayDate ? 'text-sky' :
                   'text-label-tertiary'
                 )}
               >
@@ -94,7 +94,7 @@ export default function WeekStrip({
                   className={cn(
                     'relative z-10 text-[16px] font-semibold',
                     isSelected ? 'text-white' :
-                    isTodayDate ? 'text-accent' :
+                    isTodayDate ? 'text-sky' :
                     'text-label'
                   )}
                 >

@@ -38,7 +38,7 @@ export default function ExpenseFormSheet({ isOpen, onClose, onSave, defaultDate,
         <div className="flex flex-col items-center py-4">
           <p className="text-[13px] text-label-secondary mb-1">{editing ? 'Modifica spesa' : 'Nuova spesa'}</p>
           <div className="flex items-baseline gap-1">
-            <span className={cn('text-[28px] font-semibold', numeric > 0 ? 'text-accent' : 'text-label-tertiary')}>€</span>
+            <span className={cn('text-[28px] font-semibold', numeric > 0 ? 'text-sky' : 'text-label-tertiary')}>€</span>
             <input
               value={amount}
               onChange={(e) => setAmount(e.target.value.replace(/[^\d.,]/g, ''))}
@@ -46,7 +46,7 @@ export default function ExpenseFormSheet({ isOpen, onClose, onSave, defaultDate,
               inputMode="decimal"
               autoFocus
               placeholder="0,00"
-              className="w-36 text-center bg-transparent text-[44px] leading-none font-bold text-label placeholder:text-label-quaternary tabular-nums"
+              className="w-36 text-center bg-transparent text-[44px] leading-none font-semibold text-label placeholder:text-label-quaternary tabular-nums"
             />
           </div>
           <button
@@ -55,7 +55,7 @@ export default function ExpenseFormSheet({ isOpen, onClose, onSave, defaultDate,
             aria-label="Cambia data della spesa"
           >
             <span className="text-[12px] text-label-tertiary capitalize">{date ? formatDateDisplay(parseISO(date)) : ''}</span>
-            <span className="text-[11px] text-accent font-medium">Cambia</span>
+            <span className="text-[11px] text-sky font-medium">Cambia</span>
           </button>
         </div>
 

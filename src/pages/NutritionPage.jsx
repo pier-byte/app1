@@ -137,7 +137,7 @@ export default function NutritionPage({ selectedDate }) {
     <div className="h-full overflow-y-auto scrollable px-4 pt-2 pb-32">
       {/* Header */}
       <div className="mb-3">
-        <h1 className="text-[28px] font-bold text-label tracking-tight leading-tight">Nutrizione</h1>
+        <h1 className="text-[28px] font-semibold text-label tracking-tight leading-tight">Nutrizione</h1>
         <p className="text-[13px] text-label-secondary capitalize">{formatDateDisplay(parseISO(dateKey))}</p>
       </div>
 
@@ -166,11 +166,11 @@ export default function NutritionPage({ selectedDate }) {
               <AiMealInput onConfirm={(fields) => addMeal({ ...fields, date: dateKey })} />
 
               {/* Obiettivi giornalieri: macro = fonte, kcal collegata */}
-              <div className="bg-surface-1 rounded-2xl p-4">
+              <div className="card p-4">
                 <div className="flex items-center gap-2 mb-3">
-                  <Target size={15} className="text-accent" />
+                  <Target size={15} className="text-sky" />
                   <span className="text-[13px] font-semibold text-label-secondary flex-1">Obiettivi giornalieri</span>
-                  <button onClick={() => setPlannerOpen(true)} className="text-[13px] font-semibold text-accent min-h-9 flex items-center gap-1">
+                  <button onClick={() => setPlannerOpen(true)} className="text-[13px] font-semibold text-sky min-h-9 flex items-center gap-1">
                     <Scale size={13} /> Obiettivo {goalLabel ? '· ' + goalLabel : ''}
                   </button>
                 </div>
@@ -195,17 +195,17 @@ export default function NutritionPage({ selectedDate }) {
                 </div>
                 {/* Kcal = P·4 + C·4 + G·9 (sola lettura, aggiornata in automatico) */}
                 <div className="flex items-center gap-2.5 bg-surface-2 rounded-xl px-3 py-2.5">
-                  <Link2 size={15} className="text-accent shrink-0" />
-                  <p className="flex-1 text-[14px] font-bold text-label tabular-nums">
+                  <Link2 size={15} className="text-sky shrink-0" />
+                  <p className="flex-1 text-[14px] font-semibold text-label tabular-nums">
                     {goals.calories} <span className="text-[11px] font-normal text-label-tertiary">kcal</span>
                   </p>
                 </div>
               </div>
 
               {/* Riepilogo giornata: kcal calcolata dai macro */}
-              <div className="bg-surface-1 rounded-2xl p-5">
+              <div className="card p-5">
                 <div className="flex items-center gap-2 mb-4">
-                  <Flame size={18} className="text-accent" />
+                  <Flame size={18} className="text-sky" />
                   <span className="text-[15px] font-semibold text-label">Riepilogo giornata</span>
                   {goals.calories > 0 && (
                     <span className="ml-auto text-[12px] text-label-tertiary tabular-nums">
@@ -214,7 +214,7 @@ export default function NutritionPage({ selectedDate }) {
                   )}
                 </div>
                 <div className="flex items-baseline gap-1.5 mb-1">
-                  <span className="text-[40px] leading-none font-bold text-label tracking-tight tabular-nums">{totals.calories}</span>
+                  <span className="text-[40px] leading-none font-semibold text-label tracking-tight tabular-nums">{totals.calories}</span>
                   <span className="text-[14px] text-label-tertiary">kcal</span>
                   {goals.calories > 0 && (
                     <span className="text-[12px] text-label-tertiary">/ {goals.calories}</span>
@@ -226,7 +226,7 @@ export default function NutritionPage({ selectedDate }) {
                       className="h-full rounded-full"
                       animate={{ width: `${kcalRatio * 100}%` }}
                       transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                      style={{ backgroundColor: kcalRatio >= 1 ? '#ff375f' : kcalRatio >= 0.8 ? '#ff9f0a' : '#0a84ff' }}
+                      style={{ backgroundColor: kcalRatio >= 1 ? '#ff375f' : kcalRatio >= 0.8 ? '#ff9f0a' : '#2997ff' }}
                     />
                   </div>
                 )}
@@ -241,7 +241,7 @@ export default function NutritionPage({ selectedDate }) {
                           <span className="w-2 h-2 rounded-full" style={{ backgroundColor: macro.color }} />
                           <span className="text-[10px] text-label-tertiary uppercase tracking-wide">{macro.label}</span>
                         </div>
-                        <span className="text-[17px] font-bold text-label tabular-nums">{Math.round(eaten)}g</span>
+                        <span className="text-[17px] font-semibold text-label tabular-nums">{Math.round(eaten)}g</span>
                         {goal > 0 && (
                           <>
                             <div className="w-full h-1 rounded-full bg-fill-tertiary overflow-hidden mt-2 mb-1">
@@ -263,7 +263,7 @@ export default function NutritionPage({ selectedDate }) {
                 groupedMeals.map((group) => (
                   <div key={group.type}>
                     <h3 className="text-[13px] font-semibold text-label-secondary uppercase tracking-wide mb-2 px-1">{group.type}</h3>
-                    <div className="bg-surface-1 rounded-2xl overflow-hidden">
+                    <div className="card overflow-hidden">
                       <AnimatePresence initial={false}>
                         {group.items.map((meal) => (
                           <motion.div

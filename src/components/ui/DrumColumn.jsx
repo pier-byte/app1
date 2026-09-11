@@ -94,7 +94,7 @@ export default function DrumColumn({ values, value, onChange, itemHeight = 48, v
             onClick={() => tapSelect(i)}
             className={cn(
               'drum-item w-full flex items-center justify-center select-none cursor-pointer',
-              delta === 0 ? 'text-label font-bold' : dist === 1 ? 'text-[#c7c7cc] font-medium' : 'text-[#8e8e93] font-medium'
+              delta === 0 ? 'text-label font-semibold' : dist === 1 ? 'text-[#c7c7cc] font-medium' : 'text-[#8e8e93] font-medium'
             )}
             style={{
               height: itemHeight,

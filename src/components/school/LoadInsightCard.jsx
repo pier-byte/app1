@@ -48,17 +48,17 @@ export default function LoadInsightCard({ dateKey, tasks }) {
   if (tasks.length === 0) return null;
 
   return (
-    <div className="bg-surface-1 rounded-2xl p-5">
+    <div className="card p-5">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <BrainCircuit size={18} className="text-accent" />
+          <BrainCircuit size={18} className="text-sky" />
           <span className="text-[15px] font-semibold text-label">Carico di studio</span>
         </div>
         {loadLevel && <span className={cn('text-[13px] font-semibold', levelColor)}>{loadLevel}</span>}
       </div>
 
       <div className="flex items-baseline gap-1.5 mb-3">
-        <span className="text-[28px] font-bold text-label tracking-tight">{formatMinutes(totalEst)}</span>
+        <span className="text-[28px] font-semibold text-label tracking-tight">{formatMinutes(totalEst)}</span>
         <span className="text-[13px] text-label-tertiary">stimati su {pending.length} compiti</span>
       </div>
 
@@ -69,7 +69,7 @@ export default function LoadInsightCard({ dateKey, tasks }) {
       {hasGemini ? (
         insight || cached ? (
           <div className="flex gap-2.5 bg-surface-2 rounded-xl p-3.5">
-            <Sparkles size={15} className="text-accent shrink-0 mt-0.5" />
+            <Sparkles size={15} className="text-sky shrink-0 mt-0.5" />
             <p className="text-[13.5px] leading-relaxed text-label-secondary">
               {insight || cached}
             </p>
@@ -78,7 +78,7 @@ export default function LoadInsightCard({ dateKey, tasks }) {
           <button
             onClick={analyze}
             disabled={loading}
-            className="w-full h-10 rounded-full bg-accent/15 text-accent text-[14px] font-semibold flex items-center justify-center gap-2 active:opacity-70 disabled:opacity-50 transition-opacity"
+            className="w-full h-10 rounded-full bg-accent/15 text-sky text-[14px] font-semibold flex items-center justify-center gap-2 active:opacity-70 disabled:opacity-50 transition-opacity"
           >
             {loading ? <Loader2 size={15} className="animate-spin" /> : <Sparkles size={15} />}
             {loading ? 'Gemini sta analizzando…' : 'Analizza con Gemini AI'}

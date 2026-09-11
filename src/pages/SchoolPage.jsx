@@ -58,7 +58,7 @@ export default function SchoolPage({ selectedDate, weekDates, weekLabel, goToPre
     <div className="h-full overflow-y-auto scrollable px-4 pt-3 pb-32">
       {/* Header pagina */}
       <div className="mb-1">
-        <h1 className="text-[28px] font-bold text-label tracking-tight leading-tight">Compiti</h1>
+        <h1 className="text-[28px] font-semibold text-label tracking-tight leading-tight">Compiti</h1>
         <p className="text-[13px] text-label-secondary capitalize">{format(selectedDate, 'EEEE d MMMM', { locale: it })}</p>
       </div>
 
@@ -135,9 +135,9 @@ export default function SchoolPage({ selectedDate, weekDates, weekLabel, goToPre
           onClick={() => setShowStudy((s) => !s)}
           className="w-full flex items-center gap-2 px-1 mb-2 text-[14px] font-semibold text-label-secondary"
         >
-          <Timer size={15} className="text-accent" />
+          <Timer size={15} className="text-sky" />
           Timer di studio (15:00–20:00)
-          <span className="ml-auto text-[13px] text-accent">{showStudy ? 'Nascondi' : 'Mostra'}</span>
+          <span className="ml-auto text-[13px] text-sky">{showStudy ? 'Nascondi' : 'Mostra'}</span>
         </button>
         {showStudy && (
           <StudyTimerCard

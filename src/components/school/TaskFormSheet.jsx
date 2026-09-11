@@ -142,7 +142,7 @@ export default function TaskFormSheet({ isOpen, onClose, onSave, editingTask, de
             />
             <button
               onClick={dictate}
-              className="w-10 h-10 rounded-full bg-fill-tertiary grid place-items-center text-accent"
+              className="w-10 h-10 rounded-full bg-fill-tertiary grid place-items-center text-sky"
               aria-label="Detta descrizione"
             >
               <Mic size={17} />
@@ -230,7 +230,7 @@ export default function TaskFormSheet({ isOpen, onClose, onSave, editingTask, de
           <Timer size={20} className="text-label-secondary shrink-0" />
           <span className="flex-1 text-left text-[16px] text-label">Tempo stimato</span>
           {estimating ? (
-            <Loader2 size={16} className="animate-spin text-accent" />
+            <Loader2 size={16} className="animate-spin text-sky" />
           ) : (
             <label className="flex items-center gap-2">
               <input
@@ -319,7 +319,7 @@ function CategorySheet({ isOpen, onClose, categories, selected, onSelect, onCrea
         {/* Header sheet (reference: titolo + chip SELEZIONA) */}
         <div className="flex items-end justify-between px-1 pb-4">
           <div>
-            <h2 className="text-[22px] font-bold text-label tracking-tight leading-tight">Elenco attività</h2>
+            <h2 className="text-[22px] font-semibold text-label tracking-tight leading-tight">Elenco attività</h2>
             <p className="text-[13px] text-label-tertiary mt-0.5">Scegli a quale elenco appartiene l'attività</p>
           </div>
           <button
@@ -359,9 +359,9 @@ function CategorySheet({ isOpen, onClose, categories, selected, onSelect, onCrea
             className="w-full flex items-center gap-3.5 py-3.5 text-left active:opacity-70 transition-opacity"
           >
             <span className="w-[22px] h-[22px] rounded-full border-2 border-dashed border-accent/70 grid place-items-center shrink-0">
-              <Plus size={13} className="text-accent" />
+              <Plus size={13} className="text-sky" />
             </span>
-            <span className="text-[16px] text-accent font-medium">Crea nuovo</span>
+            <span className="text-[16px] text-sky font-medium">Crea nuovo</span>
           </button>
         </div>
 
@@ -417,7 +417,7 @@ function CategoryCreateDialog({ isOpen, onClose, onCreate }) {
           <button
             onClick={() => name.trim() && onCreate(name.trim(), color)}
             disabled={!name.trim()}
-            className="flex-1 py-2.5 text-[16px] font-semibold text-accent active:opacity-60 transition-opacity disabled:opacity-40"
+            className="flex-1 py-2.5 text-[16px] font-semibold text-sky active:opacity-60 transition-opacity disabled:opacity-40"
           >
             Crea
           </button>

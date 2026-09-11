@@ -35,7 +35,7 @@ export default function DaySheet({ date, onClose, onEditFull, categories = [] })
     await createTask({
       title,
       category: cat?.name ?? 'Studiare',
-      categoryColor: cat?.color ?? '#0a84ff',
+      categoryColor: cat?.color ?? '#2997ff',
       date: dateKey,
       allDay: true,
       reminders: [],
@@ -69,14 +69,14 @@ export default function DaySheet({ date, onClose, onEditFull, categories = [] })
         </div>
         <button
           onClick={() => onEditFull(null)}
-          className="h-10 px-4 rounded-full bg-accent text-white text-[13px] font-semibold flex items-center gap-1.5 shrink-0"
+          className="h-10 px-4 rounded-full bg-accent border border-blue-400/30 text-white text-[13px] font-semibold flex items-center gap-1.5 shrink-0 shadow-lg shadow-blue-600/40"
         >
           <CalendarPlus size={15} /> Dettagli
         </button>
       </div>
 
       {/* Aggiunta rapida */}
-      <div className="flex items-center gap-2 bg-surface-2 rounded-xl pl-4 pr-1.5 py-1.5 mb-2">
+      <div className="flex items-center gap-2 bg-white/[0.06] border border-white/[0.08] rounded-[14px] pl-4 pr-1.5 py-1.5 mb-2">
         <input
           value={quickTitle}
           onChange={(e) => setQuickTitle(e.target.value)}
@@ -99,7 +99,7 @@ export default function DaySheet({ date, onClose, onEditFull, categories = [] })
       <div className="flex flex-col">
         {sorted.map((task) => {
           const done = task.completed;
-          const color = task.categoryColor || '#0a84ff';
+          const color = task.categoryColor || '#2997ff';
           const hasRepeat = task.repeat?.frequency && task.repeat.frequency !== 'none';
           return (
             <div key={task._id} className="flex items-center gap-1 py-1 border-b border-separator last:border-0">

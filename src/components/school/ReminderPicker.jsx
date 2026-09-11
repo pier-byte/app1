@@ -56,7 +56,7 @@ export default function ReminderPicker({ reminders = [], date, time, allDay, onC
         </div>
         <button
           onClick={() => setOpen(true)}
-          className="text-[14px] font-semibold text-accent min-h-10 flex items-center gap-1"
+          className="text-[14px] font-semibold text-sky min-h-10 flex items-center gap-1"
         >
           <Plus size={14} /> Aggiungi
         </button>

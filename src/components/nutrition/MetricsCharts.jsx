@@ -80,13 +80,13 @@ export default function MetricsCharts({ metrics, onAdd, onUpdate, onRemove, defa
     <div className="flex flex-col gap-4">
       {/* Input rapidi (aggiornano la misura del giorno selezionato) */}
       <div className="grid grid-cols-2 gap-3">
-        <div className="bg-surface-1 rounded-2xl p-4">
+        <div className="card p-4">
           <div className="flex items-center gap-2 mb-2.5">
-            <Scale size={15} className="text-accent" />
+            <Scale size={15} className="text-sky" />
             <span className="text-[13px] font-semibold text-label">Peso</span>
           </div>
           <div className="flex items-baseline gap-1.5 mb-3">
-            <span className="text-[26px] font-bold text-label tracking-tight tabular-nums">
+            <span className="text-[26px] font-semibold text-label tracking-tight tabular-nums">
               {lastWeight ? lastWeight.weightKg : '—'}
             </span>
             <span className="text-[13px] text-label-tertiary">kg</span>
@@ -117,13 +117,13 @@ export default function MetricsCharts({ metrics, onAdd, onUpdate, onRemove, defa
           </div>
         </div>
 
-        <div className="bg-surface-1 rounded-2xl p-4">
+        <div className="card p-4">
           <div className="flex items-center gap-2 mb-2.5">
             <Ruler size={15} className="text-sys-teal" />
             <span className="text-[13px] font-semibold text-label">Altezza</span>
           </div>
           <div className="flex items-baseline gap-1.5 mb-3">
-            <span className="text-[26px] font-bold text-label tracking-tight tabular-nums">
+            <span className="text-[26px] font-semibold text-label tracking-tight tabular-nums">
               {lastHeight ? lastHeight.heightCm : '—'}
             </span>
             <span className="text-[13px] text-label-tertiary">cm</span>
@@ -151,7 +151,7 @@ export default function MetricsCharts({ metrics, onAdd, onUpdate, onRemove, defa
 
       {/* Registrazioni recenti: tap su ✏️ per correggere i valori */}
       {recent.length > 0 && (
-        <div className="bg-surface-1 rounded-2xl overflow-hidden">
+        <div className="card overflow-hidden">
           <p className="text-[12px] font-semibold text-label-tertiary uppercase tracking-wide px-4 pt-3 pb-1">Registrazioni</p>
           {recent.map((m) => (
             <div key={m._id} className="flex items-center gap-3 px-4 py-2.5 border-t border-separator">
@@ -166,7 +166,7 @@ export default function MetricsCharts({ metrics, onAdd, onUpdate, onRemove, defa
               </span>
               <button
                 onClick={() => setEditing({ id: m._id, date: m.date, weightKg: m.weightKg ?? '', heightCm: m.heightCm ?? '' })}
-                className="w-9 h-9 grid place-items-center text-label-tertiary active:text-accent"
+                className="w-9 h-9 grid place-items-center text-label-tertiary active:text-sky"
                 aria-label="Modifica registrazione"
               >
                 <Pencil size={14} />
@@ -184,13 +184,13 @@ export default function MetricsCharts({ metrics, onAdd, onUpdate, onRemove, defa
       )}
 
       {/* Grafico peso */}
-      <ChartCard title="Peso (kg)" color="#0a84ff" data={data} dataKey="peso" empty={data.every((d) => d.peso == null)}>
+      <ChartCard title="Peso (kg)" color="#2997ff" data={data} dataKey="peso" empty={data.every((d) => d.peso == null)}>
         <LineChart data={data} margin={{ top: 8, right: 12, bottom: 0, left: -18 }}>
           <CartesianGrid stroke="rgba(84,84,88,0.3)" strokeDasharray="3 3" vertical={false} />
           <XAxis dataKey="label" tick={{ fill: 'rgba(235,235,245,0.4)', fontSize: 10 }} axisLine={false} tickLine={false} />
           <YAxis domain={['auto', 'auto']} tick={{ fill: 'rgba(235,235,245,0.4)', fontSize: 10 }} axisLine={false} tickLine={false} />
           <Tooltip contentStyle={tooltipStyle} cursor={{ stroke: 'rgba(10,132,255,0.4)' }} />
-          <Line type="monotone" dataKey="peso" stroke="#0a84ff" strokeWidth={2.5} dot={{ r: 3, fill: '#0a84ff' }} activeDot={{ r: 5 }} connectNulls />
+          <Line type="monotone" dataKey="peso" stroke="#2997ff" strokeWidth={2.5} dot={{ r: 3, fill: '#2997ff' }} activeDot={{ r: 5 }} connectNulls />
         </LineChart>
       </ChartCard>
 
@@ -213,7 +213,7 @@ export default function MetricsCharts({ metrics, onAdd, onUpdate, onRemove, defa
         actions={
           <>
             <button onClick={() => setEditing(null)} className="text-[17px] text-label-secondary font-medium active:opacity-60">Annulla</button>
-            <button onClick={saveEdit} className="text-[17px] text-accent font-semibold active:opacity-60">Salva</button>
+            <button onClick={saveEdit} className="text-[17px] text-sky font-semibold active:opacity-60">Salva</button>
           </>
         }
       >
@@ -272,7 +272,7 @@ export default function MetricsCharts({ metrics, onAdd, onUpdate, onRemove, defa
 
 function ChartCard({ title, color, children, empty }) {
   return (
-    <div className="bg-surface-1 rounded-2xl p-4">
+    <div className="card p-4">
       <div className="flex items-center gap-2 mb-2">
         <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: color }} />
         <span className="text-[14px] font-semibold text-label">{title}</span>

@@ -40,7 +40,7 @@ export default function NotesPage() {
   return (
     <div className="h-full overflow-y-auto scrollable px-4 pt-2 pb-32">
       <div className="mb-4">
-        <h1 className="text-[28px] font-bold text-label tracking-tight leading-tight">Note</h1>
+        <h1 className="text-[28px] font-semibold text-label tracking-tight leading-tight">Note</h1>
         <p className="text-[13px] text-label-secondary">Appunti e to-do list veloci</p>
       </div>
 
@@ -125,8 +125,8 @@ function NoteCard({ note, onOpen, onToggleTodo, onTogglePin, onDelete }) {
   return (
     <div
       onClick={onOpen}
-      className="bg-surface-1 rounded-2xl p-4 cursor-pointer active:bg-surface-2 transition-colors border-t-2"
-      style={{ borderTopColor: note.color || '#0a84ff' }}
+      className="card p-4 cursor-pointer active:bg-surface-2 transition-colors border-t-2"
+      style={{ borderTopColor: note.color || '#2997ff' }}
     >
       <div className="flex items-start gap-2 mb-1.5">
         <span className="text-[14px] font-semibold text-label flex-1 leading-snug">{note.title || 'Senza titolo'}</span>

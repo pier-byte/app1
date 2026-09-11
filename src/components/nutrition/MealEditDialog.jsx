@@ -61,7 +61,7 @@ export default function MealEditDialog({ meal, onClose, onSave }) {
           <button onClick={onClose} className="text-[17px] text-label-secondary font-medium active:opacity-60">
             Annulla
           </button>
-          <button onClick={save} className="text-[17px] text-accent font-semibold active:opacity-60">
+          <button onClick={save} className="text-[17px] text-sky font-semibold active:opacity-60">
             Salva
           </button>
         </>
@@ -86,7 +86,7 @@ export default function MealEditDialog({ meal, onClose, onSave }) {
             <span className="flex items-center gap-1">
               <button
                 onClick={() => setMacro(m.key, macros[m.key] - 1)}
-                className="w-6 h-8 grid place-items-center text-label-tertiary active:text-accent"
+                className="w-6 h-8 grid place-items-center text-label-tertiary active:text-sky"
                 aria-label={`Riduci ${m.label}`}
               >
                 <Minus size={11} />
@@ -96,11 +96,11 @@ export default function MealEditDialog({ meal, onClose, onSave }) {
                 min="0"
                 value={macros[m.key]}
                 onChange={(e) => setMacro(m.key, e.target.value)}
-                className="w-full min-w-0 bg-transparent text-[17px] font-bold text-label text-center"
+                className="w-full min-w-0 bg-transparent text-[17px] font-semibold text-label text-center"
               />
               <button
                 onClick={() => setMacro(m.key, macros[m.key] + 1)}
-                className="w-6 h-8 grid place-items-center text-label-tertiary active:text-accent"
+                className="w-6 h-8 grid place-items-center text-label-tertiary active:text-sky"
                 aria-label={`Aumenta ${m.label}`}
               >
                 <Plus size={11} />
@@ -112,9 +112,9 @@ export default function MealEditDialog({ meal, onClose, onSave }) {
 
       {/* Kcal collegate (sola lettura) */}
       <div className="flex items-center gap-3 bg-surface-2 rounded-xl px-4 py-3 mb-4">
-        <Link2 size={16} className="text-accent shrink-0" />
+        <Link2 size={16} className="text-sky shrink-0" />
         <p className="flex-1 text-[13px] text-label-secondary">Kcal aggiornate sui macro</p>
-        <p className="text-[20px] font-bold text-label tabular-nums">{kcal}</p>
+        <p className="text-[20px] font-semibold text-label tabular-nums">{kcal}</p>
         <span className="text-[12px] text-label-tertiary">kcal</span>
       </div>
 

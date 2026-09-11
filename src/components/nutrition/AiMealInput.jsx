@@ -79,9 +79,9 @@ export default function AiMealInput({ onConfirm }) {
 
   return (
     <>
-      <div className="bg-surface-1 rounded-2xl p-4">
+      <div className="card p-4">
         <div className="flex items-center gap-2 mb-3">
-          <Sparkles size={16} className="text-accent" />
+          <Sparkles size={16} className="text-sky" />
           <span className="text-[15px] font-semibold text-label">Log rapido con AI</span>
         </div>
         <div className="flex items-end gap-2">
@@ -130,7 +130,7 @@ export default function AiMealInput({ onConfirm }) {
               original: text.trim(),
             })
           }
-          className="mt-3 text-[13px] text-accent font-semibold min-h-8"
+          className="mt-3 text-[13px] text-sky font-semibold min-h-8"
         >
           Inserisci kcal e macro manualmente
         </button>
@@ -154,7 +154,7 @@ export default function AiMealInput({ onConfirm }) {
                 <button onClick={() => setParsed(null)} className="text-[17px] text-label-secondary font-medium active:opacity-60">
                   Annulla
                 </button>
-                <button onClick={confirm} className="text-[17px] text-accent font-semibold active:opacity-60">
+                <button onClick={confirm} className="text-[17px] text-sky font-semibold active:opacity-60">
                   Aggiungi
                 </button>
               </>
@@ -178,7 +178,7 @@ export default function AiMealInput({ onConfirm }) {
                   <span className="flex items-center gap-1">
                     <button
                       onClick={() => setMacro(m.key, parsed[m.key] - 1)}
-                      className="w-6 h-8 grid place-items-center text-label-tertiary active:text-accent"
+                      className="w-6 h-8 grid place-items-center text-label-tertiary active:text-sky"
                       aria-label={`Riduci ${m.label}`}
                     >
                       <Minus size={11} />
@@ -188,11 +188,11 @@ export default function AiMealInput({ onConfirm }) {
                       min="0"
                       value={parsed[m.key]}
                       onChange={(e) => setMacro(m.key, e.target.value)}
-                      className="w-full bg-transparent text-[17px] font-bold text-label text-center"
+                      className="w-full bg-transparent text-[17px] font-semibold text-label text-center"
                     />
                     <button
                       onClick={() => setMacro(m.key, parsed[m.key] + 1)}
-                      className="w-6 h-8 grid place-items-center text-label-tertiary active:text-accent"
+                      className="w-6 h-8 grid place-items-center text-label-tertiary active:text-sky"
                       aria-label={`Aumenta ${m.label}`}
                     >
                       <Plus size={11} />
@@ -204,7 +204,7 @@ export default function AiMealInput({ onConfirm }) {
 
             {/* Kcal collegate ai macro */}
             <div className="flex items-center gap-3 bg-surface-2 rounded-xl px-4 py-3 mb-2">
-              <Link2 size={16} className="text-accent shrink-0" />
+              <Link2 size={16} className="text-sky shrink-0" />
               <p className="flex-1 text-[13px] text-label-secondary">Kcal</p>
               <input
                 type="number"
@@ -212,7 +212,7 @@ export default function AiMealInput({ onConfirm }) {
                 step="1"
                 value={parsed.calories}
                 onChange={(e) => setCaloriesManual(e.target.value)}
-                className="w-24 bg-transparent text-right text-[20px] font-bold text-label tabular-nums"
+                className="w-24 bg-transparent text-right text-[20px] font-semibold text-label tabular-nums"
                 aria-label="Kcal"
               />
               <span className="text-[12px] text-label-tertiary">kcal</span>

@@ -35,7 +35,7 @@ export default function WalletPage({ selectedDate, weekDates }) {
   const budgetAmount = budget?.budgetAmount ?? 0;
   const ratio = budgetAmount > 0 ? spent / budgetAmount : 0;
   const remaining = budgetAmount - spent;
-  const color = budgetAmount > 0 ? budgetColor(ratio) : '#0a84ff';
+  const color = budgetAmount > 0 ? budgetColor(ratio) : '#2997ff';
 
   // Raggruppa per giorno (desc)
   const grouped = useMemo(() => {
@@ -63,7 +63,7 @@ export default function WalletPage({ selectedDate, weekDates }) {
       {/* Header */}
       <div className="flex items-end justify-between mb-4">
         <div>
-          <h1 className="text-[28px] font-bold text-label tracking-tight leading-tight">Wallet</h1>
+          <h1 className="text-[28px] font-semibold text-label tracking-tight leading-tight">Wallet</h1>
           <p className="text-[13px] text-label-secondary">{getWeekLabel(getWeekDates(selectedDate))}</p>
         </div>
         <button
@@ -76,13 +76,13 @@ export default function WalletPage({ selectedDate, weekDates }) {
       </div>
 
       {/* Card budget */}
-      <div className="bg-surface-1 rounded-2xl p-5 mb-4">
+      <div className="card p-5 mb-4">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <Wallet size={18} className="text-accent" />
+            <Wallet size={18} className="text-sky" />
             <span className="text-[15px] font-semibold text-label">Budget settimanale</span>
           </div>
-          <button onClick={openBudgetDialog} className="text-[13px] font-semibold text-accent active:opacity-60">
+          <button onClick={openBudgetDialog} className="text-[13px] font-semibold text-sky active:opacity-60">
             {budgetAmount ? 'Modifica' : 'Imposta'}
           </button>
         </div>
@@ -90,7 +90,7 @@ export default function WalletPage({ selectedDate, weekDates }) {
         {budgetAmount > 0 ? (
           <>
             <div className="flex items-baseline gap-1.5 mb-3">
-              <span className="text-[36px] leading-none font-bold tracking-tight tabular-nums" style={{ color }}>
+              <span className="text-[36px] leading-none font-semibold tracking-tight tabular-nums" style={{ color }}>
                 {euro(Math.max(remaining, 0))}
               </span>
               <span className="text-[14px] text-label-tertiary">rimanenti su {euro(budgetAmount)}</span>
@@ -120,7 +120,7 @@ export default function WalletPage({ selectedDate, weekDates }) {
         ) : (
           <button
             onClick={openBudgetDialog}
-            className="w-full h-12 rounded-xl bg-accent/15 text-accent text-[15px] font-semibold active:opacity-70"
+            className="w-full h-12 rounded-xl bg-accent/15 text-sky text-[15px] font-semibold active:opacity-70"
           >
             Imposta il budget di questa settimana
           </button>
@@ -149,7 +149,7 @@ export default function WalletPage({ selectedDate, weekDates }) {
               {euro(items.reduce((s, e) => s + e.amount, 0))}
             </span>
           </div>
-          <div className="bg-surface-1 rounded-2xl overflow-hidden">
+          <div className="card overflow-hidden">
             <AnimatePresence initial={false}>
               {items.map((exp) => (
                 <motion.div
@@ -215,7 +215,7 @@ export default function WalletPage({ selectedDate, weekDates }) {
             <button onClick={() => setBudgetDialogOpen(false)} className="text-[17px] text-label-secondary font-medium active:opacity-60">
               Annulla
             </button>
-            <button onClick={confirmBudget} className="text-[17px] text-accent font-semibold active:opacity-60">
+            <button onClick={confirmBudget} className="text-[17px] text-sky font-semibold active:opacity-60">
               Salva
             </button>
           </>
@@ -223,7 +223,7 @@ export default function WalletPage({ selectedDate, weekDates }) {
       >
         <p className="text-[13px] text-label-secondary mb-3">Quanto puoi spendere a settimana?</p>
         <div className="flex items-center gap-2 my-2">
-          <span className="text-[28px] font-bold text-label-tertiary">€</span>
+          <span className="text-[28px] font-semibold text-label-tertiary">€</span>
           <input
             value={budgetInput}
             onChange={(e) => setBudgetInput(e.target.value.replace(/[^\d.,]/g, ''))}
