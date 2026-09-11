@@ -1,14 +1,22 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Loader2, Send, AlertCircle } from 'lucide-react';
+import { Sparkles, Loader2, Send, AlertCircle, Link2, Minus, Plus } from 'lucide-react';
 import { parseFoodInput, hasGemini } from '../../lib/gemini';
 import { Dialog } from '../ui/Dialog';
-import { cn } from '../../lib/cn';
+import { kcalFromMacros, macroKcalBreakdown } from '../../lib/nutritionMath';
 import { MEAL_TYPES } from '../../lib/constants';
+import { cn } from '../../lib/cn';
+
+const MACRO_FIELDS = [
+  { key: 'protein', label: 'Proteine', unit: 'g', color: '#30d158' },
+  { key: 'carbs', label: 'Carboidrati', unit: 'g', color: '#ffd60a' },
+  { key: 'fat', label: 'Grassi', unit: 'g', color: '#ff375f' },
+];
 
 /**
- * AiMealInput — Log macro/calorie tramite prompt testo processato da Gemini AI.
- * Es: "150g pollo e riso" → preview macros → conferma con tipo pasto.
+ * AiMealInput — Log rapido: Gemini estrae kcal e macro, poi l'utente conferma.
+ * Le kcal sono SEMPRE collegate ai macro (regola 4-4-9): quando cambi P/C/G
+ * la somma si aggiorna automaticamente.
  */
 export default function AiMealInput({ onConfirm }) {
   const [text, setText] = useState('');
@@ -35,22 +43,41 @@ export default function AiMealInput({ onConfirm }) {
       setError('Non riesco a riconoscere questo alimento. Prova a riformulare (es. "150g pollo e riso").');
       return;
     }
-    setParsed({ ...result, original: value });
+    // Le kcal vengono ricalcolate dai macro così i dati restano coerenti
+    setParsed({ ...result, calories: kcalFromMacros(result), caloriesSource: 'macro', original: value });
+  };
+
+  const setMacro = (key, value) => {
+    const next = { ...parsed, [key]: Math.max(0, Number(value) || 0) };
+    next.calories = kcalFromMacros(next);
+    next.caloriesSource = 'macro';
+    setParsed(next);
+  };
+
+  const setCaloriesManual = (value) => {
+    const k = Math.max(0, Number(value) || 0);
+    setParsed({ ...parsed, calories: k, caloriesSource: 'manual' });
   };
 
   const confirm = () => {
+    const final = { ...parsed };
+    // Coerenza: se l'utente ha forzato le kcal a mano, manteniamo il suo valore
+    // ma segnaliamo la differenza; altrimenti kcal === somma macro.
     onConfirm({
       mealType,
-      description: parsed.description,
-      calories: parsed.calories,
-      protein: parsed.protein,
-      carbs: parsed.carbs,
-      fat: parsed.fat,
+      description: final.description,
+      calories: final.calories,
+      protein: final.protein,
+      carbs: final.carbs,
+      fat: final.fat,
+      caloriesSource: final.caloriesSource || 'macro',
       parsedByAI: true,
     });
     setParsed(null);
     setText('');
   };
+
+  const breakdown = parsed ? macroKcalBreakdown(parsed) : null;
 
   return (
     <>
@@ -62,7 +89,10 @@ export default function AiMealInput({ onConfirm }) {
         <div className="flex items-end gap-2">
           <textarea
             value={text}
-            onChange={(e) => { setText(e.target.value); setError(null); }}
+            onChange={(e) => {
+              setText(e.target.value);
+              setError(null);
+            }}
             placeholder='es. "150g pollo e riso"'
             rows={1}
             className="flex-1 bg-surface-2 rounded-xl px-4 py-3 text-[15px] text-label placeholder:text-label-tertiary resize-none min-h-[44px]"
@@ -90,7 +120,22 @@ export default function AiMealInput({ onConfirm }) {
             )}
           </motion.button>
         </div>
-        <button onClick={() => setParsed({ description: text.trim() || 'Pasto', calories: 0, protein: 0, carbs: 0, fat: 0, original: text.trim() })} className="mt-3 text-[13px] text-accent font-semibold min-h-8">Inserisci kcal e macro manualmente</button>
+        <button
+          onClick={() =>
+            setParsed({
+              description: text.trim() || 'Pasto',
+              calories: 0,
+              protein: 0,
+              carbs: 0,
+              fat: 0,
+              caloriesSource: 'macro',
+              original: text.trim(),
+            })
+          }
+          className="mt-3 text-[13px] text-accent font-semibold min-h-8"
+        >
+          Inserisci kcal e macro manualmente
+        </button>
         {error && (
           <div className="flex items-start gap-2 mt-3">
             <AlertCircle size={14} className="text-sys-orange shrink-0 mt-0.5" />
@@ -117,11 +162,75 @@ export default function AiMealInput({ onConfirm }) {
               </>
             }
           >
-            <input value={parsed.description} onChange={(e) => setParsed({...parsed, description:e.target.value})} className="w-full bg-surface-2 rounded-xl px-3 py-3 text-[15px] my-2" aria-label="Nome pasto" />
+            <input
+              value={parsed.description}
+              onChange={(e) => setParsed({ ...parsed, description: e.target.value })}
+              className="w-full bg-surface-2 rounded-xl px-3 py-3 text-[15px] my-2"
+              aria-label="Nome pasto"
+            />
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 my-4">
-              {[['calories','kcal'],['protein','Proteine g'],['carbs','Carboidrati g'],['fat','Grassi g']].map(([key,label]) => <label key={key} className="bg-surface-2 rounded-xl p-2 text-[10px] text-label-tertiary"><input type="number" min="0" value={parsed[key]} onChange={(e) => setParsed({...parsed,[key]:Number(e.target.value)})} className="w-full bg-transparent text-[17px] font-bold text-label" />{label}</label>)}
+            {/* Macro: fonti di verità → kcal aggiornata in automatico */}
+            <div className="grid grid-cols-3 gap-2 my-4">
+              {MACRO_FIELDS.map((m) => (
+                <label key={m.key} className="bg-surface-2 rounded-xl p-2 text-[10px] text-label-tertiary">
+                  <span className="flex items-center gap-1.5 mb-1">
+                    <span className="w-2 h-2 rounded-full" style={{ backgroundColor: m.color }} />
+                    {m.label}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <button
+                      onClick={() => setMacro(m.key, parsed[m.key] - 1)}
+                      className="w-6 h-8 grid place-items-center text-label-tertiary active:text-accent"
+                      aria-label={`Riduci ${m.label}`}
+                    >
+                      <Minus size={11} />
+                    </button>
+                    <input
+                      type="number"
+                      min="0"
+                      value={parsed[m.key]}
+                      onChange={(e) => setMacro(m.key, e.target.value)}
+                      className="w-full bg-transparent text-[17px] font-bold text-label text-center"
+                    />
+                    <button
+                      onClick={() => setMacro(m.key, parsed[m.key] + 1)}
+                      className="w-6 h-8 grid place-items-center text-label-tertiary active:text-accent"
+                      aria-label={`Aumenta ${m.label}`}
+                    >
+                      <Plus size={11} />
+                    </button>
+                  </span>
+                </label>
+              ))}
             </div>
+
+            {/* Kcal collegate ai macro */}
+            <div className="flex items-center gap-3 bg-surface-2 rounded-xl px-4 py-3 mb-2">
+              <Link2 size={16} className="text-accent shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-[11px] text-label-tertiary">Kcal collegate ai macro</p>
+                <p className="text-[11px] text-label-tertiary tabular-nums">
+                  P·4 + C·4 + G·9 = {breakdown?.protein || 0} + {breakdown?.carbs || 0} + {breakdown?.fat || 0}
+                </p>
+              </div>
+              <input
+                type="number"
+                min="0"
+                step="1"
+                value={parsed.calories}
+                onChange={(e) => setCaloriesManual(e.target.value)}
+                className="w-24 bg-transparent text-right text-[20px] font-bold text-label tabular-nums"
+                aria-label="Kcal"
+              />
+              <span className="text-[12px] text-label-tertiary">kcal</span>
+            </div>
+            {parsed.caloriesSource === 'manual' && (
+              <p className="flex items-start gap-1.5 text-[11px] text-sys-orange mb-2">
+                <AlertCircle size={12} className="shrink-0 mt-0.5" />
+                Hai impostato le kcal a mano: differiscono di {Math.abs(parsed.calories - kcalFromMacros(parsed))} kcal dalla somma dei macro.
+                Consiglio: {kcalFromMacros(parsed)} kcal rende i dati coerenti.
+              </p>
+            )}
 
             {/* Tipo pasto */}
             <p className="text-[13px] text-label-secondary mb-2">Tipo pasto</p>
@@ -143,14 +252,5 @@ export default function AiMealInput({ onConfirm }) {
         )}
       </AnimatePresence>
     </>
-  );
-}
-
-function MacroTile({ label, value, color }) {
-  return (
-    <div className="bg-surface-2 rounded-xl py-3 flex flex-col items-center gap-0.5">
-      <span className="text-[17px] font-bold tabular-nums" style={{ color }}>{value}</span>
-      <span className="text-[10px] text-label-tertiary">{label}</span>
-    </div>
   );
 }

@@ -51,16 +51,40 @@ export default defineConfig({
       },
     }),
   ],
+  // Dev più veloce: pre-bundle esplicito dei moduli pesanti alla prima
+  // apertura (evita la scoperta incrementale una dipendenza alla volta).
+  optimizeDeps: {
+    include: [
+      'react',
+      'react-dom',
+      'react-dom/client',
+      'react/jsx-runtime',
+      'framer-motion',
+      'date-fns',
+      'date-fns/locale',
+      'lucide-react',
+      'convex/react',
+      'recharts',
+      '@google/genai',
+    ],
+  },
   build: {
+    // Pagine lazy (React.lazy) → un chunk per tab + vendor separati.
+    // Forma funzionale: matching deterministico sui path risolti.
+    chunkSizeWarningLimit: 700,
     rollupOptions: {
       output: {
         // Code-splitting: cache parallela e long-term dei vendor
-        manualChunks: {
-          'react-vendor': ['react', 'react-dom'],
-          charts: ['recharts'],
-          motion: ['framer-motion'],
-          convex: ['convex'],
-          gemini: ['@google/genai'],
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return undefined;
+          if (id.includes('/recharts/')) return 'charts';
+          if (id.includes('/framer-motion/')) return 'motion';
+          if (id.includes('/@google/genai/')) return 'genai';
+          if (id.includes('/convex/')) return 'convex';
+          if (id.includes('/react-dom/') || id.includes('/react/') || id.includes('/scheduler/')) {
+            return 'react-vendor';
+          }
+          return 'vendor';
         },
       },
     },

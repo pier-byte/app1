@@ -4,9 +4,11 @@
 
 // ── Tab di navigazione ──
 export const TABS = [
-  { id: 'scuola', label: 'Scuola', icon: 'BookOpen' },
+  { id: 'calendario', label: 'Calendario', icon: 'CalendarDays' },
+  { id: 'scuola', label: 'Compiti', icon: 'ListChecks' },
   { id: 'routine', label: 'Routine', icon: 'Dumbbell' },
   { id: 'nutrizione', label: 'Nutrizione', icon: 'UtensilsCrossed' },
+  { id: 'note', label: 'Note', icon: 'StickyNote' },
   { id: 'wallet', label: 'Wallet', icon: 'Wallet' },
 ];
 
@@ -36,6 +38,55 @@ export const DEFAULT_ROUTINE_STEPS = [
   { name: 'Skincare', targetMinutes: 5 },
   { name: 'Denti', targetMinutes: 3 },
   { name: 'Cena', targetMinutes: 30 },
+];
+
+// ── Template routine (più "schede" personalizzabili) ──
+export const DEFAULT_ROUTINE_TEMPLATES = [
+  {
+    id: 'post-volley',
+    name: 'Post-volley',
+    icon: 'Volleyball',
+    color: '#0a84ff',
+    steps: DEFAULT_ROUTINE_STEPS,
+  },
+  {
+    id: 'mattina',
+    name: 'Mattina',
+    icon: 'Sunrise',
+    color: '#ffd60a',
+    steps: [
+      { name: 'Sveglia e stretch', targetMinutes: 5 },
+      { name: 'Colazione', targetMinutes: 20 },
+      { name: 'Denti', targetMinutes: 3 },
+      { name: 'Prep zaino', targetMinutes: 5 },
+    ],
+  },
+  {
+    id: 'sera',
+    name: 'Sera',
+    icon: 'MoonStar',
+    color: '#bf5af2',
+    steps: [
+      { name: 'Doccia', targetMinutes: 10 },
+      { name: 'Skincare', targetMinutes: 5 },
+      { name: 'Preparazione per domani', targetMinutes: 10 },
+      { name: 'Lettura', targetMinutes: 20 },
+    ],
+  },
+];
+
+// ── Colori per routine personalizzate ──
+export const ROUTINE_COLORS = ['#0a84ff', '#30d158', '#ffd60a', '#ff375f', '#bf5af2', '#64d2ff', '#ff9f0a', '#66d4cf', '#5e5ce6', '#ff2d55'];
+
+// ── Libreria icone monocromatiche (nomi lucide-react) ──
+// Le prime 5 sono mostrate in primo piano, le altre nel modale "+N".
+export const ROUTINE_ICONS_PRIMARY = ['Dumbbell', 'Volleyball', 'Sunrise', 'MoonStar', 'BookOpen'];
+export const ROUTINE_ICONS = [
+  ...ROUTINE_ICONS_PRIMARY,
+  'Bike', 'Footprints', 'Waves', 'Timer', 'AlarmClock', 'Sunset', 'Sun', 'Moon',
+  'Coffee', 'Salad', 'UtensilsCrossed', 'GraduationCap', 'Briefcase', 'HeartPulse',
+  'Sparkles', 'Star', 'Target', 'Trophy', 'Music', 'Headphones', 'Zap', 'Leaf',
+  'Droplets', 'ShowerHead', 'Bath', 'BedDouble',
 ];
 
 // ── Tipi pasto ──
@@ -78,3 +129,18 @@ export const DEFAULT_WEEK_PLAN = [
 
 // ── Categorie spese ──
 export const EXPENSE_CATEGORIES = ['Mensa', 'Trasporti', 'Scuola', 'Svago', 'Regali', 'Altro'];
+
+// ── Note ──
+export const NOTE_COLORS = ['#0a84ff', '#30d158', '#ffd60a', '#ff375f', '#bf5af2', '#64d2ff', '#ff9f0a', '#8e8e93'];
+
+/** Tipo di nota: testo libero oppure checklist (stile Notion). */
+export function emptyNote() {
+  return {
+    title: '',
+    body: '',
+    type: 'note', // note | todo
+    todos: [],
+    pinned: false,
+    color: NOTE_COLORS[0],
+  };
+}

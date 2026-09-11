@@ -58,7 +58,7 @@ export default function DatePickerDialog({ isOpen, onClose, value, onConfirm }) 
         </>
       }
     >
-      {/* Chip rapide */}
+      {/* Chip rapide + selettore nativo di sistema */}
       <div className="flex gap-2 py-3">
         {quickOptions.map((opt) => {
           const active = isSameDay(selected, opt.date);
@@ -67,7 +67,7 @@ export default function DatePickerDialog({ isOpen, onClose, value, onConfirm }) 
               key={opt.label}
               onClick={() => setSelected(opt.date)}
               className={cn(
-                'px-3.5 h-8 rounded-full text-[13px] font-medium transition-colors',
+                'px-3.5 h-9 rounded-full text-[13px] font-medium transition-colors',
                 active ? 'bg-accent text-white' : 'bg-fill-tertiary text-label-secondary active:bg-fill-secondary'
               )}
             >
@@ -75,6 +75,22 @@ export default function DatePickerDialog({ isOpen, onClose, value, onConfirm }) 
             </button>
           );
         })}
+        <label className="ml-auto flex items-center gap-2 pl-1">
+          <span className="text-[12px] text-label-tertiary">Data esatta</span>
+          <input
+            type="date"
+            value={toDateKey(selected)}
+            onChange={(e) => {
+              if (!e.target.value) return;
+              const d = parseISO(e.target.value);
+              setSelected(d);
+              setShownMonth(d);
+            }}
+            onClick={(e) => e.currentTarget.showPicker?.()}
+            className="h-11 bg-surface-2 rounded-lg px-2 text-[15px] text-label"
+            aria-label="Scegli la data dal calendario di sistema"
+          />
+        </label>
       </div>
 
       {/* Griglia 2 settimane */}
@@ -93,7 +109,7 @@ export default function DatePickerDialog({ isOpen, onClose, value, onConfirm }) 
                 <button
                   key={date.toISOString()}
                   onClick={() => setSelected(date)}
-                  className="flex items-center justify-center"
+                  className="flex items-center justify-center min-h-[44px]"
                 >
                   <span
                     className={cn(

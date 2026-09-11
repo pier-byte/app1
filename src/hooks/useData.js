@@ -3,7 +3,9 @@ import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { HAS_CONVEX } from '../lib/db';
 import { useLocalState, localMutations } from '../lib/localStore';
-import { DEFAULT_TASK_CATEGORIES } from '../lib/constants';
+import { DEFAULT_TASK_CATEGORIES, DEFAULT_ROUTINE_TEMPLATES } from '../lib/constants';
+import { expandEventsForRange } from '../lib/repeat';
+import { addDays, toDateKey } from '../lib/dates';
 
 /**
  * Layer dati unificato: ogni hook espone { data, isLoading, ...azioni }.
@@ -30,6 +32,7 @@ export function useTasks(dateKey) {
     const create = useMutation(api.tasks.create);
     const update = useMutation(api.tasks.update);
     const remove = useMutation(api.tasks.remove);
+    const removeSeriesM = useMutation(api.tasks.removeSeries);
     const toggle = useMutation(api.tasks.toggle);
     const moveToDate = useMutation(api.tasks.moveToDate);
     const addMinutes = useMutation(api.tasks.addActualMinutes);
@@ -39,6 +42,7 @@ export function useTasks(dateKey) {
       createTask: (fields) => create({ completed: false, ...fields }),
       updateTask: (id, patch) => update({ id, ...patch }),
       removeTask: (id) => remove({ id }),
+      removeSeries: (id) => removeSeriesM({ id }),
       toggleTask: (id) => toggle({ id }),
       moveTaskToDate: (id, date) => moveToDate({ id, date }),
       addTaskMinutes: (id, minutes) => addMinutes({ id, minutes }),
@@ -59,10 +63,36 @@ export function useTasks(dateKey) {
     createTask: (fields) => localMutations.createTask({ completed: false, ...fields }),
     updateTask: (id, patch) => localMutations.updateTask({ id, ...patch }),
     removeTask: (id) => localMutations.removeTask({ id }),
+    removeSeries: (id) => localMutations.removeSeries({ id }),
     toggleTask: (id) => localMutations.toggleTask({ id }),
     moveTaskToDate: (id, date) => localMutations.moveTaskToDate({ id, date }),
     addTaskMinutes: (id, minutes) => localMutations.addTaskMinutes({ id, minutes }),
   };
+}
+
+/**
+ * Compiti/eventi su un intervallo di date → Map<dateKey, task[]>.
+ * Include le istanze materializzate e (per i task legacy) le occorrenze
+ * espanse dalle regole di ripetizione (lookback di ~1 anno).
+ */
+export function useExpandedTasksBetween(startKey, endKey) {
+  const rangeStart = toDateKey(addDays(new Date(`${startKey}T12:00:00`), -370));
+  const { data: raw, isLoading } = useTasksBetween(rangeStart, endKey);
+  const data = useMemo(
+    () => expandEventsForRange(raw ?? [], startKey, endKey),
+    [raw, startKey, endKey]
+  );
+  return { data, isLoading };
+}
+
+/**
+ * Compiti/eventi della giornata, incluse le istanze delle serie ricorrenti
+ * (materializzate nel DB) e le occorrenze legacy espanse dalle regole.
+ */
+export function useExpandedTasks(dateKey) {
+  const { data: map, isLoading } = useExpandedTasksBetween(dateKey, dateKey);
+  const data = useMemo(() => map.get(dateKey) ?? [], [map, dateKey]);
+  return { data, isLoading };
 }
 
 export function useTaskCategories() {
@@ -120,6 +150,44 @@ export function useRoutine(dateKey) {
   const state = useLocalState();
   const data = useMemo(() => state.routines.find((r) => r.date === dateKey) ?? null, [state.routines, dateKey]);
   return { data, isLoading: false, saveRoutine: localMutations.saveRoutine };
+}
+
+export function useRoutineTemplates() {
+  if (HAS_CONVEX) {
+    const raw = useQuery(api.routineTemplates.listAll, {});
+    const createM = useMutation(api.routineTemplates.create);
+    const updateM = useMutation(api.routineTemplates.update);
+    const removeM = useMutation(api.routineTemplates.remove);
+    const seededRef = useRef(false);
+
+    useEffect(() => {
+      if (!seededRef.current && raw !== undefined && raw.length === 0) {
+        seededRef.current = true;
+        DEFAULT_ROUTINE_TEMPLATES.forEach((t) => createM({ ...t, steps: t.steps.map((s) => ({ ...s })) }));
+      }
+    }, [raw, createM]);
+
+    return {
+      data: raw ?? [],
+      isLoading: raw === undefined,
+      createTemplate: (fields) => createM(fields),
+      updateTemplate: (id, patch) => updateM({ id, ...patch }),
+      removeTemplate: (id) => removeM({ id }),
+    };
+  }
+
+  const state = useLocalState();
+  const data = useMemo(() => state.routineTemplates, [state.routineTemplates]);
+  return {
+    data,
+    isLoading: false,
+    createTemplate: (fields) => {
+      const doc = localMutations.createRoutineTemplate(fields);
+      return doc._id;
+    },
+    updateTemplate: (id, patch) => localMutations.updateRoutineTemplate({ id, ...patch }),
+    removeTemplate: (id) => localMutations.removeRoutineTemplate({ id }),
+  };
 }
 
 // ═══════════════════ TAB 3 — NUTRIZIONE ═══════════════════
@@ -213,4 +281,39 @@ export function useBudget(weekStartKey) {
     [state.budgets, weekStartKey]
   );
   return { data, isLoading: false, setBudget: (amount) => localMutations.setBudget({ weekStart: weekStartKey, budgetAmount: amount }) };
+}
+
+// ═══════════════════ TAB 5 — NOTE ═══════════════════
+
+export function useNotes() {
+  if (HAS_CONVEX) {
+    const raw = useQuery(api.notes.listAll, {});
+    const createM = useMutation(api.notes.create);
+    const updateM = useMutation(api.notes.update);
+    const removeM = useMutation(api.notes.remove);
+    return {
+      data: raw ?? [],
+      isLoading: raw === undefined,
+      createNote: (fields) => createM(fields),
+      updateNote: (id, patch) => updateM({ id, ...patch }),
+      removeNote: (id) => removeM({ id }),
+    };
+  }
+
+  const state = useLocalState();
+  const data = useMemo(
+    () =>
+      state.notes.slice().sort((a, b) => {
+        if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
+        return (b.updatedAt || 0) - (a.updatedAt || 0);
+      }),
+    [state.notes]
+  );
+  return {
+    data,
+    isLoading: false,
+    createNote: (fields) => localMutations.createNote(fields),
+    updateNote: (id, patch) => localMutations.updateNote({ id, ...patch }),
+    removeNote: (id) => localMutations.removeNote({ id }),
+  };
 }

@@ -5,7 +5,7 @@ import { useCallback, useRef } from 'react';
  * BottomSheet — Modal dal basso con drag handle, backdrop blur e swipe-to-close.
  * Replica il pattern dei screenshot (03, 07, 08).
  */
-export default function BottomSheet({ isOpen, onClose, children, title }) {
+export default function BottomSheet({ isOpen, onClose, children, title, maxHeight = '90dvh' }) {
   const handleDragEnd = useCallback((_, info) => {
     if (info.offset.y > 100 || info.velocity.y > 500) {
       onClose();
@@ -36,8 +36,8 @@ export default function BottomSheet({ isOpen, onClose, children, title }) {
             dragConstraints={{ top: 0 }}
             dragElastic={0.1}
             onDragEnd={handleDragEnd}
-            className="fixed bottom-0 left-0 right-0 z-50 bg-surface-1 rounded-t-[14px] max-h-[90vh] flex flex-col"
-            style={{ paddingBottom: 'env(safe-area-inset-bottom, 16px)' }}
+            className="fixed bottom-0 left-0 right-0 z-50 bg-surface-1 rounded-t-[14px] flex flex-col"
+            style={{ paddingBottom: 'env(safe-area-inset-bottom, 16px)', maxHeight }}
           >
             {/* Drag handle */}
             <div className="flex justify-center pt-2 pb-3 cursor-grab active:cursor-grabbing">

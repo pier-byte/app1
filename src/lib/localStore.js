@@ -1,6 +1,12 @@
 import { useSyncExternalStore } from 'react';
 import { toDateKey, addDays, getMonday } from './dates';
-import { DEFAULT_TASK_CATEGORIES, DEFAULT_ROUTINE_STEPS, DEFAULT_WEEK_PLAN } from './constants';
+import { hasRepeatRule, computeOccurrenceDates, shiftRemindersForDate } from './repeat';
+import {
+  DEFAULT_TASK_CATEGORIES,
+  DEFAULT_ROUTINE_TEMPLATES,
+  DEFAULT_WEEK_PLAN,
+  emptyNote,
+} from './constants';
 
 /**
  * Store locale reattivo (localStorage) che replica le shape dei documenti Convex.
@@ -62,6 +68,55 @@ function buildSeed() {
       { _id: uid(), date: toDateKey(addDays(today, -2)), description: 'Cinema con amiche', amount: 8.5, category: 'Svago', createdAt: 4 },
     ],
     budgets: [{ _id: uid(), weekStart, budgetAmount: 35 }],
+    notes: [
+      {
+        _id: uid(),
+        title: 'Idee regali',
+        body: 'Regalo mamma: candela profumata + pianta. Regalo Leo: fumetti.',
+        type: 'note',
+        todos: [],
+        pinned: true,
+        color: '#bf5af2',
+        createdAt: 1,
+        updatedAt: 1,
+      },
+      {
+        _id: uid(),
+        title: 'Da fare questo weekend',
+        body: '',
+        type: 'todo',
+        todos: [
+          { id: uid(), text: 'Ripassare inglese', done: false },
+          { id: uid(), text: 'Comprare regalo nonna', done: false },
+          { id: uid(), text: 'Lavare la divisa', done: true },
+        ],
+        pinned: false,
+        color: '#30d158',
+        createdAt: 2,
+        updatedAt: 2,
+      },
+    ],
+    routineTemplates: DEFAULT_ROUTINE_TEMPLATES.map((r) => ({
+      _id: uid(),
+      ...r,
+      steps: r.steps.map((s) => ({ ...s })),
+    })),
+  };
+}
+
+/** Normalizza lo stato: garantisce la presenza di tutte le chiavi (migrazione). */
+function normalize(state = {}) {
+  return {
+    tasks: state.tasks ?? [],
+    taskCategories: state.taskCategories ?? [],
+    routines: state.routines ?? [],
+    meals: state.meals ?? [],
+    mealPlans: state.mealPlans ?? [],
+    bodyMetrics: state.bodyMetrics ?? [],
+    expenses: state.expenses ?? [],
+    budgets: state.budgets ?? [],
+    notes: state.notes ?? [],
+    routineTemplates: state.routineTemplates ?? [],
   };
 }
 
@@ -70,29 +125,20 @@ function buildSeed() {
 function load() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
+    if (raw) return normalize(JSON.parse(raw));
   } catch (err) {
     console.warn('[localStore] impossibile leggere lo stato:', err);
   }
   // Prima apertura: seed demo (solo se non mai inizializzato)
   const seeded = localStorage.getItem(SEED_FLAG);
-  const state = seeded ? emptyState() : buildSeed();
+  const state = normalize(seeded ? emptyState() : buildSeed());
   localStorage.setItem(SEED_FLAG, '1');
   persist(state);
   return state;
 }
 
 function emptyState() {
-  return {
-    tasks: [],
-    taskCategories: [],
-    routines: [],
-    meals: [],
-    mealPlans: [],
-    bodyMetrics: [],
-    expenses: [],
-    budgets: [],
-  };
+  return normalize({});
 }
 
 function persist(state) {
@@ -134,20 +180,81 @@ export function useLocalState() {
 
 // ── Mutazioni locali (stessa firma delle mutation Convex) ──
 
+/**
+ * Genera le istanze figlie di una serie ricorrente a partire dal task
+ * principale (che resta l'occorrenza #1 sulla data base). Ogni istanza è un
+ * task reale e indipendente: si può spuntare, spostare o modificare da sola.
+ * - gli allegati restano solo sull'istanza principale (risparmio spazio)
+ * - i promemoria vengono spostati su ogni data mantenendo l'ora
+ * - `completed`/`actualMinutes` ripartono da zero su ogni istanza
+ */
+function materializeSeriesChildren(parent) {
+  const dates = computeOccurrenceDates(parent.date, parent.repeat);
+  const stamp = parent.createdAt ?? Date.now();
+  return dates.slice(1).map((key, i) => ({
+    ...parent,
+    _id: uid(),
+    date: key,
+    completed: false,
+    actualMinutes: 0,
+    attachments: [],
+    reminders: shiftRemindersForDate(parent.reminders, key),
+    seriesId: parent._id,
+    materialized: true,
+    createdAt: stamp + i + 1,
+  }));
+}
+
+const isSeriesParent = (task) => !!task?.seriesId && task.seriesId === task._id;
+const ruleSignature = (rule) => JSON.stringify(rule ?? null);
+
 export const localMutations = {
   // Tasks
   createTask(fields) {
     const doc = { ...fields, _id: uid(), createdAt: fields.createdAt ?? Date.now() };
+    // Serie ricorrente → duplica subito tutte le istanze nel DB locale
+    if (hasRepeatRule(fields.repeat) && !fields.seriesId && doc.date) {
+      const parent = { ...doc, seriesId: doc._id, materialized: true };
+      const children = materializeSeriesChildren(parent);
+      update((s) => ({ tasks: [...s.tasks, parent, ...children] }));
+      return doc._id;
+    }
     update((s) => ({ tasks: [...s.tasks, doc] }));
     return doc._id;
   },
   updateTask({ id, ...patch }) {
-    update((s) => ({
-      tasks: s.tasks.map((t) => (t._id === id ? { ...t, ...patch } : t)),
-    }));
+    update((s) => {
+      const existing = s.tasks.find((t) => t._id === id);
+      if (!existing) return {};
+      const repeatChanged = patch.repeat !== undefined && ruleSignature(patch.repeat) !== ruleSignature(existing.repeat);
+      const dateChanged = patch.date !== undefined && patch.date !== existing.date;
+      // Modifica di regola/data sull'istanza principale → rigenera la serie
+      if (isSeriesParent(existing) && (repeatChanged || dateChanged)) {
+        const rest = s.tasks.filter((t) => t._id === id || t.seriesId !== id);
+        const next = { ...existing, ...patch };
+        if (hasRepeatRule(next.repeat) && next.date) {
+          const parent = { ...next, seriesId: id, materialized: true };
+          const children = materializeSeriesChildren(parent);
+          return { tasks: [...rest.map((t) => (t._id === id ? parent : t)), ...children] };
+        }
+        // Regola rimossa → torna un task singolo (via metadati serie)
+        const { seriesId: _sid, materialized: _mat, ...single } = next;
+        return { tasks: rest.map((t) => (t._id === id ? single : t)) };
+      }
+      return { tasks: s.tasks.map((t) => (t._id === id ? { ...t, ...patch } : t)) };
+    });
   },
   removeTask({ id }) {
     update((s) => ({ tasks: s.tasks.filter((t) => t._id !== id) }));
+  },
+  /** Elimina un'intera serie ricorrente a partire da una sua istanza. */
+  removeSeries({ id }) {
+    update((s) => {
+      const target = s.tasks.find((t) => t._id === id);
+      const sid = target?.seriesId;
+      if (!sid) return { tasks: s.tasks.filter((t) => t._id !== id) };
+      return { tasks: s.tasks.filter((t) => t._id !== sid && t.seriesId !== sid) };
+    });
   },
   toggleTask({ id }) {
     update((s) => ({
@@ -155,7 +262,8 @@ export const localMutations = {
     }));
   },
   moveTaskToDate({ id, date }) {
-    update((s) => ({ tasks: s.tasks.map((t) => (t._id === id ? { ...t, date } : t)) }));
+    // Passa da updateTask: spostare l'istanza principale rigenera la serie
+    localMutations.updateTask({ id, date });
   },
   addTaskMinutes({ id, minutes }) {
     update((s) => ({
@@ -170,15 +278,29 @@ export const localMutations = {
     return doc;
   },
   // Routine
-  saveRoutine({ date, steps, startedAt, completedAt }) {
+  saveRoutine({ date, steps, startedAt, completedAt, routineId, routineName }) {
     update((s) => {
       const existing = s.routines.find((r) => r.date === date);
-      const patch = { steps, startedAt, completedAt };
+      const patch = { steps, startedAt, completedAt, routineId, routineName };
       if (existing) {
         return { routines: s.routines.map((r) => (r.date === date ? { ...r, ...patch } : r)) };
       }
       return { routines: [...s.routines, { _id: uid(), date, ...patch }] };
     });
+  },
+  // Template routine (schede personalizzabili)
+  createRoutineTemplate(fields) {
+    const doc = { ...fields, _id: uid() };
+    update((s) => ({ routineTemplates: [...s.routineTemplates, doc] }));
+    return doc;
+  },
+  updateRoutineTemplate({ id, ...patch }) {
+    update((s) => ({
+      routineTemplates: s.routineTemplates.map((r) => (r._id === id ? { ...r, ...patch } : r)),
+    }));
+  },
+  removeRoutineTemplate({ id }) {
+    update((s) => ({ routineTemplates: s.routineTemplates.filter((r) => r._id !== id) }));
   },
   // Pasti
   addMeal(fields) {
@@ -209,6 +331,22 @@ export const localMutations = {
   },
   removeBodyMetric({ id }) {
     update((s) => ({ bodyMetrics: s.bodyMetrics.filter((m) => m._id !== id) }));
+  },
+  // Note
+  createNote(fields) {
+    const doc = { ...emptyNote(), ...fields, _id: uid(), createdAt: Date.now(), updatedAt: Date.now() };
+    update((s) => ({ notes: [...s.notes, doc] }));
+    return doc._id;
+  },
+  updateNote({ id, ...patch }) {
+    update((s) => ({
+      notes: s.notes.map((n) =>
+        n._id === id ? { ...n, ...patch, updatedAt: Date.now() } : n
+      ),
+    }));
+  },
+  removeNote({ id }) {
+    update((s) => ({ notes: s.notes.filter((n) => n._id !== id) }));
   },
   // Wallet
   addExpense(fields) {
