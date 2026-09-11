@@ -2,11 +2,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
-import { Play, Check, RotateCcw, Clock3, Trash2, Plus, ChevronUp, ChevronDown, Pencil, X, Layers } from 'lucide-react';
-import { useRoutine, useRoutineTemplates } from '../hooks/useData';
-import { useRoutineSession, routineSession } from '../store/routineSession';
-import RoutineCarousel from '../components/routine/RoutineCarousel';
-import { ROUTINE_COLORS, ROUTINE_EMOJIS } from '../lib/constants';
 import { toDateKey, formatSeconds, formatMinutes } from '../lib/dates';
 import { cn } from '../lib/cn';
 import { Dialog } from '../components/ui/Dialog';
@@ -25,7 +20,6 @@ export default function RoutinePage({ selectedDate }) {
   const [activeTemplateId, setActiveTemplateId] = useState(() => localStorage.getItem('app1_routine_active') || null);
   const [newTemplateOpen, setNewTemplateOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
-
   const activeTemplate = useMemo(() => {
     const list = templates ?? [];
     if (!list.length) return null;
@@ -77,51 +71,36 @@ export default function RoutinePage({ selectedDate }) {
     [savedRoutine]
   );
 
-  const begin = () => {
-    if (!activeTemplate) return;
-    routineSession.begin(dateKey, activeTemplate.steps, {
-      routineId: activeTemplate._id,
-      routineName: activeTemplate.name,
-      routineEmoji: activeTemplate.emoji,
-    });
-  };
-
-  return (
-    <div className="h-full overflow-y-auto scrollable px-4 pt-2 pb-32">
-      {/* Header */}
-      <div className="mb-3">
-        <h1 className="text-[28px] font-bold text-label tracking-tight leading-tight">Routine</h1>
-        <p className="text-[13px] text-label-secondary capitalize">
-          {format(selectedDate, 'EEEE d MMMM', { locale: it })}
-        </p>
       </div>
 
-      {/* Selettore schede routine */}
-      <div className="flex gap-2 overflow-x-auto scrollable-x pb-2 mb-4 -mx-1 px-1">
-        {(templates ?? []).map((t) => {
-          const active = activeTemplate?._id === t._id;
-          return (
-            <button
-              key={t._id}
-              onClick={() => setActiveTemplateId(t._id)}
-              className={cn(
-                'flex items-center gap-2 h-11 px-4 rounded-full text-[14px] font-semibold shrink-0 transition-colors',
-                active ? 'text-white' : 'bg-surface-2 text-label-secondary'
-              )}
-              style={active ? { backgroundColor: t.color } : undefined}
-            >
-              <span>{t.emoji}</span>
-              {t.name}
-            </button>
-          );
-        })}
-        <button
-          onClick={() => setNewTemplateOpen(true)}
-          className="flex items-center gap-1.5 h-11 px-4 rounded-full bg-surface-2 text-label-secondary text-[14px] font-semibold shrink-0 border border-dashed border-label-quaternary"
-        >
-          <Plus size={15} /> Nuova scheda
-        </button>
-      </div>
+      {/* Selettore schede routine (solo vista dettaglio) */}
+      {view === 'detail' && (
+        <div className="flex gap-2 overflow-x-auto scrollable-x pb-2 mb-4 -mx-1 px-1">
+          {(templates ?? []).map((t) => {
+            const active = activeTemplate?._id === t._id;
+            return (
+              <button
+                key={t._id}
+                onClick={() => setActiveTemplateId(t._id)}
+                className={cn(
+                  'flex items-center gap-2 h-11 px-4 rounded-full text-[14px] font-semibold shrink-0 transition-colors',
+                  active ? 'text-white' : 'bg-surface-2 text-label-secondary'
+                )}
+                style={active ? { backgroundColor: t.color } : undefined}
+              >
+                <RoutineIcon template={t} size={16} className={active ? 'text-white' : undefined} />
+                {t.name}
+              </button>
+            );
+          })}
+          <button
+            onClick={() => setNewTemplateOpen(true)}
+            className="flex items-center gap-1.5 h-11 px-4 rounded-full bg-surface-2 text-label-secondary text-[14px] font-semibold shrink-0 border border-dashed border-label-quaternary"
+          >
+            <Plus size={15} /> Nuova scheda
+          </button>
+        </div>
+      )}
 
       {/* Flash salvataggio */}
       <AnimatePresence>
@@ -152,13 +131,29 @@ export default function RoutinePage({ selectedDate }) {
         <CompletionSummary session={session} />
       )}
 
+      {/* Vista panoramica: tutte le schede in formato compatto */}
+      {view === 'overview' && !isActiveSession && (
+        <OverviewGrid
+          templates={templates ?? []}
+          activeId={activeTemplate?._id}
+          onOpen={(t) => {
+            setActiveTemplateId(t._id);
+            setView('detail');
+          }}
+          onStart={(t) => {
+            setActiveTemplateId(t._id);
+            beginWith(t);
+          }}
+          onNew={() => setNewTemplateOpen(true)}
+        />
+      )}
+
       {/* Riepilogo routine salvata */}
-      {showSummary && (
+      {view === 'detail' && showSummary && (
         <SavedSummary routine={savedRoutine} totalActual={totalActual} onRepeat={begin} />
       )}
 
       {/* Intro / avvio */}
-      {showIntro && activeTemplate && (
         <div>
           <div className="bg-surface-1 rounded-2xl p-5 mb-4">
             <div className="flex items-center gap-2 mb-4">
@@ -166,7 +161,6 @@ export default function RoutinePage({ selectedDate }) {
                 className="w-9 h-9 rounded-xl grid place-items-center shrink-0"
                 style={{ backgroundColor: `${activeTemplate.color}22` }}
               >
-                <span className="text-[18px]">{activeTemplate.emoji}</span>
               </div>
               <div className="flex-1 min-w-0">
                 {editing ? (
@@ -190,22 +184,6 @@ export default function RoutinePage({ selectedDate }) {
               </button>
             </div>
 
-            {/* Selettore colore/emoji in modalità modifica */}
-            {editing && (
-              <div className="mb-4">
-                <div className="flex gap-2 mb-3">
-                  <div className="flex gap-1.5 flex-wrap">
-                    {ROUTINE_EMOJIS.map((e) => (
-                      <button
-                        key={e}
-                        onClick={() => saveTemplate(activeTemplate._id, { emoji: e })}
-                        className={cn('w-9 h-9 rounded-full bg-surface-2 grid place-items-center text-[15px]', activeTemplate.emoji === e && 'ring-2 ring-accent')}
-                      >
-                        {e}
-                      </button>
-                    ))}
-                  </div>
-                </div>
                 <div className="flex gap-2 flex-wrap">
                   {ROUTINE_COLORS.map((c) => (
                     <button
@@ -344,21 +322,6 @@ export default function RoutinePage({ selectedDate }) {
               </p>
             </>
           )}
-        </div>
-      )}
-
-      {/* Nessuna scheda */}
-      {!templatesLoading && (templates ?? []).length === 0 && (
-        <div className="bg-surface-1 rounded-2xl p-8 text-center">
-          <Layers size={32} className="text-label-tertiary mx-auto mb-3" />
-          <p className="text-[15px] text-label">Nessuna routine</p>
-          <p className="text-[13px] text-label-tertiary mt-1 mb-4">Crea la tua prima scheda con le attività che preferisci.</p>
-          <button onClick={() => setNewTemplateOpen(true)} className="h-11 px-5 rounded-full bg-accent text-white text-[14px] font-semibold">
-            <Plus size={16} className="inline mr-1" /> Crea routine
-          </button>
-        </div>
-      )}
-
       <NewTemplateDialog
         isOpen={newTemplateOpen}
         onClose={() => setNewTemplateOpen(false)}
@@ -395,9 +358,6 @@ export default function RoutinePage({ selectedDate }) {
   );
 }
 
-function NewTemplateDialog({ isOpen, onClose, onCreate }) {
-  const [name, setName] = useState('');
-  const [emoji, setEmoji] = useState('⭐');
   const [color, setColor] = useState(ROUTINE_COLORS[0]);
   const [steps, setSteps] = useState([
     { name: 'Attività 1', targetMinutes: 10 },
@@ -408,8 +368,6 @@ function NewTemplateDialog({ isOpen, onClose, onCreate }) {
 
   const create = async () => {
     if (!name.trim()) return;
-    await onCreate({ name: name.trim(), emoji, color, steps });
-    setName('');
     setSteps([{ name: 'Attività 1', targetMinutes: 10 }]);
     onClose();
   };
@@ -433,14 +391,6 @@ function NewTemplateDialog({ isOpen, onClose, onCreate }) {
         placeholder="Nome routine (es. Allenamento)"
         className="w-full bg-surface-2 rounded-xl px-4 py-3 text-[16px] text-label placeholder:text-label-tertiary my-2"
       />
-      <p className="text-[13px] text-label-secondary mb-2">Emoji e colore</p>
-      <div className="flex flex-wrap gap-1.5 mb-3">
-        {ROUTINE_EMOJIS.map((e) => (
-          <button key={e} onClick={() => setEmoji(e)} className={cn('w-9 h-9 rounded-full bg-surface-2 grid place-items-center text-[15px]', emoji === e && 'ring-2 ring-accent')}>
-            {e}
-          </button>
-        ))}
-      </div>
       <div className="flex gap-2 flex-wrap mb-4">
         {ROUTINE_COLORS.map((c) => (
           <button

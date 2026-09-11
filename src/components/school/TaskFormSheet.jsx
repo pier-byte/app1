@@ -1,5 +1,4 @@
 import { useState, useEffect, useMemo } from 'react';
-import { X, Clock, Sunrise, ListChecks, Loader2, Timer, Mic, Plus, Check } from 'lucide-react';
 import { CATEGORY_COLORS } from '../../lib/constants';
 import BottomSheet from '../ui/BottomSheet';
 import Toggle from '../ui/Toggle';
@@ -170,7 +169,6 @@ export default function TaskFormSheet({ isOpen, onClose, onSave, editingTask, de
                 type="time"
                 value={startTime}
                 onChange={(e) => setStartTime(e.target.value)}
-                className="h-10 bg-surface-2 rounded-lg px-2 text-[14px]"
                 aria-label="Ora inizio"
               />
               <span className="text-label-tertiary text-[13px]">→</span>
@@ -178,7 +176,6 @@ export default function TaskFormSheet({ isOpen, onClose, onSave, editingTask, de
                 type="time"
                 value={endTime}
                 onChange={(e) => setEndTime(e.target.value)}
-                className="h-10 bg-surface-2 rounded-lg px-2 text-[14px]"
                 aria-label="Ora fine"
               />
             </div>
@@ -189,8 +186,6 @@ export default function TaskFormSheet({ isOpen, onClose, onSave, editingTask, de
         {/* Promemoria */}
         <ReminderPicker reminders={reminders} date={date} time={startTime} allDay={allDay} onChange={setReminders} />
 
-        {/* Ripeti */}
-        <RepeatPicker repeat={repeat} onChange={setRepeat} />
 
         {/* Categoria (elenco attività) */}
         <button

@@ -58,7 +58,17 @@ export default function ExpenseFormSheet({ isOpen, onClose, onSave, defaultDate 
             className="w-36 text-center bg-transparent text-[44px] leading-none font-bold text-label placeholder:text-label-quaternary tabular-nums"
           />
         </div>
-        <p className="text-[12px] text-label-tertiary mt-2 capitalize">{date ? formatDateDisplay(parseISO(date)) : ''}</p>
+        <label className="flex items-center gap-2 mt-2">
+          <span className="text-[12px] text-label-tertiary capitalize">{date ? formatDateDisplay(parseISO(date)) : ''}</span>
+          <input
+            type="date"
+            value={date || ''}
+            onChange={(e) => e.target.value && setDate(e.target.value)}
+            onClick={(e) => e.currentTarget.showPicker?.()}
+            className="h-11 bg-surface-2 rounded-lg px-2 text-[15px] text-label"
+            aria-label="Data della spesa"
+          />
+        </label>
       </div>
 
       {/* Descrizione */}

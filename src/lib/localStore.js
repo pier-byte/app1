@@ -179,20 +179,81 @@ export function useLocalState() {
 
 // ── Mutazioni locali (stessa firma delle mutation Convex) ──
 
+/**
+ * Genera le istanze figlie di una serie ricorrente a partire dal task
+ * principale (che resta l'occorrenza #1 sulla data base). Ogni istanza è un
+ * task reale e indipendente: si può spuntare, spostare o modificare da sola.
+ * - gli allegati restano solo sull'istanza principale (risparmio spazio)
+ * - i promemoria vengono spostati su ogni data mantenendo l'ora
+ * - `completed`/`actualMinutes` ripartono da zero su ogni istanza
+ */
+function materializeSeriesChildren(parent) {
+  const dates = computeOccurrenceDates(parent.date, parent.repeat);
+  const stamp = parent.createdAt ?? Date.now();
+  return dates.slice(1).map((key, i) => ({
+    ...parent,
+    _id: uid(),
+    date: key,
+    completed: false,
+    actualMinutes: 0,
+    attachments: [],
+    reminders: shiftRemindersForDate(parent.reminders, key),
+    seriesId: parent._id,
+    materialized: true,
+    createdAt: stamp + i + 1,
+  }));
+}
+
+const isSeriesParent = (task) => !!task?.seriesId && task.seriesId === task._id;
+const ruleSignature = (rule) => JSON.stringify(rule ?? null);
+
 export const localMutations = {
   // Tasks
   createTask(fields) {
     const doc = { ...fields, _id: uid(), createdAt: fields.createdAt ?? Date.now() };
+    // Serie ricorrente → duplica subito tutte le istanze nel DB locale
+    if (hasRepeatRule(fields.repeat) && !fields.seriesId && doc.date) {
+      const parent = { ...doc, seriesId: doc._id, materialized: true };
+      const children = materializeSeriesChildren(parent);
+      update((s) => ({ tasks: [...s.tasks, parent, ...children] }));
+      return doc._id;
+    }
     update((s) => ({ tasks: [...s.tasks, doc] }));
     return doc._id;
   },
   updateTask({ id, ...patch }) {
-    update((s) => ({
-      tasks: s.tasks.map((t) => (t._id === id ? { ...t, ...patch } : t)),
-    }));
+    update((s) => {
+      const existing = s.tasks.find((t) => t._id === id);
+      if (!existing) return {};
+      const repeatChanged = patch.repeat !== undefined && ruleSignature(patch.repeat) !== ruleSignature(existing.repeat);
+      const dateChanged = patch.date !== undefined && patch.date !== existing.date;
+      // Modifica di regola/data sull'istanza principale → rigenera la serie
+      if (isSeriesParent(existing) && (repeatChanged || dateChanged)) {
+        const rest = s.tasks.filter((t) => t._id === id || t.seriesId !== id);
+        const next = { ...existing, ...patch };
+        if (hasRepeatRule(next.repeat) && next.date) {
+          const parent = { ...next, seriesId: id, materialized: true };
+          const children = materializeSeriesChildren(parent);
+          return { tasks: [...rest.map((t) => (t._id === id ? parent : t)), ...children] };
+        }
+        // Regola rimossa → torna un task singolo (via metadati serie)
+        const { seriesId: _sid, materialized: _mat, ...single } = next;
+        return { tasks: rest.map((t) => (t._id === id ? single : t)) };
+      }
+      return { tasks: s.tasks.map((t) => (t._id === id ? { ...t, ...patch } : t)) };
+    });
   },
   removeTask({ id }) {
     update((s) => ({ tasks: s.tasks.filter((t) => t._id !== id) }));
+  },
+  /** Elimina un'intera serie ricorrente a partire da una sua istanza. */
+  removeSeries({ id }) {
+    update((s) => {
+      const target = s.tasks.find((t) => t._id === id);
+      const sid = target?.seriesId;
+      if (!sid) return { tasks: s.tasks.filter((t) => t._id !== id) };
+      return { tasks: s.tasks.filter((t) => t._id !== sid && t.seriesId !== sid) };
+    });
   },
   toggleTask({ id }) {
     update((s) => ({
@@ -200,7 +261,8 @@ export const localMutations = {
     }));
   },
   moveTaskToDate({ id, date }) {
-    update((s) => ({ tasks: s.tasks.map((t) => (t._id === id ? { ...t, date } : t)) }));
+    // Passa da updateTask: spostare l'istanza principale rigenera la serie
+    localMutations.updateTask({ id, date });
   },
   addTaskMinutes({ id, minutes }) {
     update((s) => ({

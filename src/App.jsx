@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+
 import { AnimatePresence } from 'framer-motion';
 import { addMonths, subMonths } from 'date-fns';
 import { useAuth } from './hooks/useAuth';
@@ -6,12 +6,7 @@ import PinScreen from './components/auth/PinScreen';
 import AppShell from './components/layout/AppShell';
 import BottomNav from './components/layout/BottomNav';
 import { useDateNavigation } from './hooks/useDateNavigation';
-import CalendarPage from './pages/CalendarPage';
-import SchoolPage from './pages/SchoolPage';
-import RoutinePage from './pages/RoutinePage';
-import NutritionPage from './pages/NutritionPage';
-import NotesPage from './pages/NotesPage';
-import WalletPage from './pages/WalletPage';
+
 import { startReminderEngine, notify, showInAppToast } from './lib/notifications';
 import { useExpandedTasks, useTasks } from './hooks/useData';
 import { toDateKey } from './lib/dates';
@@ -66,9 +61,30 @@ export default function App() {
     return stop;
   }, [isAuthenticated, todayTasks, updateTask]);
 
-  if (authLoading) return <div className="flex items-center justify-center h-full bg-canvas"><div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" /></div>;
+  // Prefetch delle altre tab quando il browser è inattivo: switch istantaneo
+  // senza penalizzare il primo rendering.
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    let timer;
+    const prefetch = () => {
+      import('./pages/CalendarPage');
+      import('./pages/SchoolPage');
+      import('./pages/RoutinePage');
+      import('./pages/NutritionPage');
+      import('./pages/NotesPage');
+      import('./pages/WalletPage');
+    };
+    if (typeof window.requestIdleCallback === 'function') {
+      const id = window.requestIdleCallback(prefetch, { timeout: 4000 });
+      return () => window.cancelIdleCallback(id);
+    }
+    timer = setTimeout(prefetch, 2500);
+    return () => clearTimeout(timer);
+  }, [isAuthenticated]);
+
+  if (authLoading) return <PageLoader />;
   if (!isAuthenticated) return <PinScreen onAuthenticate={authenticate} />;
-  return <AppShell><div className="flex-1 overflow-hidden"><AnimatePresence mode="wait">{renderPage()}</AnimatePresence></div><ToastHost /><BottomNav activeTab={activeTab} onTabChange={setActiveTab} /></AppShell>;
+
 }
 
 /** Banner in-app per i promemoria (oltre alla notifica di sistema). */

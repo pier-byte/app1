@@ -9,10 +9,11 @@ import './index.css';
 registerSW({ immediate: true });
 
 const convexUrl = import.meta.env.VITE_CONVEX_URL;
+// Un solo client per tutta la vita dell'app (prima veniva ricreato a ogni render di Root)
+const convex = convexUrl ? new ConvexReactClient(convexUrl) : null;
 
 function Root() {
-  if (convexUrl) {
-    const convex = new ConvexReactClient(convexUrl);
+  if (convex) {
     return (
       <StrictMode>
         <ConvexProvider client={convex}>

@@ -12,7 +12,7 @@ export const listAll = query({
 });
 
 export const create = mutation({
-  args: { name: v.string(), emoji: v.string(), color: v.string(), steps: v.array(stepValidator) },
+
   handler: async (ctx, args) => await ctx.db.insert("routineTemplates", args),
 });
 
@@ -21,6 +21,7 @@ export const update = mutation({
     id: v.id("routineTemplates"),
     name: v.optional(v.string()),
     emoji: v.optional(v.string()),
+
     color: v.optional(v.string()),
     steps: v.optional(v.array(stepValidator)),
   },

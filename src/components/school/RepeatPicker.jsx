@@ -1,14 +1,10 @@
-import { useState } from 'react';
-import { Repeat, ChevronRight } from 'lucide-react';
-import { Dialog } from '../ui/Dialog';
-import { REPEAT_FREQUENCIES, WEEKDAY_OPTIONS, repeatLabel } from '../../lib/repeat';
+
 import { cn } from '../../lib/cn';
 
 /**
  * RepeatPicker — "Ripeti" (screenshot 12): frequenza, giorni della settimana
  * per la ripetizione settimanale e condizioni di fine (mai / dopo N / data).
- */
-export default function RepeatPicker({ repeat, onChange }) {
+
   const [open, setOpen] = useState(false);
   const value = repeat && repeat.frequency ? repeat : { frequency: 'none' };
 
@@ -19,6 +15,7 @@ export default function RepeatPicker({ repeat, onChange }) {
     const next = days.includes(id) ? days.filter((d) => d !== id) : [...days, id];
     set({ weekdays: next.length ? next : undefined });
   };
+
 
   return (
     <>
@@ -76,7 +73,6 @@ export default function RepeatPicker({ repeat, onChange }) {
                     key={w.id}
                     onClick={() => toggleWeekday(w.id)}
                     className={cn(
-                      'h-10 rounded-full text-[12px] font-semibold transition-colors',
                       active ? 'bg-accent text-white' : 'bg-fill-tertiary text-label-secondary'
                     )}
                   >
@@ -88,7 +84,7 @@ export default function RepeatPicker({ repeat, onChange }) {
           </>
         )}
 
-        {value.frequency !== 'none' && value.frequency !== 'monthly' && (
+
           <>
             <p className="text-[13px] font-semibold text-label-secondary uppercase tracking-wide mb-2">Fine ripetizione</p>
             <div className="flex flex-col gap-1">
@@ -115,12 +111,7 @@ export default function RepeatPicker({ repeat, onChange }) {
                     <label className="flex items-center gap-1.5">
                       <input
                         type="number"
-                        min="1"
-                        max="999"
-                        value={value.endAfter || 5}
-                        onChange={(e) => set({ endAfter: Number(e.target.value) || 1 })}
-                        onClick={(e) => e.stopPropagation()}
-                        className="w-16 h-10 bg-surface-2 rounded-lg px-2 text-right text-[15px]"
+
                       />
                       <span className="text-[12px] text-label-tertiary">volte</span>
                     </label>
@@ -129,14 +120,13 @@ export default function RepeatPicker({ repeat, onChange }) {
                     <input
                       type="date"
                       value={value.endDate || ''}
-                      onChange={(e) => set({ endDate: e.target.value })}
-                      onClick={(e) => e.stopPropagation()}
-                      className="h-10 bg-surface-2 rounded-lg px-2 text-[14px]"
+
                     />
                   )}
                 </button>
               ))}
             </div>
+
           </>
         )}
       </Dialog>

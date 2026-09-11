@@ -45,14 +45,12 @@ export const DEFAULT_ROUTINE_TEMPLATES = [
   {
     id: 'post-volley',
     name: 'Post-volley',
-    emoji: '🏐',
     color: '#0a84ff',
     steps: DEFAULT_ROUTINE_STEPS,
   },
   {
     id: 'mattina',
     name: 'Mattina',
-    emoji: '🌅',
     color: '#ffd60a',
     steps: [
       { name: 'Sveglia e stretch', targetMinutes: 5 },
@@ -64,7 +62,6 @@ export const DEFAULT_ROUTINE_TEMPLATES = [
   {
     id: 'sera',
     name: 'Sera',
-    emoji: '🌙',
     color: '#bf5af2',
     steps: [
       { name: 'Doccia', targetMinutes: 10 },
@@ -75,9 +72,6 @@ export const DEFAULT_ROUTINE_TEMPLATES = [
   },
 ];
 
-// ── Colori/emoji per routine personalizzate ──
-export const ROUTINE_COLORS = ['#0a84ff', '#30d158', '#ffd60a', '#ff375f', '#bf5af2', '#64d2ff', '#ff9f0a', '#66d4cf', '#5e5ce6', '#ff2d55'];
-export const ROUTINE_EMOJIS = ['🏐', '💪', '🌅', '🌙', '🧘', '🏃', '📚', '🦷', '🧖', '🥗', '🎯', '⭐'];
 
 // ── Tipi pasto ──
 export const MEAL_TYPES = ['Colazione', 'Pranzo', 'Cena', 'Spuntino'];

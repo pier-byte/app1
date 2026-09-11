@@ -1,11 +1,12 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { ClipboardList, Plus, Timer } from 'lucide-react';
 import { useTasks, useExpandedTasks, useTaskCategories } from '../hooks/useData';
 import TaskCard from '../components/school/TaskCard';
-import TaskFormSheet from '../components/school/TaskFormSheet';
+// Editor lazy: scaricato solo alla prima apertura
+const TaskFormSheet = lazy(() => import('../components/school/TaskFormSheet'));
 import StudyTimerCard from '../components/school/StudyTimerCard';
 import LoadInsightCard from '../components/school/LoadInsightCard';
 import DatePickerDialog from '../components/school/DatePickerDialog';
@@ -21,7 +22,6 @@ import { toDateKey, addDays } from '../lib/dates';
  */
 export default function SchoolPage({ selectedDate, weekDates, weekLabel, goToPrevWeek, goToNextWeek, goToToday, onSelectDate }) {
   const dateKey = toDateKey(selectedDate);
-  const { data: tasks /* mutazioni */, createTask, updateTask, toggleTask, removeTask, moveTaskToDate, addTaskMinutes } = useTasks(dateKey);
   const { data: expandedTasks, isLoading } = useExpandedTasks(dateKey);
   const { data: categories, createCategory } = useTaskCategories();
 
@@ -38,6 +38,7 @@ export default function SchoolPage({ selectedDate, weekDates, weekLabel, goToPre
   const openMenu = useCallback((task, e) => {
     setMenuPos({ y: Math.min(e.clientY ?? 200, window.innerHeight - 260) });
     setMenuTask(task);
+    import('../components/school/TaskFormSheet'); // preload: "Modifica" è nel menu
   }, []);
 
   const handleSave = async (fields) => {
@@ -157,18 +158,20 @@ export default function SchoolPage({ selectedDate, weekDates, weekLabel, goToPre
       />
 
       {/* Sheet creazione/modifica */}
-      <TaskFormSheet
-        isOpen={formOpen}
-        onClose={() => {
-          setFormOpen(false);
-          setEditingTask(null);
-        }}
-        onSave={handleSave}
-        editingTask={editingTask}
-        defaultDate={dateKey}
-        categories={categories ?? []}
-        onCreateCategory={createCategory}
-      />
+      <Suspense fallback={null}>
+        <TaskFormSheet
+          isOpen={formOpen}
+          onClose={() => {
+            setFormOpen(false);
+            setEditingTask(null);
+          }}
+          onSave={handleSave}
+          editingTask={editingTask}
+          defaultDate={dateKey}
+          categories={categories ?? []}
+          onCreateCategory={createCategory}
+        />
+      </Suspense>
 
       {/* Menu contestuale (screenshot 13) */}
       <ContextMenu
@@ -188,6 +191,9 @@ export default function SchoolPage({ selectedDate, weekDates, weekLabel, goToPre
                 { label: 'Sposta a domani', onClick: () => handleMoveTomorrow(menuTask) },
                 { label: 'Cambia data', onClick: () => setDateChangeTask(menuTask) },
                 { label: 'Elimina', destructive: true, onClick: () => handleDelete(menuTask) },
+                ...(menuTask.seriesId
+                  ? [{ label: 'Elimina l’intera serie', destructive: true, onClick: () => removeSeries(menuTask._id) }]
+                  : []),
               ]
             : []
         }

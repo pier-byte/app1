@@ -4,8 +4,6 @@ import { api } from '../../convex/_generated/api';
 import { HAS_CONVEX } from '../lib/db';
 import { useLocalState, localMutations } from '../lib/localStore';
 import { DEFAULT_TASK_CATEGORIES, DEFAULT_ROUTINE_TEMPLATES } from '../lib/constants';
-import { expandEventsForDate } from '../lib/repeat';
-import { addDays, getMonday, toDateKey } from '../lib/dates';
 
 /**
  * Layer dati unificato: ogni hook espone { data, isLoading, ...azioni }.
@@ -32,6 +30,7 @@ export function useTasks(dateKey) {
     const create = useMutation(api.tasks.create);
     const update = useMutation(api.tasks.update);
     const remove = useMutation(api.tasks.remove);
+    const removeSeriesM = useMutation(api.tasks.removeSeries);
     const toggle = useMutation(api.tasks.toggle);
     const moveToDate = useMutation(api.tasks.moveToDate);
     const addMinutes = useMutation(api.tasks.addActualMinutes);
@@ -41,6 +40,7 @@ export function useTasks(dateKey) {
       createTask: (fields) => create({ completed: false, ...fields }),
       updateTask: (id, patch) => update({ id, ...patch }),
       removeTask: (id) => remove({ id }),
+      removeSeries: (id) => removeSeriesM({ id }),
       toggleTask: (id) => toggle({ id }),
       moveTaskToDate: (id, date) => moveToDate({ id, date }),
       addTaskMinutes: (id, minutes) => addMinutes({ id, minutes }),
@@ -61,6 +61,7 @@ export function useTasks(dateKey) {
     createTask: (fields) => localMutations.createTask({ completed: false, ...fields }),
     updateTask: (id, patch) => localMutations.updateTask({ id, ...patch }),
     removeTask: (id) => localMutations.removeTask({ id }),
+    removeSeries: (id) => localMutations.removeSeries({ id }),
     toggleTask: (id) => localMutations.toggleTask({ id }),
     moveTaskToDate: (id, date) => localMutations.moveTaskToDate({ id, date }),
     addTaskMinutes: (id, minutes) => localMutations.addTaskMinutes({ id, minutes }),
@@ -68,17 +69,6 @@ export function useTasks(dateKey) {
 }
 
 /**
- * Compiti/eventi della giornata, incluse le occorrenze ripetute.
- * Carica un anno indietro + la settimana per espandere le ripetizioni.
- */
-export function useExpandedTasks(dateKey) {
-  const weekStart = toDateKey(getMonday(new Date(`${dateKey}T12:00:00`)));
-  const rangeStart = toDateKey(addDays(new Date(`${weekStart}T12:00:00`), -365));
-  const rangeEnd = toDateKey(addDays(new Date(`${weekStart}T12:00:00`), 6));
-  const { data: weekTasks, isLoading } = useTasksBetween(rangeStart, rangeEnd);
-  const data = useMemo(
-    () => expandEventsForDate(weekTasks ?? [], dateKey),
-    [weekTasks, dateKey]
   );
   return { data, isLoading };
 }

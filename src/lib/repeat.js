@@ -15,6 +15,7 @@ export function isoWeekday(date) {
   return getDay(date) === 0 ? 7 : getDay(date);
 }
 
+
 const FREQ_LABELS = {
   none: 'Nessuno',
   daily: 'Ogni giorno',
@@ -130,8 +131,6 @@ export function expandEventsForDate(events, dateKey) {
   return (events || []).filter((ev) => {
     if (!ev.date) return false;
     if (ev.date === dateKey) return true;
-    const hasRepeat = ev.repeat && ev.repeat.frequency && ev.repeat.frequency !== 'none';
-    if (!hasRepeat) return false;
     return occurrencesBetween(ev.date, target, target, ev.repeat).length > 0;
   });
 }

@@ -12,17 +12,11 @@ Design Apple Dark Mode, realtime con Convex DB, AI con Gemini 2.5 Flash, install
 - Persistenza sessione in `localStorage`, tasti freccia supportati su desktop
 
 ### 📅 Tab 1 — Calendario (home)
-- Vista **Mese/Settimana** con **anteprima eventi e attività** dentro ogni giorno (stile screenshot home)
-- Agenda del giorno selezionato con orari, icone ripetizione/promemoria/allegati e FAB rapido
 
 ### 🎓 Tab 2 — Compiti
 - Strip settimanale (Lun–Dom) + lista attività del giorno con categorie colorate e checkbox
 - **Editor completo stile iOS (screenshot 12)**: titolo/descrizione, scadenza, **tutto il giorno + orari**, **promemoria** (all'ora, 5/15/30 min prima, 1h/2h, giorno alle 09:00 → notifiche di sistema + banner in-app), **ripeti** (giornaliero, feriali, settimanale con giorni scelti, mensile + fine: mai / dopo N volte / in data), **elenco attività** (categorie personalizzabili) e **allegati** (foto, PDF, documenti)
-- Timer di studio 15:00–20:00, stima tempi e carico via Gemini 2.5 Flash
-- Menu contestuale: Modifica, Sposta a domani, Cambia data, Elimina
 
-### 🔁 Tab 3 — Routine
-- **Più schede** (template) con **attività personalizzabili dentro**: nome, emoji, colore, step con nome/obiettivo minuti, ordine, aggiunta/rimozione
 - Timer a scorrimento (carousel con scroll-snap) che registra i tempi effettivi per scheda
 - Riepilogo con confronto tempi reali vs obiettivo e salvataggio automatico
 
@@ -39,8 +33,6 @@ Design Apple Dark Mode, realtime con Convex DB, AI con Gemini 2.5 Flash, install
 - Budget settimanale, log rapido spese, indicatori di soglia 🟢 <50% · 🟡 50–80% · 🔴 >80%
 
 ### 📱 UX mobile (Android/iOS)
-- Touch target ≥44px, stepper +/−, chip di scelta, picker data/ora nativi del sistema
-- Input ≥16px per evitare lo zoom automatico iOS, safe-area per notch e gesture bar
 
 ## 🚀 Avvio rapido
 
@@ -70,7 +62,7 @@ Chiave gratuita su [aistudio.google.com/apikey](https://aistudio.google.com/apik
 ### Notifiche promemoria (iOS/Android)
 - Su **PWA** le notifiche locali programmate non esistono: l'app, quando è aperta, mostra notifica di sistema + banner in-app al momento del promemoria
 - Su **iOS** l'app deve essere installata nella home e il permesso notifiche concesso
-- I promemoria delle occorrenze ripetute seguono l'evento base
+
 
 ## ☁️ Deploy su Cloudflare Pages
 
@@ -101,7 +93,7 @@ src/
 │   ├── layout/      # AppShell, WeekStrip (calendario swipeable), BottomNav
 │   ├── ui/          # BottomSheet, Dialog, ContextMenu, FAB, EmptyState, SegmentedControl, Toggle
 │   ├── school/      # StudyTimerCard, TaskCard, TaskFormSheet (promemoria/ripeti/allegati), ReminderPicker, RepeatPicker, AttachmentList, LoadInsightCard
-│   ├── routine/     # RoutineCarousel
+
 │   ├── nutrition/   # AiMealInput, GoalPlannerDialog (BMR/TDEE/macro), WeeklyPlanTable, MetricsCharts
 │   ├── notes/       # NoteEditorSheet
 │   └── wallet/      # ExpenseFormSheet
@@ -115,5 +107,5 @@ scripts/             # generate-icons.mjs, smoke-test.mjs
 ## 🧪 Test
 
 ```bash
-node scripts/smoke-test.mjs   # rendering SSR di tutte le pagine/componenti (18 test)
+
 ```
