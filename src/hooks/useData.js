@@ -4,8 +4,6 @@ import { api } from '../../convex/_generated/api';
 import { HAS_CONVEX } from '../lib/db';
 import { useLocalState, localMutations } from '../lib/localStore';
 import { DEFAULT_TASK_CATEGORIES, DEFAULT_ROUTINE_TEMPLATES } from '../lib/constants';
-import { expandEventsForRange } from '../lib/repeat';
-import { addDays, toDateKey } from '../lib/dates';
 
 /**
  * Layer dati unificato: ogni hook espone { data, isLoading, ...azioni }.
@@ -71,27 +69,7 @@ export function useTasks(dateKey) {
 }
 
 /**
- * Compiti/eventi su un intervallo di date → Map<dateKey, task[]>.
- * Include le istanze materializzate e (per i task legacy) le occorrenze
- * espanse dalle regole di ripetizione (lookback di ~1 anno).
- */
-export function useExpandedTasksBetween(startKey, endKey) {
-  const rangeStart = toDateKey(addDays(new Date(`${startKey}T12:00:00`), -370));
-  const { data: raw, isLoading } = useTasksBetween(rangeStart, endKey);
-  const data = useMemo(
-    () => expandEventsForRange(raw ?? [], startKey, endKey),
-    [raw, startKey, endKey]
   );
-  return { data, isLoading };
-}
-
-/**
- * Compiti/eventi della giornata, incluse le istanze delle serie ricorrenti
- * (materializzate nel DB) e le occorrenze legacy espanse dalle regole.
- */
-export function useExpandedTasks(dateKey) {
-  const { data: map, isLoading } = useExpandedTasksBetween(dateKey, dateKey);
-  const data = useMemo(() => map.get(dateKey) ?? [], [map, dateKey]);
   return { data, isLoading };
 }
 

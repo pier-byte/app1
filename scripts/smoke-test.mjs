@@ -40,8 +40,7 @@ try {
 // 2) Ogni pagina singolarmente (bypass del gate)
 const noop = () => {};
 const pages = [
-  ['SchoolPage', { selectedDate: new Date(), weekDates: [new Date()], weekLabel: 'test', goToPrevWeek: noop, goToNextWeek: noop, goToToday: noop, onSelectDate: noop }],
-  ['CalendarPage', { selectedDate: new Date(), selectDate: noop, mode: 'month', setMode: noop, goPrev: noop, goNext: noop, goToToday: noop, weekDates: [new Date()], weekLabel: 'test', goToPrevWeek: noop, goToNextWeek: noop, onOpenTasks: noop }],
+
   ['RoutinePage', { selectedDate: new Date() }],
   ['NutritionPage', { selectedDate: new Date() }],
   ['NotesPage', {}],

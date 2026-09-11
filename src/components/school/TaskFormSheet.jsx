@@ -1,5 +1,4 @@
 import { useState, useEffect, useMemo } from 'react';
-import { X, Clock, Sunrise, ListChecks, Loader2, Timer, Mic, Plus, Check, Repeat } from 'lucide-react';
 import { CATEGORY_COLORS } from '../../lib/constants';
 import BottomSheet from '../ui/BottomSheet';
 import Toggle from '../ui/Toggle';
@@ -8,7 +7,6 @@ import ReminderPicker from './ReminderPicker';
 import RepeatPicker from './RepeatPicker';
 import AttachmentList from './AttachmentList';
 import { formatDateDisplay, parseISO } from '../../lib/dates';
-import { repeatLabel } from '../../lib/repeat';
 import { Dialog } from '../ui/Dialog';
 import { estimateStudyTime, hasGemini } from '../../lib/gemini';
 import { cn } from '../../lib/cn';
@@ -171,8 +169,6 @@ export default function TaskFormSheet({ isOpen, onClose, onSave, editingTask, de
                 type="time"
                 value={startTime}
                 onChange={(e) => setStartTime(e.target.value)}
-                onClick={(e) => e.currentTarget.showPicker?.()}
-                className="h-11 bg-surface-2 rounded-lg px-2 text-[16px]"
                 aria-label="Ora inizio"
               />
               <span className="text-label-tertiary text-[13px]">→</span>
@@ -180,8 +176,6 @@ export default function TaskFormSheet({ isOpen, onClose, onSave, editingTask, de
                 type="time"
                 value={endTime}
                 onChange={(e) => setEndTime(e.target.value)}
-                onClick={(e) => e.currentTarget.showPicker?.()}
-                className="h-11 bg-surface-2 rounded-lg px-2 text-[16px]"
                 aria-label="Ora fine"
               />
             </div>
@@ -192,20 +186,6 @@ export default function TaskFormSheet({ isOpen, onClose, onSave, editingTask, de
         {/* Promemoria */}
         <ReminderPicker reminders={reminders} date={date} time={startTime} allDay={allDay} onChange={setReminders} />
 
-        {/* Ripeti (sola lettura sulle istanze figlie di una serie) */}
-        {editingTask?.seriesId && editingTask.seriesId !== editingTask._id ? (
-          <div className="w-full flex items-center gap-3 px-1 py-3.5 border-b border-separator opacity-70">
-            <Repeat size={20} className="text-label-secondary shrink-0" />
-            <div className="flex-1">
-              <p className="text-[16px] text-label">Ripeti</p>
-              <p className="text-[13px] text-label-tertiary mt-0.5">
-                {repeatLabel(repeat)} · istanza di una serie: modifica la prima occorrenza per cambiare la regola
-              </p>
-            </div>
-          </div>
-        ) : (
-          <RepeatPicker repeat={repeat} onChange={setRepeat} baseDate={date} />
-        )}
 
         {/* Categoria (elenco attività) */}
         <button

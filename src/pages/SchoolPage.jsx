@@ -22,7 +22,6 @@ import { toDateKey, addDays } from '../lib/dates';
  */
 export default function SchoolPage({ selectedDate, weekDates, weekLabel, goToPrevWeek, goToNextWeek, goToToday, onSelectDate }) {
   const dateKey = toDateKey(selectedDate);
-  const { data: tasks /* mutazioni */, createTask, updateTask, toggleTask, removeTask, removeSeries, moveTaskToDate, addTaskMinutes } = useTasks(dateKey);
   const { data: expandedTasks, isLoading } = useExpandedTasks(dateKey);
   const { data: categories, createCategory } = useTaskCategories();
 

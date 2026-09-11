@@ -45,6 +45,5 @@ export default function CalendarHeader({ mode, onModeChange, selectedDate, onPre
         </div>
         {mode === 'week' && weekStrip}
       </div>
-    </header>
-  );
+
 }

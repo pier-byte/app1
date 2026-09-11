@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, lazy, Suspense } from 'react';
+
 import { AnimatePresence } from 'framer-motion';
 import { addMonths, subMonths } from 'date-fns';
 import { useAuth } from './hooks/useAuth';
@@ -6,14 +6,7 @@ import PinScreen from './components/auth/PinScreen';
 import AppShell from './components/layout/AppShell';
 import BottomNav from './components/layout/BottomNav';
 import { useDateNavigation } from './hooks/useDateNavigation';
-// Code-splitting: ogni tab è un chunk separato caricato on-demand,
-// così il primo rendering scarica solo shell + PIN + tab iniziale.
-const CalendarPage = lazy(() => import('./pages/CalendarPage'));
-const SchoolPage = lazy(() => import('./pages/SchoolPage'));
-const RoutinePage = lazy(() => import('./pages/RoutinePage'));
-const NutritionPage = lazy(() => import('./pages/NutritionPage'));
-const NotesPage = lazy(() => import('./pages/NotesPage'));
-const WalletPage = lazy(() => import('./pages/WalletPage'));
+
 import { startReminderEngine, notify, showInAppToast } from './lib/notifications';
 import { useExpandedTasks, useTasks } from './hooks/useData';
 import { toDateKey } from './lib/dates';
@@ -91,12 +84,7 @@ export default function App() {
 
   if (authLoading) return <PageLoader />;
   if (!isAuthenticated) return <PinScreen onAuthenticate={authenticate} />;
-  return <AppShell><div className="flex-1 overflow-hidden"><AnimatePresence mode="wait"><Suspense fallback={<PageLoader />}>{renderPage()}</Suspense></AnimatePresence></div><ToastHost /><BottomNav activeTab={activeTab} onTabChange={setActiveTab} /></AppShell>;
-}
 
-/** Loader a pagina intera (primo paint + fallback Suspense dei chunk lazy). */
-function PageLoader() {
-  return <div className="flex items-center justify-center h-full bg-canvas"><div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" /></div>;
 }
 
 /** Banner in-app per i promemoria (oltre alla notifica di sistema). */

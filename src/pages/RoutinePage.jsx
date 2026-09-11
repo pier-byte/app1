@@ -2,13 +2,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
-import { Play, Check, RotateCcw, Clock3, Trash2, Plus, ChevronUp, ChevronDown, Pencil, X, Layers, LayoutGrid, Square } from 'lucide-react';
-import { useRoutine, useRoutineTemplates } from '../hooks/useData';
-import { useRoutineSession, routineSession } from '../store/routineSession';
-import RoutineCarousel from '../components/routine/RoutineCarousel';
-import RoutineIcon, { routineIconName } from '../components/routine/RoutineIcon';
-import IconPicker from '../components/routine/IconPicker';
-import { ROUTINE_COLORS } from '../lib/constants';
 import { toDateKey, formatSeconds, formatMinutes } from '../lib/dates';
 import { cn } from '../lib/cn';
 import { Dialog } from '../components/ui/Dialog';
@@ -27,8 +20,6 @@ export default function RoutinePage({ selectedDate }) {
   const [activeTemplateId, setActiveTemplateId] = useState(() => localStorage.getItem('app1_routine_active') || null);
   const [newTemplateOpen, setNewTemplateOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [view, setView] = useState('detail'); // detail | overview (panoramica compatta)
-
   const activeTemplate = useMemo(() => {
     const list = templates ?? [];
     if (!list.length) return null;
@@ -80,44 +71,6 @@ export default function RoutinePage({ selectedDate }) {
     [savedRoutine]
   );
 
-  const beginWith = (template) => {
-    if (!template) return;
-    routineSession.begin(dateKey, template.steps, {
-      routineId: template._id,
-      routineName: template.name,
-      routineIcon: routineIconName(template),
-    });
-  };
-
-  const begin = () => beginWith(activeTemplate);
-
-  return (
-    <div className="h-full overflow-y-auto scrollable px-4 pt-2 pb-32">
-      {/* Header + toggle vista */}
-      <div className="flex items-start justify-between gap-3 mb-3">
-        <div>
-          <h1 className="text-[28px] font-bold text-label tracking-tight leading-tight">Routine</h1>
-          <p className="text-[13px] text-label-secondary capitalize">
-            {format(selectedDate, 'EEEE d MMMM', { locale: it })}
-          </p>
-        </div>
-        <div className="flex bg-surface-2 rounded-full p-1 shrink-0" aria-label="Vista routine">
-          {[
-            { id: 'detail', label: 'Scheda', Icon: Square },
-            { id: 'overview', label: 'Tutte', Icon: LayoutGrid },
-          ].map(({ id, label, Icon }) => (
-            <button
-              key={id}
-              onClick={() => setView(id)}
-              className={cn(
-                'h-8 px-3 rounded-full text-[12px] font-semibold flex items-center gap-1.5',
-                view === id ? 'bg-accent text-white' : 'text-label-secondary'
-              )}
-            >
-              <Icon size={13} /> {label}
-            </button>
-          ))}
-        </div>
       </div>
 
       {/* Selettore schede routine (solo vista dettaglio) */}
@@ -201,7 +154,6 @@ export default function RoutinePage({ selectedDate }) {
       )}
 
       {/* Intro / avvio */}
-      {view === 'detail' && showIntro && activeTemplate && (
         <div>
           <div className="bg-surface-1 rounded-2xl p-5 mb-4">
             <div className="flex items-center gap-2 mb-4">
@@ -209,7 +161,6 @@ export default function RoutinePage({ selectedDate }) {
                 className="w-9 h-9 rounded-xl grid place-items-center shrink-0"
                 style={{ backgroundColor: `${activeTemplate.color}22` }}
               >
-                <RoutineIcon template={activeTemplate} size={18} />
               </div>
               <div className="flex-1 min-w-0">
                 {editing ? (
@@ -233,17 +184,6 @@ export default function RoutinePage({ selectedDate }) {
               </button>
             </div>
 
-            {/* Selettore icona/colore in modalità modifica */}
-            {editing && (
-              <div className="mb-4">
-                <p className="text-[13px] text-label-secondary mb-2">Icona</p>
-                <div className="mb-3">
-                  <IconPicker
-                    value={routineIconName(activeTemplate)}
-                    onChange={(icon) => saveTemplate(activeTemplate._id, { icon })}
-                  />
-                </div>
-                <p className="text-[13px] text-label-secondary mb-2">Colore</p>
                 <div className="flex gap-2 flex-wrap">
                   {ROUTINE_COLORS.map((c) => (
                     <button
@@ -382,21 +322,6 @@ export default function RoutinePage({ selectedDate }) {
               </p>
             </>
           )}
-        </div>
-      )}
-
-      {/* Nessuna scheda (vista dettaglio) */}
-      {view === 'detail' && !templatesLoading && (templates ?? []).length === 0 && (
-        <div className="bg-surface-1 rounded-2xl p-8 text-center">
-          <Layers size={32} className="text-label-tertiary mx-auto mb-3" />
-          <p className="text-[15px] text-label">Nessuna routine</p>
-          <p className="text-[13px] text-label-tertiary mt-1 mb-4">Crea la tua prima scheda con le attività che preferisci.</p>
-          <button onClick={() => setNewTemplateOpen(true)} className="h-11 px-5 rounded-full bg-accent text-white text-[14px] font-semibold">
-            <Plus size={16} className="inline mr-1" /> Crea routine
-          </button>
-        </div>
-      )}
-
       <NewTemplateDialog
         isOpen={newTemplateOpen}
         onClose={() => setNewTemplateOpen(false)}
@@ -433,72 +358,6 @@ export default function RoutinePage({ selectedDate }) {
   );
 }
 
-/**
- * OverviewGrid — Vista globale e sintetica: tutte le schede routine insieme
- * in formato compatto (icona, nome, n° attività, durata). Tap → dettaglio,
- * pulsante play → avvio diretto della sessione.
- */
-function OverviewGrid({ templates, activeId, onOpen, onStart, onNew }) {
-  return (
-    <div>
-      <p className="text-[13px] text-label-secondary px-1 mb-2.5">
-        {templates.length === 1 ? '1 scheda' : `${templates.length} schede`} · tocca per aprire, ▶ per avviare
-      </p>
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-        {templates.map((t) => {
-          const total = (t.steps ?? []).reduce((s, st) => s + (st.targetMinutes || 0), 0);
-          const active = t._id === activeId;
-          return (
-            <div
-              key={t._id}
-              className={cn(
-                'bg-surface-1 rounded-2xl p-3.5 flex flex-col gap-2 text-left border',
-                active ? 'border-accent/60' : 'border-transparent'
-              )}
-            >
-              <button onClick={() => onOpen(t)} className="flex flex-col gap-2 text-left" aria-label={`Apri ${t.name}`}>
-                <span
-                  className="w-10 h-10 rounded-xl grid place-items-center"
-                  style={{ backgroundColor: `${t.color}22` }}
-                >
-                  <RoutineIcon template={t} size={19} />
-                </span>
-                <span className="min-w-0">
-                  <span className="block text-[15px] font-semibold text-label truncate">{t.name}</span>
-                  <span className="block text-[12px] text-label-tertiary tabular-nums mt-0.5">
-                    {(t.steps ?? []).length} attività · ~{formatMinutes(total)}
-                  </span>
-                </span>
-              </button>
-              <button
-                onClick={() => onStart(t)}
-                className="h-10 rounded-full bg-accent/15 text-accent text-[13px] font-semibold flex items-center justify-center gap-1.5 active:bg-accent/25"
-                aria-label={`Avvia ${t.name}`}
-              >
-                <Play size={14} fill="currentColor" /> Avvia
-              </button>
-            </div>
-          );
-        })}
-
-        {/* Card "nuova scheda" */}
-        <button
-          onClick={onNew}
-          className="rounded-2xl p-3.5 flex flex-col items-center justify-center gap-2 min-h-[148px] border border-dashed border-label-quaternary text-label-secondary active:bg-surface-1"
-        >
-          <span className="w-10 h-10 rounded-full bg-surface-2 grid place-items-center">
-            <Plus size={19} />
-          </span>
-          <span className="text-[13px] font-semibold">Nuova scheda</span>
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function NewTemplateDialog({ isOpen, onClose, onCreate }) {
-  const [name, setName] = useState('');
-  const [icon, setIcon] = useState('Dumbbell');
   const [color, setColor] = useState(ROUTINE_COLORS[0]);
   const [steps, setSteps] = useState([
     { name: 'Attività 1', targetMinutes: 10 },
@@ -509,9 +368,6 @@ function NewTemplateDialog({ isOpen, onClose, onCreate }) {
 
   const create = async () => {
     if (!name.trim()) return;
-    await onCreate({ name: name.trim(), icon, color, steps });
-    setName('');
-    setIcon('Dumbbell');
     setSteps([{ name: 'Attività 1', targetMinutes: 10 }]);
     onClose();
   };
@@ -535,11 +391,6 @@ function NewTemplateDialog({ isOpen, onClose, onCreate }) {
         placeholder="Nome routine (es. Allenamento)"
         className="w-full bg-surface-2 rounded-xl px-4 py-3 text-[16px] text-label placeholder:text-label-tertiary my-2"
       />
-      <p className="text-[13px] text-label-secondary mb-2">Icona</p>
-      <div className="mb-3">
-        <IconPicker value={icon} onChange={setIcon} />
-      </div>
-      <p className="text-[13px] text-label-secondary mb-2">Colore</p>
       <div className="flex gap-2 flex-wrap mb-4">
         {ROUTINE_COLORS.map((c) => (
           <button

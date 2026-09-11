@@ -1,16 +1,10 @@
-import { useMemo, useState } from 'react';
-import { Repeat, ChevronRight } from 'lucide-react';
-import { Dialog } from '../ui/Dialog';
-import { REPEAT_FREQUENCIES, WEEKDAY_OPTIONS, repeatLabel, computeOccurrenceDates, hasRepeatRule, MAX_SERIES_INSTANCES } from '../../lib/repeat';
+
 import { cn } from '../../lib/cn';
 
 /**
  * RepeatPicker — "Ripeti" (screenshot 12): frequenza, giorni della settimana
  * per la ripetizione settimanale e condizioni di fine (mai / dopo N / data).
- * Al salvataggio la serie viene MATERIALIZZATA: ogni occorrenza diventa un
- * task reale nel DB (vedi anteprima "Verranno create N attività").
- */
-export default function RepeatPicker({ repeat, onChange, baseDate }) {
+
   const [open, setOpen] = useState(false);
   const value = repeat && repeat.frequency ? repeat : { frequency: 'none' };
 
@@ -22,16 +16,6 @@ export default function RepeatPicker({ repeat, onChange, baseDate }) {
     set({ weekdays: next.length ? next : undefined });
   };
 
-  // Anteprima live delle istanze che verranno generate al salvataggio
-  const preview = useMemo(() => {
-    if (!baseDate || !hasRepeatRule(value)) return null;
-    try {
-      const dates = computeOccurrenceDates(baseDate, value);
-      return { count: dates.length, first: dates[0], last: dates[dates.length - 1] };
-    } catch {
-      return null;
-    }
-  }, [baseDate, value]);
 
   return (
     <>
@@ -89,7 +73,6 @@ export default function RepeatPicker({ repeat, onChange, baseDate }) {
                     key={w.id}
                     onClick={() => toggleWeekday(w.id)}
                     className={cn(
-                      'h-11 rounded-full text-[12px] font-semibold transition-colors',
                       active ? 'bg-accent text-white' : 'bg-fill-tertiary text-label-secondary'
                     )}
                   >
@@ -101,7 +84,7 @@ export default function RepeatPicker({ repeat, onChange, baseDate }) {
           </>
         )}
 
-        {value.frequency !== 'none' && (
+
           <>
             <p className="text-[13px] font-semibold text-label-secondary uppercase tracking-wide mb-2">Fine ripetizione</p>
             <div className="flex flex-col gap-1">
@@ -128,13 +111,7 @@ export default function RepeatPicker({ repeat, onChange, baseDate }) {
                     <label className="flex items-center gap-1.5">
                       <input
                         type="number"
-                        inputMode="numeric"
-                        min="1"
-                        max={MAX_SERIES_INSTANCES}
-                        value={value.endAfter || 5}
-                        onChange={(e) => set({ endAfter: Math.min(MAX_SERIES_INSTANCES, Math.max(1, Number(e.target.value) || 1)) })}
-                        onClick={(e) => e.stopPropagation()}
-                        className="w-20 h-11 bg-surface-2 rounded-lg px-2 text-right text-[16px]"
+
                       />
                       <span className="text-[12px] text-label-tertiary">volte</span>
                     </label>
@@ -143,29 +120,13 @@ export default function RepeatPicker({ repeat, onChange, baseDate }) {
                     <input
                       type="date"
                       value={value.endDate || ''}
-                      min={baseDate}
-                      onChange={(e) => set({ endDate: e.target.value || undefined })}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        // Apre il selettore data nativo (tamburo su iOS/Android)
-                        e.currentTarget.showPicker?.();
-                      }}
-                      className="h-11 bg-surface-2 rounded-lg px-2 text-[15px] text-label"
-                      aria-label="Data fine ripetizione"
+
                     />
                   )}
                 </button>
               ))}
             </div>
 
-            {preview && (
-              <p className="text-[13px] text-accent font-medium mt-3 leading-snug">
-                Verranno create {preview.count} {preview.count === 1 ? 'attività' : 'attività'}
-                {preview.count > 1 && (
-                  <> · dal {preview.first.split('-').reverse().slice(0, 2).join('/')} al {preview.last.split('-').reverse().slice(0, 2).join('/')}</>
-                )}
-              </p>
-            )}
           </>
         )}
       </Dialog>
