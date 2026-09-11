@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Loader2, Send, AlertCircle, Link2, Minus, Plus } from 'lucide-react';
 import { parseFoodInput, hasGemini } from '../../lib/gemini';
 import { Dialog } from '../ui/Dialog';
-import { kcalFromMacros, macroKcalBreakdown } from '../../lib/nutritionMath';
+import { kcalFromMacros } from '../../lib/nutritionMath';
 import { MEAL_TYPES } from '../../lib/constants';
 import { cn } from '../../lib/cn';
 
@@ -76,8 +76,6 @@ export default function AiMealInput({ onConfirm }) {
     setParsed(null);
     setText('');
   };
-
-  const breakdown = parsed ? macroKcalBreakdown(parsed) : null;
 
   return (
     <>
@@ -207,12 +205,7 @@ export default function AiMealInput({ onConfirm }) {
             {/* Kcal collegate ai macro */}
             <div className="flex items-center gap-3 bg-surface-2 rounded-xl px-4 py-3 mb-2">
               <Link2 size={16} className="text-accent shrink-0" />
-              <div className="flex-1 min-w-0">
-                <p className="text-[11px] text-label-tertiary">Kcal collegate ai macro</p>
-                <p className="text-[11px] text-label-tertiary tabular-nums">
-                  P·4 + C·4 + G·9 = {breakdown?.protein || 0} + {breakdown?.carbs || 0} + {breakdown?.fat || 0}
-                </p>
-              </div>
+              <p className="flex-1 text-[13px] text-label-secondary">Kcal</p>
               <input
                 type="number"
                 min="0"
@@ -224,13 +217,6 @@ export default function AiMealInput({ onConfirm }) {
               />
               <span className="text-[12px] text-label-tertiary">kcal</span>
             </div>
-            {parsed.caloriesSource === 'manual' && (
-              <p className="flex items-start gap-1.5 text-[11px] text-sys-orange mb-2">
-                <AlertCircle size={12} className="shrink-0 mt-0.5" />
-                Hai impostato le kcal a mano: differiscono di {Math.abs(parsed.calories - kcalFromMacros(parsed))} kcal dalla somma dei macro.
-                Consiglio: {kcalFromMacros(parsed)} kcal rende i dati coerenti.
-              </p>
-            )}
 
             {/* Tipo pasto */}
             <p className="text-[13px] text-label-secondary mb-2">Tipo pasto</p>

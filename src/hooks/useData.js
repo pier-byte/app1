@@ -196,11 +196,13 @@ export function useMeals(dateKey) {
   if (HAS_CONVEX) {
     const data = useQuery(api.meals.listByDate, { date: dateKey });
     const add = useMutation(api.meals.add);
+    const update = useMutation(api.meals.update);
     const remove = useMutation(api.meals.remove);
     return {
       data,
       isLoading: data === undefined,
       addMeal: (fields) => add(fields),
+      updateMeal: (id, patch) => update({ id, ...patch }),
       removeMeal: (id) => remove({ id }),
     };
   }
@@ -210,19 +212,27 @@ export function useMeals(dateKey) {
     () => state.meals.filter((m) => m.date === dateKey).sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0)),
     [state.meals, dateKey]
   );
-  return { data, isLoading: false, addMeal: localMutations.addMeal, removeMeal: (id) => localMutations.removeMeal({ id }) };
+  return {
+    data,
+    isLoading: false,
+    addMeal: localMutations.addMeal,
+    updateMeal: (id, patch) => localMutations.updateMeal({ id, ...patch }),
+    removeMeal: (id) => localMutations.removeMeal({ id }),
+  };
 }
 
 export function useMealPlan(weekStartKey) {
   if (HAS_CONVEX) {
-    const data = useQuery(api.mealPlan.getByWeek, { weekStart: weekStartKey });
+    const doc = useQuery(api.mealPlan.getByWeek, { weekStart: weekStartKey });
     const save = useMutation(api.mealPlan.save);
-    return { data: data ?? null, isLoading: data === undefined, savePlan: (plan) => save({ weekStart: weekStartKey, plan }) };
+    // NB: esponiamo l'ARRAY `plan` del documento (non il documento intero):
+    // la tabella rotazione pasti fa `plan.map(...)` e crasha altrimenti.
+    return { data: doc?.plan ?? null, isLoading: doc === undefined, savePlan: (plan) => save({ weekStart: weekStartKey, plan }) };
   }
 
   const state = useLocalState();
   const data = useMemo(
-    () => state.mealPlans.find((p) => p.weekStart === weekStartKey) ?? null,
+    () => state.mealPlans.find((p) => p.weekStart === weekStartKey)?.plan ?? null,
     [state.mealPlans, weekStartKey]
   );
   return { data, isLoading: false, savePlan: (plan) => localMutations.saveMealPlan({ weekStart: weekStartKey, plan }) };
@@ -232,14 +242,21 @@ export function useBodyMetrics() {
   if (HAS_CONVEX) {
     const raw = useQuery(api.bodyMetrics.listAll, {});
     const add = useMutation(api.bodyMetrics.add);
+    const update = useMutation(api.bodyMetrics.update);
     const remove = useMutation(api.bodyMetrics.remove);
     const data = useMemo(() => (raw ?? []).slice().sort((a, b) => a.date.localeCompare(b.date)), [raw]);
-    return { data, isLoading: raw === undefined, addMetric: add, removeMetric: (id) => remove({ id }) };
+    return { data, isLoading: raw === undefined, addMetric: add, updateMetric: (id, patch) => update({ id, ...patch }), removeMetric: (id) => remove({ id }) };
   }
 
   const state = useLocalState();
   const data = useMemo(() => state.bodyMetrics.slice().sort((a, b) => a.date.localeCompare(b.date)), [state.bodyMetrics]);
-  return { data, isLoading: false, addMetric: localMutations.addBodyMetric, removeMetric: (id) => localMutations.removeBodyMetric({ id }) };
+  return {
+    data,
+    isLoading: false,
+    addMetric: localMutations.addBodyMetric,
+    updateMetric: (id, patch) => localMutations.updateBodyMetric({ id, ...patch }),
+    removeMetric: (id) => localMutations.removeBodyMetric({ id }),
+  };
 }
 
 // ═══════════════════ TAB 4 — WALLET ═══════════════════
@@ -248,11 +265,13 @@ export function useExpenses(startKey, endKey) {
   if (HAS_CONVEX) {
     const data = useQuery(api.wallet.listExpensesBetween, { start: startKey, end: endKey });
     const add = useMutation(api.wallet.addExpense);
+    const update = useMutation(api.wallet.updateExpense);
     const remove = useMutation(api.wallet.removeExpense);
     return {
       data,
       isLoading: data === undefined,
       addExpense: (fields) => add(fields),
+      updateExpense: (id, patch) => update({ id, ...patch }),
       removeExpense: (id) => remove({ id }),
     };
   }
@@ -265,7 +284,13 @@ export function useExpenses(startKey, endKey) {
         .sort((a, b) => b.date.localeCompare(a.date) || (b.createdAt || 0) - (a.createdAt || 0)),
     [state.expenses, startKey, endKey]
   );
-  return { data, isLoading: false, addExpense: localMutations.addExpense, removeExpense: (id) => localMutations.removeExpense({ id }) };
+  return {
+    data,
+    isLoading: false,
+    addExpense: localMutations.addExpense,
+    updateExpense: (id, patch) => localMutations.updateExpense({ id, ...patch }),
+    removeExpense: (id) => localMutations.removeExpense({ id }),
+  };
 }
 
 export function useBudget(weekStartKey) {

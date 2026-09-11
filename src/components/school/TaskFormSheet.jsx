@@ -1,15 +1,16 @@
 import { useState, useEffect, useMemo } from 'react';
 import { X, Clock, Sunrise, ListChecks, Loader2, Timer, Mic, Plus, Check, Repeat } from 'lucide-react';
-import { CATEGORY_COLORS } from '../../lib/constants';
+import { CATEGORY_COLORS, DEFAULT_TASK_CATEGORIES } from '../../lib/constants';
 import BottomSheet from '../ui/BottomSheet';
 import Toggle from '../ui/Toggle';
+import LiquidDialog from '../ui/LiquidDialog';
 import DatePickerDialog from './DatePickerDialog';
+import TimePickerDialog from './TimePickerDialog';
 import ReminderPicker from './ReminderPicker';
 import RepeatPicker from './RepeatPicker';
 import AttachmentList from './AttachmentList';
 import { formatDateDisplay, parseISO } from '../../lib/dates';
 import { repeatLabel } from '../../lib/repeat';
-import { Dialog } from '../ui/Dialog';
 import { estimateStudyTime, hasGemini } from '../../lib/gemini';
 import { cn } from '../../lib/cn';
 
@@ -17,8 +18,10 @@ const DEFAULT_REPEAT = { frequency: 'none', weekdays: undefined, endMode: 'never
 
 /**
  * TaskFormSheet — Creazione/modifica attività/evento (screenshot 12):
- * titolo + descrizione, scadenza, tutto il giorno + orari, promemoria,
- * ripeti (giorni della settimana + fine), elenco attività, allegati.
+ * titolo + descrizione, scadenza, tutto il giorno + orari (picker a tamburo
+ * Liquid Glass), promemoria, ripeti (giorni della settimana + fine),
+ * elenco attività (selezione stile Liquid Glass + creazione con colori),
+ * allegati.
  */
 export default function TaskFormSheet({ isOpen, onClose, onSave, editingTask, defaultDate, categories, onCreateCategory }) {
   const [title, setTitle] = useState('');
@@ -33,11 +36,9 @@ export default function TaskFormSheet({ isOpen, onClose, onSave, editingTask, de
   const [attachments, setAttachments] = useState([]);
   const [estimate, setEstimate] = useState(null);
   const [datePickerOpen, setDatePickerOpen] = useState(false);
+  const [timePickerMode, setTimePickerMode] = useState(null); // null | 'start' | 'end'
   const [categoryPickerOpen, setCategoryPickerOpen] = useState(false);
   const [estimating, setEstimating] = useState(false);
-  const [listName, setListName] = useState('');
-  const [listColor, setListColor] = useState(CATEGORY_COLORS[7]);
-  const [listCreating, setListCreating] = useState(false);
 
   const dictate = () => {
     const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -161,29 +162,27 @@ export default function TaskFormSheet({ isOpen, onClose, onSave, editingTask, de
           <span className="text-[13px] text-label-tertiary">›</span>
         </button>
 
-        {/* Tutto il giorno + orari */}
+        {/* Tutto il giorno + orari (tap → tamburo Liquid Glass) */}
         <div className="w-full flex items-center gap-3 px-1 py-3.5 border-b border-separator">
           <Sunrise size={20} className="text-label-secondary shrink-0" />
           <span className="flex-1 text-left text-[16px] text-label">Tutto il giorno</span>
           {!allDay && (
             <div className="flex items-center gap-1.5">
-              <input
-                type="time"
-                value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
-                onClick={(e) => e.currentTarget.showPicker?.()}
-                className="h-11 bg-surface-2 rounded-lg px-2 text-[16px]"
-                aria-label="Ora inizio"
-              />
+              <button
+                onClick={() => setTimePickerMode('start')}
+                className="h-11 min-w-[64px] bg-surface-2 rounded-lg px-2.5 text-[16px] tabular-nums text-label active:bg-surface-3"
+                aria-label={`Ora inizio ${startTime}. Tocca per cambiare`}
+              >
+                {startTime}
+              </button>
               <span className="text-label-tertiary text-[13px]">→</span>
-              <input
-                type="time"
-                value={endTime}
-                onChange={(e) => setEndTime(e.target.value)}
-                onClick={(e) => e.currentTarget.showPicker?.()}
-                className="h-11 bg-surface-2 rounded-lg px-2 text-[16px]"
-                aria-label="Ora fine"
-              />
+              <button
+                onClick={() => setTimePickerMode('end')}
+                className="h-11 min-w-[64px] bg-surface-2 rounded-lg px-2.5 text-[16px] tabular-nums text-label active:bg-surface-3"
+                aria-label={`Ora fine ${endTime}. Tocca per cambiare`}
+              >
+                {endTime}
+              </button>
             </div>
           )}
           <Toggle value={allDay} onChange={setAllDay} />
@@ -250,6 +249,7 @@ export default function TaskFormSheet({ isOpen, onClose, onSave, editingTask, de
         </div>
       </BottomSheet>
 
+      {/* Data — calendario mensile Liquid Glass (+ tamburo mese/anno) */}
       <DatePickerDialog
         isOpen={datePickerOpen}
         onClose={() => setDatePickerOpen(false)}
@@ -257,7 +257,29 @@ export default function TaskFormSheet({ isOpen, onClose, onSave, editingTask, de
         onConfirm={setDate}
       />
 
-      <CategoryPickerDialog
+      {/* Orario — tamburo 3D Liquid Glass */}
+      <TimePickerDialog
+        isOpen={timePickerMode !== null}
+        onClose={() => setTimePickerMode(null)}
+        value={timePickerMode === 'start' ? startTime : endTime}
+        onConfirm={(time) => {
+          if (timePickerMode === 'start') setStartTime(time);
+          else setEndTime(time);
+          setTimePickerMode(null);
+        }}
+        onToggleAllDay={
+          timePickerMode !== null
+            ? () => {
+                setAllDay(true);
+                setTimePickerMode(null);
+              }
+            : undefined
+        }
+        title={timePickerMode === 'end' ? 'Ora di fine' : 'Ora di inizio'}
+      />
+
+      {/* Elenco attività — selezione Liquid Glass + crea nuovo */}
+      <CategorySheet
         isOpen={categoryPickerOpen}
         onClose={() => setCategoryPickerOpen(false)}
         categories={categories}
@@ -266,92 +288,178 @@ export default function TaskFormSheet({ isOpen, onClose, onSave, editingTask, de
           setCategory(cat);
           setCategoryPickerOpen(false);
         }}
-        listCreating={listCreating}
-        setListCreating={setListCreating}
-        listName={listName}
-        setListName={setListName}
-        listColor={listColor}
-        setListColor={setListColor}
-        onCreate={async () => {
-          if (!listName.trim()) return;
-          await onCreateCategory?.(listName.trim(), listColor);
-          setCategory({ name: listName.trim(), color: listColor });
-          setListName('');
-          setListCreating(false);
-          setCategoryPickerOpen(false);
+        onCreate={async (name, color) => {
+          await onCreateCategory?.(name, color);
+          setCategory({ name, color });
         }}
       />
     </>
   );
 }
 
-function CategoryPickerDialog({ isOpen, onClose, categories, selected, onSelect, listCreating, setListCreating, listName, setListName, listColor, setListColor, onCreate }) {
+/**
+ * CategorySheet — Selezione elenco attività stile Liquid Glass
+ * (ui-references/selezione_elenco_attivit): bottom sheet con radio colorate,
+ * etichetta "Predefinito" per gli elenchi di sistema e "Crea nuovo".
+ */
+function CategorySheet({ isOpen, onClose, categories, selected, onSelect, onCreate }) {
+  const [pending, setPending] = useState(null);
+  const [creating, setCreating] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) setPending(selected ?? categories[0] ?? null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
+
+  const isDefault = (cat) => DEFAULT_TASK_CATEGORIES.some((d) => d.name === cat.name);
+
   return (
-    <Dialog
+    <>
+      <BottomSheet isOpen={isOpen} onClose={onClose} maxHeight="80dvh">
+        {/* Header sheet (reference: titolo + chip SELEZIONA) */}
+        <div className="flex items-end justify-between px-1 pb-4">
+          <div>
+            <h2 className="text-[22px] font-bold text-label tracking-tight leading-tight">Elenco attività</h2>
+            <p className="text-[13px] text-label-tertiary mt-0.5">Scegli a quale elenco appartiene l'attività</p>
+          </div>
+          <button
+            onClick={() => pending && onSelect(pending)}
+            disabled={!pending}
+            className="text-[11.5px] font-semibold tracking-wide text-[#2997ff] px-3 py-1.5 rounded-full bg-accent/15 border border-accent/25 disabled:opacity-40"
+          >
+            SELEZIONA
+          </button>
+        </div>
+
+        {/* Lista radio (divide-y come reference) */}
+        <div className="flex flex-col px-1">
+          {categories.map((cat) => {
+            const active = pending?.name === cat.name;
+            return (
+              <button
+                key={cat._id ?? cat.name}
+                onClick={() => setPending(cat)}
+                className="w-full flex items-center gap-3.5 py-3.5 border-b border-separator last:border-0 text-left active:opacity-70 transition-opacity"
+              >
+                <span
+                  className="relative w-[22px] h-[22px] rounded-full border-2 flex items-center justify-center shrink-0 transition-colors"
+                  style={{ borderColor: cat.color }}
+                >
+                  {active && <span className="w-[12px] h-[12px] rounded-full" style={{ backgroundColor: cat.color }} />}
+                </span>
+                <span className={cn('flex-1 text-[16px] truncate', active ? 'text-label font-medium' : 'text-label')}>{cat.name}</span>
+                {isDefault(cat) && <span className="text-[12px] text-label-tertiary">Predefinito</span>}
+              </button>
+            );
+          })}
+
+          {/* Crea nuovo (reference: cerchio tratteggiato +) */}
+          <button
+            onClick={() => setCreating(true)}
+            className="w-full flex items-center gap-3.5 py-3.5 text-left active:opacity-70 transition-opacity"
+          >
+            <span className="w-[22px] h-[22px] rounded-full border-2 border-dashed border-accent/70 grid place-items-center shrink-0">
+              <Plus size={13} className="text-accent" />
+            </span>
+            <span className="text-[16px] text-accent font-medium">Crea nuovo</span>
+          </button>
+        </div>
+
+        {/* Footer sheet: Annulla / Conferma */}
+        <div className="pt-3 pb-1 flex items-center justify-end gap-6">
+          <button onClick={onClose} className="text-[16px] text-label-secondary font-medium active:opacity-60 px-2 py-2">
+            Annulla
+          </button>
+          <button
+            onClick={() => pending && onSelect(pending)}
+            disabled={!pending}
+            className="min-w-[120px] py-2.5 px-6 rounded-full bg-accent text-white text-[15px] font-semibold shadow-lg shadow-blue-500/30 active:scale-95 transition-all disabled:opacity-40"
+          >
+            Conferma
+          </button>
+        </div>
+      </BottomSheet>
+
+      {/* Creazione nuovo elenco (reference: creazione_elenco_colori) */}
+      <CategoryCreateDialog
+        isOpen={creating}
+        onClose={() => setCreating(false)}
+        onCreate={async (name, color) => {
+          await onCreate(name, color);
+          setCreating(false);
+          onClose();
+        }}
+      />
+    </>
+  );
+}
+
+/**
+ * CategoryCreateDialog — "Crea un nuovo elenco di attività" Liquid Glass
+ * (ui-references/creazione_elenco_colori): nome con contatore 0/50 e
+ * griglia colori con check sulla selezione. Footer Annulla / Crea.
+ */
+function CategoryCreateDialog({ isOpen, onClose, onCreate }) {
+  const [name, setName] = useState('');
+  const [color, setColor] = useState(CATEGORY_COLORS[7]);
+
+  return (
+    <LiquidDialog
       isOpen={isOpen}
       onClose={onClose}
-      title="Elenco delle attività"
-      actions={
-        <button onClick={onClose} className="text-[17px] text-label-secondary font-medium active:opacity-60">
-          Annulla
-        </button>
+      maxWidth={358}
+      title="Crea un nuovo elenco di attività"
+      footer={
+        <>
+          <button onClick={onClose} className="flex-1 py-2.5 text-[15px] font-medium text-white/70 hover:text-white active:scale-95 transition-all">
+            Annulla
+          </button>
+          <button
+            onClick={() => name.trim() && onCreate(name.trim(), color)}
+            disabled={!name.trim()}
+            className="flex-1 py-2.5 text-[16px] font-semibold text-accent active:opacity-60 transition-opacity disabled:opacity-40"
+          >
+            Crea
+          </button>
+        </>
       }
     >
-      <div className="py-2">
-        {categories.map((cat) => {
-          const active = selected?.name === cat.name;
+      <p className="text-[12.5px] text-label-tertiary mb-2">Nome dell'elenco attività</p>
+      <div className="flex items-center bg-surface-2 border border-white/10 rounded-xl px-4 py-3 mb-5">
+        <input
+          autoFocus
+          maxLength={50}
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Inserisci qui"
+          className="flex-1 min-w-0 bg-transparent text-[16px] text-label placeholder:text-label-tertiary"
+          aria-label="Nome dell'elenco attività"
+        />
+        <span className="text-[12px] text-label-tertiary tabular-nums shrink-0 ml-2">{name.length}/50</span>
+      </div>
+
+      <p className="text-[12.5px] text-label-tertiary mb-3">Colore calendario</p>
+      <div className="grid grid-cols-6 gap-3 pb-2">
+        {CATEGORY_COLORS.map((c) => {
+          const active = color === c;
           return (
             <button
-              key={cat._id ?? cat.name}
-              onClick={() => onSelect(cat)}
-              className="w-full flex items-center gap-3.5 py-3 active:opacity-70 transition-opacity text-left"
+              key={c}
+              type="button"
+              onClick={() => setColor(c)}
+              aria-label={`Colore ${c}`}
+              aria-pressed={active}
+              className={cn(
+                'aspect-square rounded-full grid place-items-center transition-all active:scale-90',
+                active ? 'ring-2 ring-white ring-offset-2 ring-offset-[#1c1c1e]' : 'hover:scale-105'
+              )}
+              style={{ backgroundColor: c }}
             >
-              <span
-                className="w-[22px] h-[22px] rounded-full border-2 flex items-center justify-center shrink-0"
-                style={{ borderColor: cat.color }}
-              >
-                {active && <span className="w-3 h-3 rounded-full" style={{ backgroundColor: cat.color }} />}
-              </span>
-              <span className="text-[16px] text-label">{cat.name}</span>
+              {active && <Check size={15} className="text-white" strokeWidth={3.2} />}
             </button>
           );
         })}
-        {!listCreating ? (
-          <button onClick={() => setListCreating(true)} className="w-full flex items-center gap-3 py-3 text-accent font-semibold">
-            <Plus size={20} /> Crea nuovo elenco
-          </button>
-        ) : (
-          <div className="border-t border-separator pt-4 mt-2">
-            <input
-              autoFocus
-              maxLength={50}
-              value={listName}
-              onChange={(e) => setListName(e.target.value)}
-              placeholder="Nome elenco"
-              className="w-full bg-surface-2 rounded-xl px-4 py-3 mb-4"
-            />
-            <div className="grid grid-cols-6 gap-3">
-              {CATEGORY_COLORS.slice(0, 24).map((color) => (
-                <button
-                  key={color}
-                  onClick={() => setListColor(color)}
-                  className="aspect-square rounded-full grid place-items-center"
-                  style={{ backgroundColor: color }}
-                >
-                  {listColor === color && <Check size={16} className="text-white" strokeWidth={3} />}
-                </button>
-              ))}
-            </div>
-            <button
-              onClick={onCreate}
-              disabled={!listName.trim()}
-              className="w-full h-11 rounded-full bg-accent text-white font-semibold mt-5 disabled:opacity-40"
-            >
-              Crea elenco
-            </button>
-          </div>
-        )}
       </div>
-    </Dialog>
+    </LiquidDialog>
   );
 }

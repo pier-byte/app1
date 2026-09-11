@@ -208,43 +208,88 @@ function occurrencesBetween(base, from, to, repeat) {
 }
 
 /**
+ * Identità "logica" di un'attività per il dedup: stesso titolo (normalizzato),
+ * categoria e ora di inizio → considerata la stessa attività.
+ * Serve per il requisito "giorni con un'attività normale e una duplicata →
+ * si vede solo quella normale": l'occorrenza virtuale (espansa da una regola
+ * di ripetizione) è nascosta quando sul giorno esiste già l'istanza reale.
+ */
+function identityKey(ev) {
+  return [(ev.title || '').trim().toLowerCase(), (ev.category || '').trim().toLowerCase(), ev.startTime || ''].join('|');
+}
+
+/**
  * Restituisce l'elenco di eventi (con la loro data originale) che cadono nella
  * data richiesta, incluse le occorrenze ripetute.
  * eventi: array di task/eventi con { date?, startDate?, repeat? }
  */
 export function expandEventsForDate(events, dateKey) {
   const target = parseISO(dateKey);
-  return (events || []).filter((ev) => {
-    if (!ev.date) return false;
-    if (ev.date === dateKey) return true;
-    // Le serie materializzate sono già istanze reali: niente espansione
-    // (l'espansione resta solo per i task legacy creati prima della v1.4).
-    if (ev.materialized) return false;
-    if (!hasRepeatRule(ev.repeat)) return false;
-    return occurrencesBetween(ev.date, target, target, ev.repeat).length > 0;
-  });
+  // Istanze concrete (salvate nel DB) per la data: vincono sempre sulle occorrenze virtuali
+  const concrete = (events || []).filter((ev) => ev.date === dateKey);
+  const seenIds = new Set(concrete.map((ev) => ev._id));
+  const seenSeries = new Set(concrete.map((ev) => ev.seriesId).filter(Boolean));
+  const seenIdentity = new Set(concrete.map(identityKey));
+  const out = [...concrete];
+  for (const ev of events || []) {
+    // Le istanze concrete della data sono già in `out`; qui restano solo le
+    // occorrenze virtuali espanse dalle regole di ripetizione (task legacy).
+    if (!ev._id || seenIds.has(ev._id)) continue;
+    if (ev.materialized || !hasRepeatRule(ev.repeat)) continue;
+    if (!occurrencesBetween(ev.date, target, target, ev.repeat).length) continue;
+    // Duplicata → mostra solo l'istanza concreta ("normale") già presente
+    if (seenSeries.has(ev._id) || seenIdentity.has(identityKey(ev))) continue;
+    seenIds.add(ev._id);
+    if (ev.seriesId) seenSeries.add(ev.seriesId);
+    seenIdentity.add(identityKey(ev));
+    out.push(ev);
+  }
+  return out;
 }
 
 /**
  * Espande gli eventi su un intervallo di date → Map<dateKey, eventi[]>.
  * Usato dalla griglia mensile (ogni giorno mostra le sue istanze).
+ * Dedup: se su un giorno esistono sia l'attività "normale" (istanza reale)
+ * sia la sua duplicata virtuale (occorrenza espansa), resta solo la normale.
  */
 export function expandEventsForRange(events, startKey, endKey) {
   const map = new Map();
+  const entry = (key) => {
+    if (!map.has(key)) map.set(key, { items: [], ids: new Set(), series: new Set(), identity: new Set() });
+    return map.get(key);
+  };
   const push = (key, ev) => {
-    if (!map.has(key)) map.set(key, []);
-    map.get(key).push(ev);
+    const e = entry(key);
+    if (ev._id && e.ids.has(ev._id)) return; // dedup per _id (sicurezza)
+    if (ev._id) e.ids.add(ev._id);
+    if (ev.seriesId) e.series.add(ev.seriesId);
+    e.identity.add(identityKey(ev));
+    e.items.push(ev);
   };
   const from = parseISO(startKey);
   const to = parseISO(endKey);
+  if (from > to) return map;
+
+  // 1) Istanze concrete sulla loro data
   for (const ev of events || []) {
     if (!ev.date) continue;
     if (ev.date >= startKey && ev.date <= endKey) push(ev.date, ev);
-    if (ev.materialized || !hasRepeatRule(ev.repeat)) continue;
-    if (from > to) continue;
-    for (const key of occurrencesBetween(ev.date, from, to, ev.repeat)) push(key, ev);
   }
-  return map;
+  // 2) Occorrenze virtuali dei task legacy (con regola, non materializzati):
+  //    nascoste se il giorno ha già l'istanza normale (stessa serie o stessa identità)
+  for (const ev of events || []) {
+    if (!ev.date || ev.materialized || !hasRepeatRule(ev.repeat)) continue;
+    for (const key of occurrencesBetween(ev.date, from, to, ev.repeat)) {
+      const e = entry(key);
+      if (ev._id && (e.ids.has(ev._id) || e.series.has(ev._id))) continue;
+      if (e.identity.has(identityKey(ev))) continue; // già c'è la "normale"
+      push(key, ev);
+    }
+  }
+  const out = new Map();
+  for (const [key, e] of map) out.set(key, e.items);
+  return out;
 }
 
 /** Range di date base necessario per coprire le occorrenze nel range richiesto. */

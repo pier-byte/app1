@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format, parseISO } from 'date-fns';
 import { it } from 'date-fns/locale';
-import { Wallet, Settings2, Plus, Trash2, Receipt } from 'lucide-react';
+import { Wallet, Settings2, Plus, Trash2, Receipt, Pencil } from 'lucide-react';
 import { useExpenses, useBudget } from '../hooks/useData';
 import FAB from '../components/ui/FAB';
 import Dialog from '../components/ui/Dialog';
@@ -22,10 +22,11 @@ export default function WalletPage({ selectedDate, weekDates }) {
   const weekStartKey = toDateKey(getWeekDates(selectedDate)[0]);
   const weekEndKey = toDateKey(getWeekDates(selectedDate)[6]);
 
-  const { data: expenses, isLoading, addExpense, removeExpense } = useExpenses(weekStartKey, weekEndKey);
+  const { data: expenses, isLoading, addExpense, updateExpense, removeExpense } = useExpenses(weekStartKey, weekEndKey);
   const { data: budget, isLoading: budgetLoading, setBudget } = useBudget(weekStartKey);
 
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [editingExpense, setEditingExpense] = useState(null);
   const [budgetDialogOpen, setBudgetDialogOpen] = useState(false);
   const [budgetInput, setBudgetInput] = useState('');
 
@@ -159,10 +160,17 @@ export default function WalletPage({ selectedDate, weekDates }) {
                   exit={{ opacity: 0, height: 0 }}
                   className="flex items-center gap-3 px-4 py-3 border-b border-separator last:border-0"
                 >
-                  <div className="flex-1 min-w-0">
+                  <button
+                    onClick={() => setEditingExpense(exp)}
+                    className="flex-1 min-w-0 text-left active:opacity-70 transition-opacity"
+                    aria-label={`Modifica ${exp.description}`}
+                  >
                     <p className="text-[15px] text-label">{exp.description}</p>
-                    {exp.category && <span className="text-[12px] text-label-tertiary">{exp.category}</span>}
-                  </div>
+                    <span className="text-[12px] text-label-tertiary flex items-center gap-1">
+                      {exp.category}
+                      <Pencil size={9} className="opacity-70" />
+                    </span>
+                  </button>
                   <span className="text-[15px] font-semibold text-label tabular-nums">−{euro(exp.amount)}</span>
                   <button
                     onClick={() => removeExpense(exp._id)}
@@ -181,12 +189,20 @@ export default function WalletPage({ selectedDate, weekDates }) {
       {/* FAB log rapido */}
       <FAB onClick={() => setSheetOpen(true)} icon={Plus} label="Nuova spesa" />
 
-      {/* Sheet nuova spesa */}
+      {/* Sheet nuova spesa / modifica spesa */}
       <ExpenseFormSheet
-        isOpen={sheetOpen}
-        onClose={() => setSheetOpen(false)}
+        key={editingExpense?._id ?? 'new'}
+        isOpen={sheetOpen || !!editingExpense}
+        onClose={() => {
+          setSheetOpen(false);
+          setEditingExpense(null);
+        }}
         defaultDate={dateKey}
-        onSave={(fields) => addExpense(fields)}
+        editing={editingExpense}
+        onSave={(fields) => {
+          if (editingExpense) updateExpense(editingExpense._id, fields);
+          else addExpense(fields);
+        }}
       />
 
       {/* Dialog budget */}

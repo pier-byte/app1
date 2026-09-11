@@ -34,3 +34,21 @@ export const remove = mutation({
     await ctx.db.delete(id);
   },
 });
+
+/** Modifica a posteriori di un pasto (descrizione, tipo, macro/kcal). */
+export const update = mutation({
+  args: {
+    id: v.id("meals"),
+    mealType: v.optional(v.string()),
+    description: v.optional(v.string()),
+    calories: v.optional(v.number()),
+    protein: v.optional(v.number()),
+    carbs: v.optional(v.number()),
+    fat: v.optional(v.number()),
+    caloriesSource: v.optional(v.string()),
+  },
+  handler: async (ctx, { id, ...patch }) => {
+    const clean = Object.fromEntries(Object.entries(patch).filter(([, v]) => v !== undefined));
+    await ctx.db.patch(id, clean);
+  },
+});

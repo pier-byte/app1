@@ -23,11 +23,11 @@ export const DEFAULT_TASK_CATEGORIES = [
   { name: 'Ricerche/presentazioni', color: '#ac8e68' },
 ];
 
-// ── Griglia colori per nuova categoria ──
+// ── Griglia colori per nuova categoria (tutti unici: usati come key React) ──
 export const CATEGORY_COLORS = [
   '#ff453a', '#ff6723', '#ffd60a', '#32d74b', '#66d4cf', '#30d158',
   '#a2d149', '#0a84ff', '#5ac8fa', '#ff2d55', '#bf5af2', '#af52de',
-  '#5e5ce6', '#ac8e68', '#8e8e93', '#aeaeb2', '#30d158', '#64d2ff',
+  '#5e5ce6', '#ac8e68', '#8e8e93', '#aeaeb2', '#00c7be', '#64d2ff',
   '#ff6961', '#e0b0ff',
 ];
 

@@ -33,6 +33,21 @@ export const removeExpense = mutation({
   },
 });
 
+/** Modifica a posteriori di una spesa (descrizione, importo, categoria, data). */
+export const updateExpense = mutation({
+  args: {
+    id: v.id("expenses"),
+    date: v.optional(v.string()),
+    description: v.optional(v.string()),
+    amount: v.optional(v.number()),
+    category: v.optional(v.string()),
+  },
+  handler: async (ctx, { id, ...patch }) => {
+    const clean = Object.fromEntries(Object.entries(patch).filter(([, v]) => v !== undefined));
+    await ctx.db.patch(id, clean);
+  },
+});
+
 // ── Budget ──
 
 export const getBudget = query({

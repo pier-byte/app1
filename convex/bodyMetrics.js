@@ -24,3 +24,17 @@ export const remove = mutation({
     await ctx.db.delete(id);
   },
 });
+
+/** Corregge una registrazione esistente (peso/altezza/data). */
+export const update = mutation({
+  args: {
+    id: v.id("bodyMetrics"),
+    date: v.optional(v.string()),
+    weightKg: v.optional(v.number()),
+    heightCm: v.optional(v.number()),
+  },
+  handler: async (ctx, { id, ...patch }) => {
+    const clean = Object.fromEntries(Object.entries(patch).filter(([, v]) => v !== undefined));
+    await ctx.db.patch(id, clean);
+  },
+});

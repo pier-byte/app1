@@ -4,14 +4,15 @@ import { Dialog } from '../ui/Dialog';
 import {
   ACTIVITY_LEVELS, GOALS, GAIN_PACES, LOSE_PACES,
   bmrMifflin, tdee, targetKcal, suggestMacros, proteinTarget,
-  expectedWeeklyChange, kcalFromMacros,
+  expectedWeeklyChange,
 } from '../../lib/nutritionMath';
 import { cn } from '../../lib/cn';
 
 /**
  * GoalPlannerDialog — Calcola BMR/TDEE (Mifflin-St Jeor), obiettivo di peso
  * (mantenere / aumentare / diminuire) e i macro giornalieri suggeriti.
- * "Applica" salva i target usati dalla pagina Nutrizione.
+ * "Applica" salva i target usati dalla pagina Nutrizione e chiude il dialog:
+ * la pagina si aggiorna immediatamente.
  */
 export default function GoalPlannerDialog({ isOpen, onClose, onApply, initial }) {
   const [sex, setSex] = useState(initial?.sex || 'female');
@@ -49,6 +50,8 @@ export default function GoalPlannerDialog({ isOpen, onClose, onApply, initial })
       profile: { sex, age: Number(age), weightKg: Number(weightKg), heightCm: Number(heightCm), activity, goal, pace },
       goals: { calories: kcal, protein: macros.protein, carbs: macros.carbs, fat: macros.fat },
     });
+    // Salvataggio → chiusura immediata: la pagina dietro mostra subito i target
+    onClose();
   };
 
   return (
@@ -212,9 +215,6 @@ export default function GoalPlannerDialog({ isOpen, onClose, onApply, initial })
                 </div>
               ))}
             </div>
-            <p className="text-[10px] text-label-tertiary mt-2 text-center tabular-nums">
-              Verifica: P·4 + C·4 + G·9 = {kcalFromMacros(macros)} kcal ≈ {kcal} kcal
-            </p>
           </section>
         )}
       </div>

@@ -2,18 +2,18 @@ import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
-import { Flame, Trash2, UtensilsCrossed, CalendarRange, Target, Link2, Scale } from 'lucide-react';
+import { Flame, Trash2, UtensilsCrossed, CalendarRange, Target, Link2, Scale, Pencil } from 'lucide-react';
 import { useMeals, useMealPlan, useBodyMetrics } from '../hooks/useData';
 import SegmentedControl from '../components/ui/SegmentedControl';
 import AiMealInput from '../components/nutrition/AiMealInput';
 import WeeklyPlanTable from '../components/nutrition/WeeklyPlanTable';
 import MetricsCharts from '../components/nutrition/MetricsCharts';
 import GoalPlannerDialog from '../components/nutrition/GoalPlannerDialog';
+import MealEditDialog from '../components/nutrition/MealEditDialog';
 import EmptyState from '../components/ui/EmptyState';
 import { toDateKey, getMonday, formatDateDisplay, parseISO } from '../lib/dates';
 import { DEFAULT_WEEK_PLAN, MEAL_TYPES } from '../lib/constants';
-import { kcalFromMacros, macroKcalBreakdown } from '../lib/nutritionMath';
-import { cn } from '../lib/cn';
+import { kcalFromMacros } from '../lib/nutritionMath';
 
 const MACROS = [
   { key: 'protein', label: 'Proteine', short: 'P', color: '#30d158', goal: 'protein' },
@@ -33,9 +33,18 @@ function loadGoals() {
   }
 }
 
+/** kcal SEMPRE collegate ai macro (regola 4-4-9): normalizza qualsiasi source. */
+function normalizeGoals(g) {
+  const next = { ...g, protein: g.protein || 0, carbs: g.carbs || 0, fat: g.fat || 0 };
+  next.calories = kcalFromMacros(next);
+  next.source = 'macro';
+  return next;
+}
+
 /**
  * Tab — Nutrizione: macro e kcal SEMPRE collegati (regola 4-4-9: P·4 + C·4 + G·9).
  * Obiettivo giornaliero calcolato da BMR/TDEE + surplus (aumento peso) o deficit.
+ * Ogni pasto è modificabile a posteriori (descrizione, tipo, macro).
  */
 export default function NutritionPage({ selectedDate }) {
   const [view, setView] = useState('oggi');
@@ -48,13 +57,14 @@ export default function NutritionPage({ selectedDate }) {
     }
   });
   const [plannerOpen, setPlannerOpen] = useState(false);
+  const [editingMeal, setEditingMeal] = useState(null);
 
   const dateKey = toDateKey(selectedDate);
   const weekStartKey = toDateKey(getMonday(selectedDate));
 
-  const { data: meals, isLoading, addMeal, removeMeal } = useMeals(dateKey);
+  const { data: meals, isLoading, addMeal, updateMeal, removeMeal } = useMeals(dateKey);
   const { data: plan, isLoading: planLoading, savePlan } = useMealPlan(weekStartKey);
-  const { data: metrics, addMetric } = useBodyMetrics();
+  const { data: metrics, addMetric, updateMetric, removeMetric } = useBodyMetrics();
 
   // Auto-inizializza il piano con la rotazione predefinita (per ogni settimana)
   const planInitRef = useRef(null);
@@ -67,21 +77,21 @@ export default function NutritionPage({ selectedDate }) {
 
   const updateGoal = useCallback((key, value) => {
     setGoals((g) => {
-      const next = { ...g, [key]: Number(value) || 0 };
-      // kcal sempre = somma macro (4-4-9)
-      next.calories = kcalFromMacros(next);
-      next.source = 'macro';
+      const next = normalizeGoals({ ...g, [key]: Number(value) || 0 });
       localStorage.setItem(GOALS_KEY, JSON.stringify(next));
       return next;
     });
   }, []);
 
-  const applyPlan = ({ profile: p, goals: g }) => {
-    setGoals(g);
+  // Salvataggio target (dal planner Obiettivo) → la pagina si aggiorna SUBITO:
+  // goals è stato React e kcal è ricalcolata 4-4-9 per restare coerente.
+  const applyPlan = useCallback(({ profile: p, goals: g }) => {
+    const next = normalizeGoals(g);
+    setGoals(next);
     setProfile(p);
-    localStorage.setItem(GOALS_KEY, JSON.stringify(g));
+    localStorage.setItem(GOALS_KEY, JSON.stringify(next));
     localStorage.setItem(PROFILE_KEY, JSON.stringify(p));
-  };
+  }, []);
 
   // Totali: kcal SEMPRE derivate dai macro dei pasti
   const totals = useMemo(() => {
@@ -96,7 +106,6 @@ export default function NutritionPage({ selectedDate }) {
     return { ...sum, calories: kcalFromMacros(sum) };
   }, [meals]);
 
-  const kcalBreakdown = useMemo(() => macroKcalBreakdown(totals), [totals]);
   const remainingKcal = Math.max(0, (goals.calories || 0) - totals.calories);
   const kcalRatio = goals.calories > 0 ? Math.min(totals.calories / goals.calories, 1) : 0;
 
@@ -187,10 +196,9 @@ export default function NutritionPage({ selectedDate }) {
                 {/* Kcal = P·4 + C·4 + G·9 (sola lettura, aggiornata in automatico) */}
                 <div className="flex items-center gap-2.5 bg-surface-2 rounded-xl px-3 py-2.5">
                   <Link2 size={15} className="text-accent shrink-0" />
-                  <div className="flex-1">
-                    <p className="text-[14px] font-bold text-label tabular-nums">{goals.calories} <span className="text-[11px] font-normal text-label-tertiary">kcal</span></p>
-                    <p className="text-[10px] text-label-tertiary">kcal collegate ai macro (P·4 + C·4 + G·9)</p>
-                  </div>
+                  <p className="flex-1 text-[14px] font-bold text-label tabular-nums">
+                    {goals.calories} <span className="text-[11px] font-normal text-label-tertiary">kcal</span>
+                  </p>
                 </div>
               </div>
 
@@ -222,9 +230,6 @@ export default function NutritionPage({ selectedDate }) {
                     />
                   </div>
                 )}
-                <p className="text-[10px] text-label-tertiary mb-3 tabular-nums">
-                  Calcolata dai macro: P {totals.protein}g ×4 = {kcalBreakdown.protein} · C {totals.carbs}g ×4 = {kcalBreakdown.carbs} · G {totals.fat}g ×9 = {kcalBreakdown.fat}
-                </p>
                 <div className="grid grid-cols-3 gap-2">
                   {MACROS.map((macro) => {
                     const eaten = totals[macro.key] ?? 0;
@@ -251,7 +256,7 @@ export default function NutritionPage({ selectedDate }) {
                 </div>
               </div>
 
-              {/* Pasti registrati */}
+              {/* Pasti registrati (tap = modifica, cestino = elimina) */}
               {isLoading ? null : meals.length === 0 ? (
                 <EmptyState title="Nessun pasto registrato" subtitle='Prova il log AI: "150g pollo e riso"' icon={UtensilsCrossed} />
               ) : (
@@ -269,12 +274,17 @@ export default function NutritionPage({ selectedDate }) {
                             exit={{ opacity: 0, height: 0 }}
                             className="flex items-center gap-3 px-4 py-3.5 border-b border-separator last:border-0"
                           >
-                            <div className="flex-1 min-w-0">
+                            <button
+                              onClick={() => setEditingMeal(meal)}
+                              className="flex-1 min-w-0 text-left active:opacity-70 transition-opacity"
+                              aria-label={`Modifica ${meal.description}`}
+                            >
                               <p className="text-[15px] text-label leading-snug">{meal.description}</p>
-                              <span className="text-[11px] text-label-tertiary tabular-nums">
-                                P·4 {Math.round((meal.protein || 0) * 4)} + C·4 {Math.round((meal.carbs || 0) * 4)} + G·9 {Math.round((meal.fat || 0) * 9)} = {kcalFromMacros(meal)} kcal
+                              <span className="text-[11px] text-label-tertiary tabular-nums flex items-center gap-1">
+                                <Pencil size={9} />
+                                modifica
                               </span>
-                            </div>
+                            </button>
                             <div className="text-right shrink-0">
                               <p className="text-[15px] font-semibold text-label tabular-nums">{kcalFromMacros(meal)} <span className="text-[11px] text-label-tertiary font-normal">kcal</span></p>
                               <p className="text-[11px] text-label-tertiary tabular-nums">
@@ -307,27 +317,41 @@ export default function NutritionPage({ selectedDate }) {
                 </span>
               </div>
               <WeeklyPlanTable plan={plan} onUpdatePlan={savePlan} />
-              <p className="text-[12px] text-label-tertiary text-center mt-4 px-6 leading-relaxed">
-                Tocca una cella per modificare il pasto. Usa "Scambia giorni" per uno swap rapido tra due giorni.
-              </p>
             </div>
           )}
 
           {view === 'andamento' && (
-            <MetricsCharts metrics={metrics ?? []} onAdd={(fields) => addMetric({ date: dateKey, ...fields })} />
+            <MetricsCharts
+              metrics={metrics ?? []}
+              onAdd={(fields) => addMetric({ date: dateKey, ...fields })}
+              onUpdate={(id, patch) => updateMetric(id, patch)}
+              onRemove={(id) => removeMetric(id)}
+              defaultDate={dateKey}
+            />
           )}
         </motion.div>
       </AnimatePresence>
 
-      <GoalPlannerDialog
-        isOpen={plannerOpen}
-        onClose={() => setPlannerOpen(false)}
-        onApply={applyPlan}
-        initial={{
-          ...(profile || {}),
-          weightKg: profile?.weightKg || lastMetric.weightKg || '',
-          heightCm: profile?.heightCm || lastMetric.heightCm || '',
-        }}
+      {/* Planner Obiettivo: remount ad ogni apertura → parte dai dati correnti,
+          e "Applica" aggiorna subito la pagina (vedi applyPlan) */}
+      {plannerOpen && (
+        <GoalPlannerDialog
+          isOpen
+          onClose={() => setPlannerOpen(false)}
+          onApply={applyPlan}
+          initial={{
+            ...(profile || {}),
+            weightKg: profile?.weightKg || lastMetric.weightKg || '',
+            heightCm: profile?.heightCm || lastMetric.heightCm || '',
+          }}
+        />
+      )}
+
+      {/* Modifica pasto (in-post): descrizione, tipo, macro con kcal collegate */}
+      <MealEditDialog
+        meal={editingMeal}
+        onClose={() => setEditingMeal(null)}
+        onSave={(id, patch) => updateMeal(id, patch)}
       />
     </div>
   );
