@@ -1,0 +1,459 @@
+<!DOCTYPE html><html class="dark" lang="it"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport">
+<title>Crea Evento / Attività</title>
+<!-- Tailwind CSS v3 -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>tailwind.config = {darkMode: "class", theme: {extend: {colors: {iosDark: "#121316", iosCard: "rgba(28, 29, 34, 0.75)", iosAccent: "#0A84FF", iosBorder: "rgba(255, 255, 255, 0.08)", iosSubtext: "#8E8E93", iosWarning: "#FF9F0A", "surface-bright": "#39393b", "outline-variant": "#414753", background: "#131315", "surface-container-low": "#1b1b1d", tertiary: "#abc7ff", "on-secondary-fixed": "#001c39", "inverse-primary": "#005cba", "inverse-surface": "#e4e2e4", "on-secondary": "#00315c", "surface-container-highest": "#353437", "on-primary-fixed": "#001b3e", secondary: "#a3c9ff", "secondary-fixed-dim": "#a3c9ff", "surface-tint": "#aac7ff", "on-tertiary-fixed-variant": "#00458f", "on-tertiary": "#002f66", surface: "#131315", "on-surface": "#e4e2e4", outline: "#8b919e", "surface-container": "#1f1f21", "on-tertiary-fixed": "#001b3f", "surface-dim": "#131315", "on-primary-container": "#dfe8ff", "on-background": "#e4e2e4", primary: "#aac7ff", "on-surface-variant": "#c1c6d5", "on-tertiary-container": "#e0e8ff", "on-primary": "#002f65", "primary-container": "#0066cc", "tertiary-fixed-dim": "#abc7ff", "surface-container-lowest": "#0e0e10", "tertiary-container": "#0066ce", "secondary-fixed": "#d3e3ff", "inverse-on-surface": "#303032", "error-container": "#93000a", "primary-fixed": "#d7e3ff", "on-error-container": "#ffdad6", "primary-fixed-dim": "#aac7ff", "on-secondary-container": "#002a51", "surface-container-high": "#2a2a2c", "on-error": "#690005", "on-primary-fixed-variant": "#00458e", "tertiary-fixed": "#d7e2ff", "on-secondary-fixed-variant": "#004882", error: "#ffb4ab", "surface-variant": "#353437", "secondary-container": "#2193fb"}, fontFamily: {sans: ["-apple-system", "BlinkMacSystemFont", "\"SF Pro Display\"", "\"SF Pro Text\"", "Helvetica Neue", "sans-serif"], headline: ["Inter"], display: ["Inter"], body: ["Inter"], label: ["Inter"]}, boxShadow: {"glow-blue": "0 0 20px -3px rgba(10, 132, 255, 0.4)", sheet: "0 25px 50px -12px rgba(0, 0, 0, 0.7)"}, fontSize: {}, borderRadius: {DEFAULT: "1rem", lg: "2rem", xl: "3rem", full: "9999px"}}}};</script>
+<!-- BEGIN: Custom Styling for Liquid Glass Effects -->
+<style data-purpose="glass-effects">
+    .liquid-glass {
+      background: rgba(28, 30, 36, 0.65);
+      backdrop-filter: blur(28px) saturate(190%);
+      -webkit-backdrop-filter: blur(28px) saturate(190%);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+    }
+    .liquid-glass-subtle {
+      background: rgba(255, 255, 255, 0.04);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .liquid-input {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+    }
+    .liquid-input:focus-within {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(10, 132, 255, 0.5);
+      box-shadow: 0 0 15px -3px rgba(10, 132, 255, 0.25);
+    }
+    /* iOS Custom Checkmark Dot Radio */
+    .color-radio:checked + label .radio-ring {
+      border-width: 5px;
+    }
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 0px;
+      background: transparent;
+    }
+  </style>
+<!-- END: Custom Styling for Liquid Glass Effects -->
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-[#0b0c0e] text-white min-h-screen flex justify-center font-sans antialiased selection:bg-iosAccent selection:text-white pb-10">
+<!-- Mobile Frame Mockup Container -->
+<div class="w-full max-w-[430px] min-h-screen bg-iosDark relative flex flex-col shadow-2xl overflow-x-hidden border-x border-white/5">
+<!-- BEGIN: TopBar -->
+<header class="sticky top-0 z-30 pt-4 pb-3 px-5 liquid-glass flex items-center justify-between border-b border-white/5" data-purpose="top-navigation">
+<!-- Close Button -->
+<button aria-label="Chiudi" class="w-9 h-9 rounded-full liquid-glass-subtle flex items-center justify-center text-zinc-300 hover:text-white transition active:scale-95" data-purpose="close-modal-trigger" type="button">
+<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</button>
+<!-- Centered Title / Status -->
+<span class="text-xs font-medium tracking-wider text-zinc-400 uppercase">Nuovo Elemento</span>
+<!-- Save Primary Pill Button -->
+<button class="px-5 py-1.5 rounded-full bg-iosAccent text-white text-sm font-semibold tracking-tight shadow-glow-blue hover:brightness-110 active:scale-95 transition-all duration-150" data-purpose="save-event-trigger" type="button">
+        Salva
+      </button>
+</header>
+<!-- END: TopBar -->
+<!-- BEGIN: MainContent -->
+<main class="flex-1 px-4 py-4 space-y-4">
+<!-- BEGIN: TitleAndDetailsCard -->
+<section class="rounded-2xl liquid-glass p-4 border border-white/10 shadow-lg space-y-3" data-purpose="title-input-card">
+<!-- Event Name Input with category indicator icon -->
+<div class="flex items-center gap-3">
+<span class="w-7 h-7 rounded-full bg-pink-500/20 text-pink-400 border border-pink-500/30 flex items-center justify-center shrink-0">
+<!-- Palette / Tag Icon -->
+<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+<path d="M12 2C6.49 2 2 6.49 2 12s4.49 10 10 10c1.38 0 2.5-1.12 2.5-2.5 0-.61-.23-1.2-.64-1.67-.08-.1-.13-.23-.13-.37 0-.28.22-.5.5-.5H16c3.31 0 6-2.69 6-6 0-4.96-4.49-9-10-9zm-5.5 11c-.83 0-1.5-.67-1.5-1.5S5.67 10 6.5 10s1.5.67 1.5 1.5S7.33 13 6.5 13zm3-4C8.67 9 8 8.33 8 7.5S8.67 6 9.5 6s1.5.67 1.5 1.5S10.33 9 9.5 9zm5 0c-.83 0-1.5-.67-1.5-1.5S13.67 6 14.5 6s1.5.67 1.5 1.5S15.33 9 14.5 9zm3 4c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"></path>
+</svg>
+</span>
+<input class="w-full bg-transparent text-lg font-medium text-white placeholder-zinc-500 focus:outline-none border-none p-0 focus:ring-0" placeholder="Inserisci qui l'evento" type="text" value="Allenamento pomeridiano">
+</div>
+<!-- Secondary Description / Notes Input -->
+<div class="pt-2 border-t border-white/5 flex items-start">
+<textarea class="w-full bg-transparent text-sm text-zinc-300 placeholder-zinc-600 focus:outline-none border-none p-0 focus:ring-0 resize-none leading-relaxed" placeholder="Descrizione..." rows="2">Riscaldamento, sessione pesi e defaticamento 45 min.</textarea>
+</div>
+<!-- Sub-task Action Tag (PRO) -->
+<div class="flex justify-end pt-1">
+<button class="inline-flex items-center gap-1.5 text-xs text-zinc-400 hover:text-zinc-200 liquid-glass-subtle px-2.5 py-1 rounded-full active:scale-95 transition" type="button">
+<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M12 4v16m8-8H4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2"></path>
+</svg>
+<span>Sottoattività</span>
+<span class="text-[9px] font-bold uppercase tracking-wider bg-white/10 text-white px-1 py-0.5 rounded border border-white/10">PRO</span>
+</button>
+</div>
+</section>
+<!-- END: TitleAndDetailsCard -->
+<!-- BEGIN: TimeAndDurationGroup -->
+<section class="rounded-2xl liquid-glass border border-white/10 overflow-hidden divide-y divide-white/5" data-purpose="time-schedule-group">
+<!-- Row: Tutto il Giorno Toggle -->
+<div class="flex items-center justify-between px-4 py-3.5">
+<div class="flex items-center gap-3">
+<span class="w-8 h-8 rounded-xl liquid-glass-subtle flex items-center justify-center text-zinc-300">
+<!-- 24h Icon -->
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"></path>
+</svg>
+</span>
+<span class="text-sm font-medium text-white">Tutto il giorno</span>
+</div>
+<!-- iOS Toggle Switch -->
+<label class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" id="all-day-toggle" type="checkbox">
+<div class="w-12 h-6 bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-6 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-iosAccent"></div>
+</label>
+</div>
+<!-- Row: Start and End Times -->
+<div class="px-4 py-3.5 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="w-8 h-8 rounded-xl liquid-glass-subtle flex items-center justify-center text-zinc-300">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"></path>
+</svg>
+</span>
+<!-- Start Time Block -->
+<div class="text-left cursor-pointer hover:opacity-80 transition">
+<div class="text-xs text-zinc-400">gio 1 ott</div>
+<div class="text-base font-semibold tracking-tight text-white">12:30</div>
+</div>
+</div>
+<!-- Chevron Connector -->
+<div class="text-zinc-600">
+<svg class="w-5 h-5 stroke-[1.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</div>
+<!-- End Time Block -->
+<div class="text-right cursor-pointer hover:opacity-80 transition pr-1">
+<div class="text-xs text-zinc-400">gio 1 ott</div>
+<div class="text-base font-semibold tracking-tight text-white">13:30</div>
+</div>
+</div>
+</section>
+<!-- END: TimeAndDurationGroup -->
+<!-- BEGIN: RemindersAndNotificationsGroup -->
+<section class="rounded-2xl liquid-glass border border-white/10 overflow-hidden divide-y divide-white/5" data-purpose="notification-options">
+<!-- Row: Promemoria Header -->
+<div class="px-4 py-3.5 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="w-8 h-8 rounded-xl liquid-glass-subtle flex items-center justify-center text-zinc-300">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"></path>
+</svg>
+</span>
+<span class="text-sm font-medium text-white">Promemoria</span>
+</div>
+<button class="text-xs font-medium text-zinc-400 hover:text-white flex items-center gap-1 transition" type="button">
+            Aggiungi
+            <svg class="w-3.5 h-3.5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</button>
+</div>
+<!-- Selected Reminder Pill and Permission Warning -->
+<div class="px-4 py-3 bg-white/[0.02] space-y-2">
+<div class="flex items-center justify-between text-sm text-zinc-200">
+<span class="text-xs px-2.5 py-1 rounded-md bg-white/5 border border-white/10 font-medium">15 minuti prima</span>
+<button aria-label="Rimuovi promemoria" class="text-zinc-500 hover:text-zinc-300 p-1" type="button">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</button>
+</div>
+<!-- Alert notification permission banner -->
+<div class="flex items-start gap-2.5 text-xs text-iosWarning bg-iosWarning/10 p-2.5 rounded-xl border border-iosWarning/20">
+<svg class="w-4 h-4 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+<p class="leading-tight opacity-90">
+              Il promemoria non funziona. Concedere l'autorizzazione alla notifica per ricevere avvisi.
+            </p>
+</div>
+</div>
+<!-- Row: Allarme a schermo intero (PRO) -->
+<div class="flex items-center justify-between px-4 py-3.5">
+<div class="flex items-center gap-3">
+<span class="w-8 h-8 rounded-xl liquid-glass-subtle flex items-center justify-center text-zinc-300">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M13 10V3L4 14h7v7l9-11h-7z" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"></path>
+</svg>
+</span>
+<div class="flex items-center gap-2">
+<span class="text-sm font-medium text-white">Allarme a schermo intero</span>
+<span class="text-[9px] font-bold uppercase tracking-wider bg-white/10 text-white px-1 py-0.5 rounded border border-white/10">PRO</span>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" type="checkbox">
+<div class="w-12 h-6 bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-6 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-iosAccent"></div>
+</label>
+</div>
+<!-- Row: Ripeti (PRO) -->
+<button class="w-full flex items-center justify-between px-4 py-3.5 text-left hover:bg-white/[0.03] transition" type="button">
+<div class="flex items-center gap-3">
+<span class="w-8 h-8 rounded-xl liquid-glass-subtle flex items-center justify-center text-zinc-300">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"></path>
+</svg>
+</span>
+<div class="flex items-center gap-2">
+<span class="text-sm font-medium text-white">Ripeti</span>
+<span class="text-[9px] font-bold uppercase tracking-wider bg-white/10 text-white px-1 py-0.5 rounded border border-white/10">PRO</span>
+</div>
+</div>
+<div class="flex items-center gap-1.5 text-xs text-zinc-400">
+<span>Nessuno</span>
+<svg class="w-4 h-4 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+</button>
+</section>
+<!-- END: RemindersAndNotificationsGroup -->
+<!-- BEGIN: CalendarCategoryAndMetaGroup -->
+<section class="rounded-2xl liquid-glass border border-white/10 overflow-hidden divide-y divide-white/5" data-purpose="meta-options-group">
+<!-- Row: Calendario / Elenco Attività (Interactive Trigger for Sheet) -->
+<button class="w-full flex items-center justify-between px-4 py-3.5 text-left hover:bg-white/[0.03] transition group" id="openCategorySheetBtn" type="button">
+<div class="flex items-center gap-3">
+<span class="w-8 h-8 rounded-xl liquid-glass-subtle flex items-center justify-center text-zinc-300">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"></path>
+</svg>
+</span>
+<span class="text-sm font-medium text-white">Calendario / Elenco</span>
+</div>
+<div class="flex items-center gap-2">
+<!-- Selected Category Tag with Green/Magenta Dot -->
+<div class="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full bg-white/5 border border-white/10">
+<span class="w-2.5 h-2.5 rounded-full bg-[#30D158] shadow-sm" id="selectedCategoryDot"></span>
+<span class="text-zinc-200 font-medium" id="selectedCategoryName">Studiare</span>
+</div>
+<svg class="w-4 h-4 text-zinc-500 group-hover:translate-x-0.5 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+</button>
+<!-- Row: Posizione -->
+<button class="w-full flex items-center justify-between px-4 py-3.5 text-left hover:bg-white/[0.03] transition" type="button">
+<div class="flex items-center gap-3">
+<span class="w-8 h-8 rounded-xl liquid-glass-subtle flex items-center justify-center text-zinc-300">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"></path>
+<path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"></path>
+</svg>
+</span>
+<span class="text-sm font-medium text-white">Posizione</span>
+</div>
+<div class="flex items-center gap-1.5 text-xs text-zinc-400">
+<span>Aggiungi</span>
+<svg class="w-4 h-4 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+</button>
+<!-- Row: Allegato -->
+<button class="w-full flex items-center justify-between px-4 py-3.5 text-left hover:bg-white/[0.03] transition" type="button">
+<div class="flex items-center gap-3">
+<span class="w-8 h-8 rounded-xl liquid-glass-subtle flex items-center justify-center text-zinc-300">
+<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"></path>
+</svg>
+</span>
+<span class="text-sm font-medium text-white">Allegato</span>
+</div>
+<div class="flex items-center gap-1.5 text-xs text-zinc-400">
+<span>Aggiungi</span>
+<svg class="w-4 h-4 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+</button>
+</section>
+<!-- END: CalendarCategoryAndMetaGroup -->
+</main>
+<!-- END: MainContent -->
+<!-- BEGIN: CategorySelectionModalSheet -->
+<!-- Backdrop overlay & Sheet Modal representing Image 10 & 5 -->
+<div class="fixed inset-0 z-50 bg-black/60 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 transition-all duration-300" data-purpose="category-modal-container" id="categoryModalOverlay">
+<div class="w-full max-w-[390px] rounded-t-3xl sm:rounded-3xl liquid-glass border border-white/15 p-5 shadow-sheet flex flex-col space-y-4 max-h-[751px] animate-in fade-in zoom-in-95 duration-200" data-purpose="modal-sheet-dialog">
+<!-- Modal Handle bar for touch gesture aesthetic -->
+<div class="w-10 h-1 rounded-full bg-white/20 mx-auto -mt-1 sm:hidden"></div>
+<!-- Modal Header -->
+<div class="flex items-center justify-between pb-2 border-b border-white/10">
+<div>
+<h2 class="text-lg font-bold text-white tracking-tight">Salvare</h2>
+<p class="text-xs text-zinc-400 font-medium">Good Calendar &amp; Task</p>
+</div>
+<span class="text-xs text-iosAccent font-semibold uppercase tracking-wider px-2 py-1 rounded bg-iosAccent/10 border border-iosAccent/20">Seleziona</span>
+</div>
+<!-- Category Radio List -->
+<div class="space-y-1 overflow-y-auto pr-1" data-purpose="radio-options-list">
+<!-- Item 1: Studiare (Selected by default) -->
+<label class="flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-white/5 cursor-pointer transition group">
+<div class="flex items-center gap-3">
+<div class="relative flex items-center justify-center">
+<input checked="" class="sr-only peer" data-color="#30D158" name="event_category" type="radio" value="Studiare">
+<div class="w-5 h-5 rounded-full border-2 border-[#30D158] flex items-center justify-center peer-checked:bg-[#30D158]/20 transition-all">
+<div class="w-2.5 h-2.5 rounded-full bg-[#30D158] scale-100 peer-checked:scale-100 transition-transform"></div>
+</div>
+</div>
+<span class="text-sm font-medium text-white group-hover:text-zinc-100">Studiare</span>
+</div>
+<span class="text-[11px] text-zinc-500 font-normal">Predefinito</span>
+</label>
+<!-- Item 2: Esercizi -->
+<label class="flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-white/5 cursor-pointer transition group">
+<div class="flex items-center gap-3">
+<div class="relative flex items-center justify-center">
+<input class="sr-only peer" data-color="#FFD60A" name="event_category" type="radio" value="Esercizi">
+<div class="w-5 h-5 rounded-full border-2 border-[#FFD60A] flex items-center justify-center peer-checked:bg-[#FFD60A]/20 transition-all">
+<div class="w-2.5 h-2.5 rounded-full bg-[#FFD60A] scale-0 peer-checked:scale-100 transition-transform"></div>
+</div>
+</div>
+<span class="text-sm font-medium text-white group-hover:text-zinc-100">Esercizi</span>
+</div>
+</label>
+<!-- Item 3: Verifica/interrogazione -->
+<label class="flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-white/5 cursor-pointer transition group">
+<div class="flex items-center gap-3">
+<div class="relative flex items-center justify-center">
+<input class="sr-only peer" data-color="#FF453A" name="event_category" type="radio" value="Verifica/interrogazione">
+<div class="w-5 h-5 rounded-full border-2 border-[#FF453A] flex items-center justify-center peer-checked:bg-[#FF453A]/20 transition-all">
+<div class="w-2.5 h-2.5 rounded-full bg-[#FF453A] scale-0 peer-checked:scale-100 transition-transform"></div>
+</div>
+</div>
+<span class="text-sm font-medium text-white group-hover:text-zinc-100">Verifica/interrogazione</span>
+</div>
+</label>
+<!-- Item 4: Ripetere -->
+<label class="flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-white/5 cursor-pointer transition group">
+<div class="flex items-center gap-3">
+<div class="relative flex items-center justify-center">
+<input class="sr-only peer" data-color="#FF9F0A" name="event_category" type="radio" value="Ripetere">
+<div class="w-5 h-5 rounded-full border-2 border-[#FF9F0A] flex items-center justify-center peer-checked:bg-[#FF9F0A]/20 transition-all">
+<div class="w-2.5 h-2.5 rounded-full bg-[#FF9F0A] scale-0 peer-checked:scale-100 transition-transform"></div>
+</div>
+</div>
+<span class="text-sm font-medium text-white group-hover:text-zinc-100">Ripetere</span>
+</div>
+</label>
+<!-- Item 5: Leggere -->
+<label class="flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-white/5 cursor-pointer transition group">
+<div class="flex items-center gap-3">
+<div class="relative flex items-center justify-center">
+<input class="sr-only peer" data-color="#32D74B" name="event_category" type="radio" value="Leggere">
+<div class="w-5 h-5 rounded-full border-2 border-[#32D74B] flex items-center justify-center peer-checked:bg-[#32D74B]/20 transition-all">
+<div class="w-2.5 h-2.5 rounded-full bg-[#32D74B] scale-0 peer-checked:scale-100 transition-transform"></div>
+</div>
+</div>
+<span class="text-sm font-medium text-white group-hover:text-zinc-100">Leggere</span>
+</div>
+</label>
+<!-- Item 6: Ricopiare -->
+<label class="flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-white/5 cursor-pointer transition group">
+<div class="flex items-center gap-3">
+<div class="relative flex items-center justify-center">
+<input class="sr-only peer" data-color="#64D2FF" name="event_category" type="radio" value="Ricopiare">
+<div class="w-5 h-5 rounded-full border-2 border-[#64D2FF] flex items-center justify-center peer-checked:bg-[#64D2FF]/20 transition-all">
+<div class="w-2.5 h-2.5 rounded-full bg-[#64D2FF] scale-0 peer-checked:scale-100 transition-transform"></div>
+</div>
+</div>
+<span class="text-sm font-medium text-white group-hover:text-zinc-100">Ricopiare</span>
+</div>
+</label>
+<!-- Item 7: Ricerche/presentazioni -->
+<label class="flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-white/5 cursor-pointer transition group">
+<div class="flex items-center gap-3">
+<div class="relative flex items-center justify-center">
+<input class="sr-only peer" data-color="#BF5AF2" name="event_category" type="radio" value="Ricerche/presentazioni">
+<div class="w-5 h-5 rounded-full border-2 border-[#BF5AF2] flex items-center justify-center peer-checked:bg-[#BF5AF2]/20 transition-all">
+<div class="w-2.5 h-2.5 rounded-full bg-[#BF5AF2] scale-0 peer-checked:scale-100 transition-transform"></div>
+</div>
+</div>
+<span class="text-sm font-medium text-white group-hover:text-zinc-100">Ricerche/presentazioni</span>
+</div>
+</label>
+<!-- Action: Crea nuovo category -->
+<button class="w-full flex items-center gap-3 px-3 py-2.5 text-iosAccent hover:bg-iosAccent/10 rounded-xl transition text-sm font-medium mt-1" type="button">
+<div class="w-5 h-5 rounded-full border border-dashed border-iosAccent/60 flex items-center justify-center">
+<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path d="M12 4v16m8-8H4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+<span>Crea nuovo</span>
+</button>
+</div>
+<!-- Modal Dialog Actions: Annulla & Conferma -->
+<div class="flex items-center justify-end gap-3 pt-3 border-t border-white/10">
+<button class="px-4 py-2 rounded-xl text-sm font-medium text-zinc-400 hover:text-white hover:bg-white/5 transition active:scale-95" id="cancelModalBtn" type="button">
+            Annulla
+          </button>
+<button class="px-5 py-2 rounded-xl text-sm font-semibold bg-iosAccent text-white shadow-glow-blue hover:brightness-110 active:scale-95 transition" id="confirmModalBtn" type="button">
+            Conferma
+          </button>
+</div>
+</div>
+</div>
+<!-- END: CategorySelectionModalSheet -->
+</div>
+<!-- BEGIN: Interactive Behavior Script -->
+<script data-purpose="modal-and-state-interactivity">
+    document.addEventListener('DOMContentLoaded', () => {
+      const modalOverlay = document.getElementById('categoryModalOverlay');
+      const openModalBtn = document.getElementById('openCategorySheetBtn');
+      const closeModalBtn = document.getElementById('cancelModalBtn');
+      const confirmModalBtn = document.getElementById('confirmModalBtn');
+      const selectedDot = document.getElementById('selectedCategoryDot');
+      const selectedName = document.getElementById('selectedCategoryName');
+
+      // Function to show modal
+      const showModal = () => {
+        modalOverlay.classList.remove('hidden');
+        modalOverlay.classList.add('flex');
+      };
+
+      // Function to hide modal
+      const hideModal = () => {
+        modalOverlay.classList.add('hidden');
+        modalOverlay.classList.remove('flex');
+      };
+
+      // Open Modal event
+      openModalBtn.addEventListener('click', showModal);
+
+      // Dismiss on Cancel
+      closeModalBtn.addEventListener('click', hideModal);
+
+      // Confirm & Update Selection
+      confirmModalBtn.addEventListener('click', () => {
+        const checkedRadio = document.querySelector('input[name="event_category"]:checked');
+        if (checkedRadio) {
+          const catName = checkedRadio.value;
+          const catColor = checkedRadio.getAttribute('data-color') || '#30D158';
+
+          selectedName.textContent = catName;
+          selectedDot.style.backgroundColor = catColor;
+        }
+        hideModal();
+      });
+
+      // Dismiss by clicking outside sheet
+      modalOverlay.addEventListener('click', (e) => {
+        if (e.target === modalOverlay) {
+          hideModal();
+        }
+      });
+    });
+  </script>
+<!-- END: Interactive Behavior Script -->
+</body></html>

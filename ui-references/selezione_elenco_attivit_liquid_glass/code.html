@@ -1,0 +1,219 @@
+<!DOCTYPE html><html class="h-full bg-slate-950" lang="it" style="width: 390px; height: 884px; overflow: hidden; position: relative;"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport">
+<title>Selezione Elenco Attività - Liquid Glass</title>
+<!-- Tailwind CSS v3 with Plugins -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              blue: '#0066cc',
+              blueHover: '#0052a3'
+            }
+          },
+          fontFamily: {
+            sans: ['-apple-system', 'BlinkMacSystemFont', '"SF Pro Display"', '"SF Pro Text"', 'system-ui', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+<style data-purpose="liquid-glass-effects">
+    /* Specular lighting and liquid backdrop effects */
+    .liquid-modal {
+      background: linear-gradient(135deg, rgba(30, 41, 59, 0.78) 0%, rgba(15, 23, 42, 0.88) 100%);
+      backdrop-filter: blur(28px) saturate(190%);
+      -webkit-backdrop-filter: blur(28px) saturate(190%);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.65), 
+                  inset 0 1px 1px 0 rgba(255, 255, 255, 0.22),
+                  inset 0 -1px 1px 0 rgba(255, 255, 255, 0.05);
+    }
+    .specular-border {
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+    .custom-scroll::-webkit-scrollbar {
+      display: none;
+    }
+    .custom-scroll {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="h-full font-sans antialiased text-white selection:bg-blue-500/30 overflow-hidden">
+<!-- BEGIN: UnderlyingBlurredScreen -->
+<!-- Contextual mock of the underlying task creation form that sits behind the backdrop -->
+<div class="fixed inset-0 w-full h-full bg-[#080d1a] px-5 pt-3 pb-8 flex flex-col justify-between pointer-events-none filter blur-md select-none opacity-40">
+<!-- Top Status Bar Area & Nav -->
+<header class="w-full">
+<div class="flex items-center justify-between text-xs text-slate-400 font-medium px-1 mb-4">
+<span class="">12:20</span>
+<div class="flex items-center gap-1.5">
+<svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 3c-4.97 0-9 4.03-9 9 0 2.12.74 4.07 1.97 5.61L4.35 18.4A1 1 0 005.76 19.8l.79-.79C8.08 20.25 9.97 21 12 21c4.97 0 9-4.03 9-9s-4.03-9-9-9z"></path></svg>
+<svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 4c-4.42 0-8 3.58-8 8s3.58 8 8 8 8-3.58 8-8-3.58-8-8-8z"></path></svg>
+<span class="">88%</span>
+</div>
+</div>
+<div class="flex items-center justify-between py-2">
+<span class="p-2 -ml-2 text-slate-300">
+<svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+</span>
+<div class="px-5 py-1.5 rounded-full bg-blue-600 text-white font-medium text-sm">Salva</div>
+</div>
+</header>
+<!-- Background Mock Fields -->
+<div class="space-y-6 flex-1 mt-6">
+<div class="text-2xl font-light text-slate-300 border-l-2 border-blue-500 pl-3">Inserisci l'attività qui</div>
+<div class="text-sm text-slate-500">Descrizione</div>
+<div class="p-4 rounded-2xl bg-white/5 space-y-4">
+<div class="h-4 w-32 bg-slate-700/50 rounded"></div>
+<div class="h-4 w-48 bg-slate-700/30 rounded"></div>
+</div>
+<div class="p-4 rounded-2xl bg-white/5 flex justify-between items-center">
+<span class="text-slate-400 text-sm">Elenco delle attività</span>
+<span class="text-emerald-400 text-sm">Studiare</span>
+</div>
+</div>
+</div>
+<!-- END: UnderlyingBlurredScreen -->
+<!-- BEGIN: DimmedBackdrop -->
+<div aria-modal="true" class="fixed inset-0 bg-black/65 backdrop-blur-sm z-20 flex items-center justify-center p-5 transition-opacity duration-300" role="dialog" style="background-color: rgba(0, 0, 0, 0.55); backdrop-filter: blur(8px);">
+<!-- BEGIN: LiquidGlassModal -->
+<div class="w-full max-w-[370px] liquid-modal specular-border rounded-[28px] p-6 shadow-2xl z-30 transform transition-all flex flex-col max-h-[90vh]" style="background: rgba(33, 33, 36, 0.96); backdrop-filter: blur(32px); border: 1px solid rgba(255, 255, 255, 0.12); box-shadow: rgba(0, 0, 0, 0.7) 0px 20px 40px -15px, rgba(255, 255, 255, 0.05) 0px 0px 0px 1px;">
+<!-- Modal Header -->
+<div class="mb-5 flex-shrink-0">
+<h2 class="text-2xl font-bold text-white tracking-tight">Salvare</h2>
+
+</div>
+<!-- Radio Item List Form -->
+<form class="space-y-1 overflow-y-auto custom-scroll -mx-2 px-2 flex-1 divide-y divide-white/5" onsubmit="event.preventDefault();">
+<!-- Option 1: Studiare (Selected) -->
+<label class="group flex items-center gap-3.5 py-3.5 cursor-pointer select-none transition-colors duration-150 rounded-xl px-2 hover:bg-white/5">
+<input checked="" class="sr-only" name="activity_category" type="radio" value="studiare">
+<div class="relative flex items-center justify-center w-5 h-5 flex-shrink-0">
+<!-- Outer Vibrant Emerald Ring -->
+<div class="w-5 h-5 rounded-full border-2 border-emerald-400 flex items-center justify-center shadow-[0_0_8px_rgba(52,211,153,0.35)]">
+<!-- Inner Emerald Dot -->
+<div class="w-2.5 h-2.5 bg-emerald-400 rounded-full"></div>
+</div>
+</div>
+<span class="text-[16px] text-white font-medium group-hover:text-emerald-300 transition-colors">Studiare</span>
+</label>
+<!-- Option 2: Esercizi -->
+<label class="group flex items-center gap-3.5 py-3.5 cursor-pointer select-none transition-colors duration-150 rounded-xl px-2 hover:bg-white/5">
+<input class="sr-only" name="activity_category" type="radio" value="esercizi">
+<div class="relative flex items-center justify-center w-5 h-5 flex-shrink-0">
+<!-- Outer Bright Yellow/Amber Ring -->
+<div class="w-5 h-5 rounded-full border-2 border-amber-300 group-hover:border-amber-200 transition-colors"></div>
+</div>
+<span class="text-[16px] text-slate-100 font-normal group-hover:text-white transition-colors">Esercizi</span>
+</label>
+<!-- Option 3: Verifica/interrogazione -->
+<label class="group flex items-center gap-3.5 py-3.5 cursor-pointer select-none transition-colors duration-150 rounded-xl px-2 hover:bg-white/5">
+<input class="sr-only" name="activity_category" type="radio" value="verifica_interrogazione">
+<div class="relative flex items-center justify-center w-5 h-5 flex-shrink-0">
+<!-- Outer Coral Red Ring -->
+<div class="w-5 h-5 rounded-full border-2 border-rose-400 group-hover:border-rose-300 transition-colors"></div>
+</div>
+<span class="text-[16px] text-slate-100 font-normal group-hover:text-white transition-colors">Verifica/interrogazione</span>
+</label>
+<!-- Option 4: Ripetere -->
+<label class="group flex items-center gap-3.5 py-3.5 cursor-pointer select-none transition-colors duration-150 rounded-xl px-2 hover:bg-white/5">
+<input class="sr-only" name="activity_category" type="radio" value="ripetere">
+<div class="relative flex items-center justify-center w-5 h-5 flex-shrink-0">
+<!-- Outer Orange Ring -->
+<div class="w-5 h-5 rounded-full border-2 border-orange-400 group-hover:border-orange-300 transition-colors"></div>
+</div>
+<span class="text-[16px] text-slate-100 font-normal group-hover:text-white transition-colors">Ripetere</span>
+</label>
+<!-- Option 5: leggere -->
+<label class="group flex items-center gap-3.5 py-3.5 cursor-pointer select-none transition-colors duration-150 rounded-xl px-2 hover:bg-white/5">
+<input class="sr-only" name="activity_category" type="radio" value="leggere">
+<div class="relative flex items-center justify-center w-5 h-5 flex-shrink-0">
+<!-- Outer Lime Green Ring -->
+<div class="w-5 h-5 rounded-full border-2 border-lime-400 group-hover:border-lime-300 transition-colors"></div>
+</div>
+<span class="text-[16px] text-slate-100 font-normal group-hover:text-white transition-colors">leggere</span>
+</label>
+<!-- Option 6: ricopiare -->
+<label class="group flex items-center gap-3.5 py-3.5 cursor-pointer select-none transition-colors duration-150 rounded-xl px-2 hover:bg-white/5">
+<input class="sr-only" name="activity_category" type="radio" value="ricopiare">
+<div class="relative flex items-center justify-center w-5 h-5 flex-shrink-0">
+<!-- Outer Cyan/Teal Ring -->
+<div class="w-5 h-5 rounded-full border-2 border-cyan-400 group-hover:border-cyan-300 transition-colors"></div>
+</div>
+<span class="text-[16px] text-slate-100 font-normal group-hover:text-white transition-colors">ricopiare</span>
+</label>
+<!-- Option 7: ricerche/presentazioni -->
+<label class="group flex items-center gap-3.5 py-3.5 cursor-pointer select-none transition-colors duration-150 rounded-xl px-2 hover:bg-white/5">
+<input class="sr-only" name="activity_category" type="radio" value="ricerche_presentazioni">
+<div class="relative flex items-center justify-center w-5 h-5 flex-shrink-0">
+<!-- Outer Soft Bronze/Brownish Ring -->
+<div class="w-5 h-5 rounded-full border-2 border-amber-600/80 group-hover:border-amber-500 transition-colors"></div>
+</div>
+<span class="text-[16px] text-slate-100 font-normal group-hover:text-white transition-colors">ricerche/presentazioni</span>
+</label>
+<!-- Action Item: + Crea nuovo -->
+<div class="pt-2">
+<button class="w-full flex items-center gap-3.5 py-3 px-2 rounded-xl text-left text-slate-300 hover:text-white hover:bg-white/5 transition-all group" type="button">
+<div class="flex items-center justify-center w-5 h-5 text-blue-400 group-hover:text-blue-300">
+<svg class="w-5 h-5 stroke-current" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" viewBox="0 0 24 24">
+<line x1="12" x2="12" y1="5" y2="19"></line>
+<line x1="5" x2="19" y1="12" y2="12"></line>
+</svg>
+</div>
+<span class="text-[16px] font-medium tracking-wide">Crea nuovo</span>
+</button>
+</div>
+</form>
+<!-- Modal Footer Action Buttons -->
+<footer class="mt-6 pt-4 flex items-center justify-end gap-3 flex-shrink-0 border-t border-white/10">
+<!-- Cancel Text Button -->
+<button class="px-4 py-2 text-[15px] font-medium text-slate-400 hover:text-white transition-colors rounded-full active:scale-95" type="button">
+          Annulla
+        </button>
+<!-- Confirm Action Blue Pill Button -->
+<button class="px-6 py-2.5 bg-brand-blue hover:bg-brand-blueHover text-white text-[15px] font-semibold rounded-full shadow-[0_4px_14px_rgba(0,102,204,0.39)] transition-all duration-200 active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-400/50" type="button">
+          Conferma
+        </button>
+</footer>
+</div>
+<!-- END: LiquidGlassModal -->
+</div>
+<!-- END: DimmedBackdrop -->
+<!-- Interactive Radio Behavior Script -->
+<script data-purpose="radio-selection-handlers">
+    document.querySelectorAll('input[type="radio"][name="activity_category"]').forEach((radio) => {
+      radio.addEventListener('change', (e) => {
+        // Clear dots from other items
+        document.querySelectorAll('input[name="activity_category"]').forEach((r) => {
+          const dot = r.parentElement.querySelector('.w-2\\.5');
+          if (dot) dot.remove();
+          r.parentElement.querySelector('span').classList.remove('font-medium');
+        });
+
+        // Add inner dot to newly selected
+        const indicator = e.target.parentElement.querySelector('.rounded-full');
+        if (indicator && !indicator.querySelector('.w-2\\.5')) {
+          const dot = document.createElement('div');
+          dot.className = 'w-2.5 h-2.5 rounded-full';
+          // Color match border
+          if (e.target.value === 'studiare') dot.classList.add('bg-emerald-400');
+          else if (e.target.value === 'esercizi') dot.classList.add('bg-amber-300');
+          else if (e.target.value === 'verifica_interrogazione') dot.classList.add('bg-rose-400');
+          else if (e.target.value === 'ripetere') dot.classList.add('bg-orange-400');
+          else if (e.target.value === 'leggere') dot.classList.add('bg-lime-400');
+          else if (e.target.value === 'ricopiare') dot.classList.add('bg-cyan-400');
+          else if (e.target.value === 'ricerche_presentazioni') dot.classList.add('bg-amber-600');
+          indicator.appendChild(dot);
+        }
+        e.target.parentElement.querySelector('span').classList.add('font-medium');
+      });
+    });
+  </script>
+
+
+</body></html>

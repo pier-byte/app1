@@ -1,0 +1,569 @@
+<!DOCTYPE html><html class="h-full bg-[#0a0b0e]" lang="it" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport">
+<title>Calendario Mensile</title>
+<!-- Tailwind CSS v3 CDN -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>tailwind.config = {theme: {extend: {colors: {brand: {blue: "#0088ff", glow: "rgba(0, 136, 255, 0.4)"}, "surface-bright": "#39393b", "outline-variant": "#414753", background: "#131315", "surface-container-low": "#1b1b1d", tertiary: "#abc7ff", "on-secondary-fixed": "#001c39", "inverse-primary": "#005cba", "inverse-surface": "#e4e2e4", "on-secondary": "#00315c", "surface-container-highest": "#353437", "on-primary-fixed": "#001b3e", secondary: "#a3c9ff", "secondary-fixed-dim": "#a3c9ff", "surface-tint": "#aac7ff", "on-tertiary-fixed-variant": "#00458f", "on-tertiary": "#002f66", surface: "#131315", "on-surface": "#e4e2e4", outline: "#8b919e", "surface-container": "#1f1f21", "on-tertiary-fixed": "#001b3f", "surface-dim": "#131315", "on-primary-container": "#dfe8ff", "on-background": "#e4e2e4", primary: "#aac7ff", "on-surface-variant": "#c1c6d5", "on-tertiary-container": "#e0e8ff", "on-primary": "#002f65", "primary-container": "#0066cc", "tertiary-fixed-dim": "#abc7ff", "surface-container-lowest": "#0e0e10", "tertiary-container": "#0066ce", "secondary-fixed": "#d3e3ff", "inverse-on-surface": "#303032", "error-container": "#93000a", "primary-fixed": "#d7e3ff", "on-error-container": "#ffdad6", "primary-fixed-dim": "#aac7ff", "on-secondary-container": "#002a51", "surface-container-high": "#2a2a2c", "on-error": "#690005", "on-primary-fixed-variant": "#00458e", "tertiary-fixed": "#d7e2ff", "on-secondary-fixed-variant": "#004882", error: "#ffb4ab", "surface-variant": "#353437", "secondary-container": "#2193fb"}, fontFamily: {sans: ["-apple-system", "BlinkMacSystemFont", "\"SF Pro Display\"", "\"SF Pro Text\"", "Roboto", "Helvetica Neue", "sans-serif"], headline: ["Inter"], display: ["Inter"], body: ["Inter"], label: ["Inter"]}, fontSize: {}, borderRadius: {DEFAULT: "1rem", lg: "2rem", xl: "3rem", full: "9999px"}}}};</script>
+<!-- Custom Styles for Liquid Glass and Grid Layout -->
+<style data-purpose="liquid-glass-effects">
+    /* Subtle radial glow background */
+    body {
+      background: radial-gradient(circle at 50% 8%, rgba(24, 40, 75, 0.45) 0%, rgba(10, 11, 14, 1) 75%);
+      min-height: 100vh;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    /* Glass pill & panels */
+    .glass-panel {
+      background: rgba(22, 25, 34, 0.65);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .glass-nav {
+      background: rgba(15, 17, 24, 0.82);
+      backdrop-filter: blur(28px);
+      -webkit-backdrop-filter: blur(28px);
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 -10px 35px rgba(0, 0, 0, 0.6);
+    }
+
+    .glass-btn {
+      background: rgba(255, 255, 255, 0.06);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: all 0.15s ease;
+    }
+
+    .glass-btn:active {
+      transform: scale(0.96);
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    /* Calendar Grid Lines */
+    .cal-cell {
+      border-right: 1px solid rgba(255, 255, 255, 0.045);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.045);
+    }
+    .cal-cell:nth-child(7n) {
+      border-right: none;
+    }
+
+    /* Vibrant FAB Button Glow */
+    .fab-shadow {
+      box-shadow: 0 8px 24px -2px rgba(0, 149, 255, 0.55), inset 0 1px 2px rgba(255, 255, 255, 0.4);
+    }
+
+    /* Compact task pills typography */
+    .event-chip {
+      letter-spacing: -0.015em;
+      line-height: 1.15;
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="text-slate-100 flex flex-col justify-between h-full font-sans antialiased overflow-x-hidden">
+<!-- BEGIN: MainHeader -->
+<header class="w-full pt-2.5 pb-2 px-3.5 z-30 shrink-0 select-none">
+<!-- Top Status / Action Bar -->
+<div class="flex items-center justify-between">
+<!-- Left: Menu & Month Selector -->
+<div class="flex items-center gap-2.5">
+<button aria-label="Menu" class="glass-btn w-9 h-9 rounded-full flex items-center justify-center text-slate-300 hover:text-white" type="button">
+<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<path d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</button>
+<!-- Month Dropdown Trigger -->
+<button class="flex items-center gap-1.5 px-2.5 py-1 rounded-xl glass-btn text-slate-100 group" type="button">
+<span class="text-lg font-semibold tracking-tight">set 2026</span>
+<svg class="w-4 h-4 text-slate-400 group-hover:text-slate-200 transition-transform" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+<path d="M19.5 8.25l-7.5 7.5-7.5-7.5" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</button>
+</div>
+<!-- Right: PRO Badge & Top Icons -->
+<div class="flex items-center gap-2">
+<button aria-label="Messaggi e Chat" class="glass-btn w-9 h-9 rounded-full flex items-center justify-center text-slate-300 hover:text-white" type="button">
+
+</button>
+<button aria-label="Altre Opzioni" class="glass-btn w-9 h-9 rounded-full flex items-center justify-center text-slate-300 hover:text-white" type="button">
+<svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+<path d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</button>
+</div>
+</div>
+<!-- Weekday Header Row -->
+<div class="grid grid-cols-7 pt-3 pb-1 text-center font-medium text-[11px] tracking-wide uppercase">
+<span class="text-slate-400">lun</span>
+<span class="text-slate-400">mar</span>
+<span class="text-slate-400">mer</span>
+<span class="text-sky-400 font-semibold drop-shadow-[0_0_8px_rgba(56,189,248,0.5)]">gio</span>
+<span class="text-slate-400">ven</span>
+<span class="text-slate-400">sab</span>
+<span class="text-slate-400">dom</span>
+</div>
+</header>
+<!-- END: MainHeader -->
+<!-- BEGIN: CalendarGrid -->
+<main class="flex-1 flex flex-col px-1.5 pb-16 overflow-hidden select-none">
+<div class="grid grid-cols-7 grid-rows-5 flex-1 h-full border-t border-l border-white/[0.06] rounded-xl overflow-hidden bg-[#0d0f14]/80 shadow-2xl backdrop-blur-md">
+<!-- ================= ROW 1 (Aug 31 - Sep 6) ================= -->
+<!-- Day 31 Ago -->
+<div class="cal-cell p-1 flex flex-col bg-white/[0.01] overflow-hidden">
+<span class="text-[12px] font-medium text-slate-500 self-center">31</span>
+<div class="mt-1 flex flex-col gap-1 overflow-y-auto overflow-x-hidden">
+<div class="event-chip rounded px-1.5 py-0.5 text-[10px] font-medium bg-fuchsia-950/60 text-fuchsia-300 border border-fuchsia-500/25 leading-tight truncate">
+            allenamento
+          </div>
+</div>
+</div>
+<!-- Day 1 Set -->
+<div class="cal-cell p-1 flex flex-col overflow-hidden">
+<span class="text-[12px] font-medium text-slate-200 self-center">1</span>
+<div class="mt-1 flex flex-col gap-1 overflow-y-auto overflow-x-hidden">
+<div class="event-chip rounded px-1.5 py-0.5 text-[10px] font-medium bg-emerald-950/70 text-emerald-300 border border-emerald-500/30 flex items-center gap-1 leading-tight">
+<svg class="w-2.5 h-2.5 shrink-0 text-emerald-400" fill="currentColor" viewBox="0 0 16 16"><path d="M14 4.5l-8.5 8.5L1.5 9l1.4-1.4 2.6 2.6L12.6 3.1z"></path></svg>
+<span class="truncate">studiare</span>
+</div>
+<div class="event-chip rounded px-1.5 py-0.5 text-[10px] font-medium bg-emerald-950/70 text-emerald-300 border border-emerald-500/30 flex items-center gap-1 leading-tight">
+<svg class="w-2.5 h-2.5 shrink-0 text-emerald-400" fill="currentColor" viewBox="0 0 16 16"><path d="M14 4.5l-8.5 8.5L1.5 9l1.4-1.4 2.6 2.6L12.6 3.1z"></path></svg>
+<span class="truncate">studiare</span>
+</div>
+<div class="event-chip rounded px-1.5 py-0.5 text-[10px] font-medium bg-emerald-950/70 text-emerald-300 border border-emerald-500/30 flex items-center gap-1 leading-tight">
+<svg class="w-2.5 h-2.5 shrink-0 text-emerald-400" fill="currentColor" viewBox="0 0 16 16"><path d="M14 4.5l-8.5 8.5L1.5 9l1.4-1.4 2.6 2.6L12.6 3.1z"></path></svg>
+<span class="truncate">studiare</span>
+</div>
+</div>
+</div>
+<!-- Day 2 Set -->
+<div class="cal-cell p-1 flex flex-col overflow-hidden">
+<span class="text-[12px] font-medium text-slate-200 self-center">2</span>
+<div class="mt-1 flex flex-col gap-1 overflow-y-auto overflow-x-hidden">
+<div class="event-chip rounded px-1.5 py-0.5 text-[10px] font-medium bg-slate-800/80 text-slate-300 border border-slate-600/30 truncate">
+            casa
+          </div>
+<div class="event-chip rounded px-1.5 py-0.5 text-[10px] font-medium bg-fuchsia-950/60 text-fuchsia-300 border border-fuchsia-500/25 truncate">
+            allenamento
+          </div>
+</div>
+</div>
+<!-- Day 3 Set (Current Active Day) -->
+<div class="cal-cell p-1 flex flex-col bg-sky-950/20 ring-1 ring-inset ring-sky-500/30 rounded-sm relative overflow-hidden">
+<div class="w-5 h-5 rounded-full bg-gradient-to-tr from-sky-600 to-blue-500 text-white font-bold text-[12px] flex items-center justify-center self-center shadow-[0_0_12px_rgba(14,165,233,0.7)] shrink-0">
+          3
+        </div>
+<div class="mt-1 flex flex-col gap-1 overflow-y-auto overflow-x-hidden">
+<div class="event-chip rounded px-1.5 py-0.5 text-[10px] font-semibold bg-sky-900/60 text-sky-200 border border-sky-400/40 flex items-center gap-1 leading-tight">
+<svg class="w-2.5 h-2.5 shrink-0 text-sky-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+<span class="truncate">Ginnastica</span>
+</div>
+<div class="event-chip rounded px-1.5 py-0.5 text-[10px] font-medium bg-fuchsia-950/60 text-fuchsia-300 border border-fuchsia-500/25 truncate">
+            allenamento
+          </div>
+</div>
+</div>
+<!-- Day 4 Set -->
+<div class="cal-cell p-1 flex flex-col overflow-hidden">
+<span class="text-[12px] font-medium text-slate-200 self-center">4</span>
+</div>
+<!-- Day 5 Set -->
+<div class="cal-cell p-1 flex flex-col overflow-hidden">
+<span class="text-[12px] font-medium text-slate-200 self-center">5</span>
+</div>
+<!-- Day 6 Set -->
+<div class="cal-cell p-1 flex flex-col overflow-hidden">
+<span class="text-[12px] font-medium text-slate-200 self-center">6</span>
+<div class="mt-1 flex flex-col gap-1 overflow-y-auto overflow-x-hidden">
+<div class="event-chip rounded px-1.5 py-0.5 text-[10px] font-medium bg-indigo-950/60 text-indigo-300 border border-indigo-500/25 flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-indigo-400 shrink-0"></span>
+<span class="truncate">Christian</span>
+</div>
+</div>
+</div>
+<!-- ================= ROW 2 (Sep 7 - Sep 13) ================= -->
+<!-- Day 7 Set -->
+<div class="cal-cell p-1 flex flex-col overflow-hidden">
+<span class="text-[12px] font-medium text-slate-200 self-center">7</span>
+<div class="mt-1 flex flex-col gap-1 overflow-y-auto overflow-x-hidden">
+<div class="event-chip rounded px-1.5 py-0.5 text-[10px] font-medium bg-slate-800/80 text-slate-300 border border-slate-600/30 truncate">
+            casa
+          </div>
+</div>
+</div>
+<!-- Day 8 Set -->
+<div class="cal-cell p-1 flex flex-col overflow-hidden">
+<span class="text-[12px] font-medium text-slate-200 self-center">8</span>
+<div class="mt-1 flex flex-col gap-1 overflow-y-auto overflow-x-hidden">
+<div class="event-chip rounded px-1.5 py-0.5 text-[10px] font-medium bg-amber-950/70 text-amber-200 border border-amber-500/30 flex items-center gap-1 leading-tight">
+<svg class="w-2.5 h-2.5 shrink-0 text-amber-400" fill="currentColor" viewBox="0 0 16 16"><path d="M14 4.5l-8.5 8.5L1.5 9l1.4-1.4 2.6 2.6L12.6 3.1z"></path></svg>
+<span class="truncate">es. matematica</span>
+</div>
+<div class="event-chip rounded px-1.5 py-0.5 text-[10px] font-medium bg-fuchsia-950/60 text-fuchsia-300 border border-fuchsia-500/25 truncate">
+            allenamento
+          </div>
+</div>
+</div>
+<!-- Day 9 Set -->
+<div class="cal-cell p-1 flex flex-col overflow-hidden">
+<span class="text-[12px] font-medium text-slate-200 self-center">9</span>
+<div class="mt-1 flex flex-col gap-1 overflow-y-auto overflow-x-hidden">
+<div class="event-chip rounded px-1.5 py-0.5 text-[10px] font-medium bg-amber-950/70 text-amber-200 border border-amber-500/30 flex items-center gap-1 leading-tight">
+<svg class="w-2.5 h-2.5 shrink-0 text-amber-400" fill="currentColor" viewBox="0 0 16 16"><path d="M14 4.5l-8.5 8.5L1.5 9l1.4-1.4 2.6 2.6L12.6 3.1z"></path></svg>
+<span class="truncate">es. latino</span>
+</div>
+<div class="event-chip rounded px-1.5 py-0.5 text-[10px] font-medium bg-amber-950/70 text-amber-200 border border-amber-500/30 flex items-center gap-1 leading-tight">
+<svg class="w-2.5 h-2.5 shrink-0 text-amber-400" fill="currentColor" viewBox="0 0 16 16"><path d="M14 4.5l-8.5 8.5L1.5 9l1.4-1.4 2.6 2.6L12.6 3.1z"></path></svg>
+<span class="truncate">es. matematica</span>
+</div>
+</div>
+</div>
+<!-- Day 10 Set -->
+<div class="cal-cell p-1 flex flex-col overflow-hidden">
+<span class="text-[12px] font-medium text-slate-200 self-center">10</span>
+<div class="mt-1 flex flex-col gap-1 overflow-y-auto overflow-x-hidden">
+<div class="event-chip rounded px-1.5 py-0.5 text-[10px] font-medium bg-amber-950/70 text-amber-200 border border-amber-500/30 flex items-center gap-1 leading-tight">
+<svg class="w-2.5 h-2.5 shrink-0 text-amber-400" fill="currentColor" viewBox="0 0 16 16"><path d="M14 4.5l-8.5 8.5L1.5 9l1.4-1.4 2.6 2.6L12.6 3.1z"></path></svg>
+<span class="truncate">es. poesia</span>
+</div>
+<div class="event-chip rounded px-1.5 py-0.5 text-[10px] font-medium bg-amber-950/70 text-amber-200 border border-amber-500/30 flex items-center gap-1 leading-tight">
+<svg class="w-2.5 h-2.5 shrink-0 text-amber-400" fill="currentColor" viewBox="0 0 16 16"><path d="M14 4.5l-8.5 8.5L1.5 9l1.4-1.4 2.6 2.6L12.6 3.1z"></path></svg>
+<span class="truncate">es. grammatica</span>
+</div>
+<div class="event-chip rounded px-1.5 py-0.5 text-[10px] font-medium bg-orange-950/70 text-orange-200 border border-orange-500/30 flex items-center gap-1 leading-tight">
+<svg class="w-2.5 h-2.5 shrink-0 text-orange-400" fill="currentColor" viewBox="0 0 16 16"><path d="M14 4.5l-8.5 8.5L1.5 9l1.4-1.4 2.6 2.6L12.6 3.1z"></path></svg>
+<span class="truncate">ripetere</span>
+</div>
+<div class="event-chip rounded px-1.5 py-0.5 text-[10px] font-medium bg-emerald-950/70 text-emerald-300 border border-emerald-500/30 flex items-center gap-1 leading-tight">
+<svg class="w-2.5 h-2.5 shrink-0 text-emerald-400" fill="currentColor" viewBox="0 0 16 16"><path d="M14 4.5l-8.5 8.5L1.5 9l1.4-1.4 2.6 2.6L12.6 3.1z"></path></svg>
+<span class="truncate">studiare</span>
+</div>
+</div>
+</div>
+<!-- Day 11 Set -->
+<div class="cal-cell p-1 flex flex-col overflow-hidden">
+<span class="text-[12px] font-medium text-slate-200 self-center">11</span>
+<div class="mt-1 flex flex-col gap-1 overflow-y-auto overflow-x-hidden">
+<div class="event-chip rounded px-1.5 py-0.5 text-[10px] font-semibold bg-blue-900/70 text-blue-200 border border-blue-400/40 flex items-center gap-1 leading-tight">
+<svg class="w-2.5 h-2.5 shrink-0 text-blue-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8M4 16s4-1 8-1 8 1 8 1M2 21h20M7 8V5a2 2 0 1 1 4 0v3M13 8V5a2 2 0 1 1 4 0v3"></path></svg>
+<span class="truncate">Giovanni</span>
+</div>
+<div class="event-chip rounded px-1.5 py-0.5 text-[10px] font-medium bg-emerald-950/70 text-emerald-300 border border-emerald-500/30 flex items-center gap-1 leading-tight">
+<svg class="w-2.5 h-2.5 shrink-0 text-emerald-400" fill="currentColor" viewBox="0 0 16 16"><path d="M14 4.5l-8.5 8.5L1.5 9l1.4-1.4 2.6 2.6L12.6 3.1z"></path></svg>
+<span class="truncate">studiare</span>
+</div>
+<div class="event-chip rounded px-1.5 py-0.5 text-[10px] font-medium bg-emerald-950/70 text-emerald-300 border border-emerald-500/30 flex items-center gap-1 leading-tight">
+<svg class="w-2.5 h-2.5 shrink-0 text-emerald-400" fill="currentColor" viewBox="0 0 16 16"><path d="M14 4.5l-8.5 8.5L1.5 9l1.4-1.4 2.6 2.6L12.6 3.1z"></path></svg>
+<span class="truncate">studiare</span>
+</div>
+<div class="event-chip rounded px-1.5 py-0.5 text-[10px] font-medium bg-amber-950/70 text-amber-200 border border-amber-500/30 flex items-center gap-1 leading-tight">
+<svg class="w-2.5 h-2.5 shrink-0 text-amber-400" fill="currentColor" viewBox="0 0 16 16"><path d="M14 4.5l-8.5 8.5L1.5 9l1.4-1.4 2.6 2.6L12.6 3.1z"></path></svg>
+<span class="truncate">es. inglese</span>
+</div>
+</div>
+</div>
+<!-- Day 12 Set -->
+<div class="cal-cell p-1 flex flex-col overflow-hidden">
+<span class="text-[12px] font-medium text-slate-200 self-center">12</span>
+</div>
+<!-- Day 13 Set -->
+<div class="cal-cell p-1 flex flex-col overflow-hidden">
+<span class="text-[12px] font-medium text-slate-200 self-center">13</span>
+<div class="mt-1 flex flex-col gap-1 overflow-y-auto overflow-x-hidden">
+<div class="event-chip rounded px-1.5 py-0.5 text-[10px] font-medium bg-amber-950/70 text-amber-200 border border-amber-500/30 flex items-center gap-1 leading-tight">
+<svg class="w-2.5 h-2.5 shrink-0 text-amber-400" fill="currentColor" viewBox="0 0 16 16"><path d="M14 4.5l-8.5 8.5L1.5 9l1.4-1.4 2.6 2.6L12.6 3.1z"></path></svg>
+<span class="truncate">es. fisica</span>
+</div>
+<div class="event-chip rounded px-1.5 py-0.5 text-[10px] font-medium bg-amber-950/70 text-amber-200 border border-amber-500/30 flex items-center gap-1 leading-tight">
+<svg class="w-2.5 h-2.5 shrink-0 text-amber-400" fill="currentColor" viewBox="0 0 16 16"><path d="M14 4.5l-8.5 8.5L1.5 9l1.4-1.4 2.6 2.6L12.6 3.1z"></path></svg>
+<span class="truncate">es. inglese</span>
+</div>
+<div class="event-chip rounded px-1.5 py-0.5 text-[10px] font-medium bg-fuchsia-950/60 text-fuchsia-300 border border-fuchsia-500/25 truncate">
+            allenamento
+          </div>
+</div>
+</div>
+<!-- ================= ROW 3 (Sep 14 - Sep 20) ================= -->
+<!-- Day 14 Set -->
+<div class="cal-cell p-1 flex flex-col overflow-hidden">
+<span class="text-[12px] font-medium text-slate-200 self-center">14</span>
+<div class="mt-1 flex flex-col gap-1 overflow-y-auto overflow-x-hidden">
+<div class="event-chip rounded px-1.5 py-0.5 text-[10px] font-semibold bg-rose-950/70 text-rose-300 border border-rose-500/40 flex items-center gap-1 leading-tight">
+<svg class="w-2.5 h-2.5 shrink-0 text-rose-400" fill="currentColor" viewBox="0 0 16 16"><path d="M14 4.5l-8.5 8.5L1.5 9l1.4-1.4 2.6 2.6L12.6 3.1z"></path></svg>
+<span class="truncate">verifica</span>
+</div>
+<div class="event-chip rounded px-1.5 py-0.5 text-[10px] font-medium bg-amber-950/70 text-amber-200 border border-amber-500/30 flex items-center gap-1 leading-tight">
+<svg class="w-2.5 h-2.5 shrink-0 text-amber-400" fill="currentColor" viewBox="0 0 16 16"><path d="M14 4.5l-8.5 8.5L1.5 9l1.4-1.4 2.6 2.6L12.6 3.1z"></path></svg>
+<span class="truncate">es. latino</span>
+</div>
+</div>
+</div>
+<!-- Day 15 Set -->
+<div class="cal-cell p-1 flex flex-col overflow-hidden">
+<span class="text-[12px] font-medium text-slate-200 self-center">15</span>
+<div class="mt-1 flex flex-col gap-1 overflow-y-auto overflow-x-hidden">
+<div class="event-chip rounded px-1.5 py-0.5 text-[10px] font-medium bg-emerald-950/70 text-emerald-300 border border-emerald-500/30 flex items-center gap-1 leading-tight">
+<svg class="w-2.5 h-2.5 shrink-0 text-emerald-400" fill="currentColor" viewBox="0 0 16 16"><path d="M14 4.5l-8.5 8.5L1.5 9l1.4-1.4 2.6 2.6L12.6 3.1z"></path></svg>
+<span class="truncate">studiare</span>
+</div>
+<div class="event-chip rounded px-1.5 py-0.5 text-[10px] font-medium bg-emerald-950/70 text-emerald-300 border border-emerald-500/30 flex items-center gap-1 leading-tight">
+<svg class="w-2.5 h-2.5 shrink-0 text-emerald-400" fill="currentColor" viewBox="0 0 16 16"><path d="M14 4.5l-8.5 8.5L1.5 9l1.4-1.4 2.6 2.6L12.6 3.1z"></path></svg>
+<span class="truncate">studiare</span>
+</div>
+<div class="event-chip rounded px-1.5 py-0.5 text-[10px] font-medium bg-amber-950/70 text-amber-200 border border-amber-500/30 flex items-center gap-1 leading-tight">
+<svg class="w-2.5 h-2.5 shrink-0 text-amber-400" fill="currentColor" viewBox="0 0 16 16"><path d="M14 4.5l-8.5 8.5L1.5 9l1.4-1.4 2.6 2.6L12.6 3.1z"></path></svg>
+<span class="truncate">es. matematica</span>
+</div>
+<div class="event-chip rounded px-1.5 py-0.5 text-[10px] font-medium bg-fuchsia-950/60 text-fuchsia-300 border border-fuchsia-500/25 truncate">
+            allenamento
+          </div>
+</div>
+</div>
+<!-- Day 16 Set -->
+<div class="cal-cell p-1 flex flex-col overflow-hidden">
+<span class="text-[12px] font-medium text-slate-200 self-center">16</span>
+<div class="mt-1 flex flex-col gap-1 overflow-y-auto overflow-x-hidden">
+<div class="event-chip rounded px-1.5 py-0.5 text-[10px] font-medium bg-amber-950/70 text-amber-200 border border-amber-500/30 flex items-center gap-1 leading-tight">
+<svg class="w-2.5 h-2.5 shrink-0 text-amber-400" fill="currentColor" viewBox="0 0 16 16"><path d="M14 4.5l-8.5 8.5L1.5 9l1.4-1.4 2.6 2.6L12.6 3.1z"></path></svg>
+<span class="truncate">es. fisica</span>
+</div>
+<div class="event-chip rounded px-1.5 py-0.5 text-[10px] font-medium bg-amber-950/70 text-amber-200 border border-amber-500/30 flex items-center gap-1 leading-tight">
+<svg class="w-2.5 h-2.5 shrink-0 text-amber-400" fill="currentColor" viewBox="0 0 16 16"><path d="M14 4.5l-8.5 8.5L1.5 9l1.4-1.4 2.6 2.6L12.6 3.1z"></path></svg>
+<span class="truncate">es. matematica</span>
+</div>
+</div>
+</div>
+<!-- Day 17 Set -->
+<div class="cal-cell p-1 flex flex-col overflow-hidden">
+<span class="text-[12px] font-medium text-slate-200 self-center">17</span>
+<div class="mt-1 flex flex-col gap-1 overflow-y-auto overflow-x-hidden">
+<div class="event-chip rounded px-1.5 py-0.5 text-[10px] font-semibold bg-rose-950/70 text-rose-300 border border-rose-500/40 flex items-center gap-1 leading-tight">
+<svg class="w-2.5 h-2.5 shrink-0 text-rose-400" fill="currentColor" viewBox="0 0 16 16"><path d="M14 4.5l-8.5 8.5L1.5 9l1.4-1.4 2.6 2.6L12.6 3.1z"></path></svg>
+<span class="truncate">verifica</span>
+</div>
+<div class="event-chip rounded px-1.5 py-0.5 text-[10px] font-medium bg-emerald-950/70 text-emerald-300 border border-emerald-500/30 flex items-center gap-1 leading-tight">
+<svg class="w-2.5 h-2.5 shrink-0 text-emerald-400" fill="currentColor" viewBox="0 0 16 16"><path d="M14 4.5l-8.5 8.5L1.5 9l1.4-1.4 2.6 2.6L12.6 3.1z"></path></svg>
+<span class="truncate">studiare</span>
+</div>
+</div>
+</div>
+<!-- Day 18 Set -->
+<div class="cal-cell p-1 flex flex-col overflow-hidden">
+<span class="text-[12px] font-medium text-slate-200 self-center">18</span>
+<div class="mt-1 flex flex-col gap-1 overflow-y-auto overflow-x-hidden">
+<div class="event-chip rounded px-1.5 py-0.5 text-[10px] font-medium bg-amber-950/70 text-amber-200 border border-amber-500/30 flex items-center gap-1 leading-tight">
+<span class="w-2 h-2 rounded-[2px] border border-amber-400 shrink-0"></span>
+<span class="truncate">es. geografia</span>
+</div>
+<div class="event-chip rounded px-1.5 py-0.5 text-[10px] font-medium bg-orange-950/70 text-orange-200 border border-orange-500/30 flex items-center gap-1 leading-tight">
+<svg class="w-2.5 h-2.5 shrink-0 text-orange-400" fill="currentColor" viewBox="0 0 16 16"><path d="M14 4.5l-8.5 8.5L1.5 9l1.4-1.4 2.6 2.6L12.6 3.1z"></path></svg>
+<span class="truncate">ripetere</span>
+</div>
+<div class="event-chip rounded px-1.5 py-0.5 text-[10px] font-medium bg-emerald-950/70 text-emerald-300 border border-emerald-500/30 flex items-center gap-1 leading-tight">
+<svg class="w-2.5 h-2.5 shrink-0 text-emerald-400" fill="currentColor" viewBox="0 0 16 16"><path d="M14 4.5l-8.5 8.5L1.5 9l1.4-1.4 2.6 2.6L12.6 3.1z"></path></svg>
+<span class="truncate">studiare</span>
+</div>
+</div>
+</div>
+<!-- Day 19 Set -->
+<div class="cal-cell p-1 flex flex-col overflow-hidden">
+<span class="text-[12px] font-medium text-slate-200 self-center">19</span>
+<div class="mt-1 flex flex-col gap-1 overflow-y-auto overflow-x-hidden">
+<div class="event-chip rounded px-1.5 py-0.5 text-[10px] font-semibold bg-fuchsia-950/70 text-fuchsia-300 border border-fuchsia-500/35 truncate">
+            partita
+          </div>
+</div>
+</div>
+<!-- Day 20 Set -->
+<div class="cal-cell p-1 flex flex-col overflow-hidden">
+<span class="text-[12px] font-medium text-slate-200 self-center">20</span>
+<div class="mt-1 flex flex-col gap-1 overflow-y-auto overflow-x-hidden">
+<div class="event-chip rounded px-1.5 py-0.5 text-[10px] font-medium bg-fuchsia-950/60 text-fuchsia-300 border border-fuchsia-500/25 truncate">
+            allenamento
+          </div>
+</div>
+</div>
+<!-- ================= ROW 4 (Sep 21 - Sep 27) ================= -->
+<!-- Day 21 Set -->
+<div class="cal-cell p-1 flex flex-col overflow-hidden">
+<span class="text-[12px] font-medium text-slate-200 self-center">21</span>
+<div class="mt-1 flex flex-col gap-1 overflow-y-auto overflow-x-hidden">
+<div class="event-chip rounded px-1.5 py-0.5 text-[10px] font-medium bg-amber-950/70 text-amber-200 border border-amber-500/30 flex items-center gap-1 leading-tight">
+<svg class="w-2.5 h-2.5 shrink-0 text-amber-400" fill="currentColor" viewBox="0 0 16 16"><path d="M14 4.5l-8.5 8.5L1.5 9l1.4-1.4 2.6 2.6L12.6 3.1z"></path></svg>
+<span class="truncate">es. matematica</span>
+</div>
+</div>
+</div>
+<!-- Day 22 Set -->
+<div class="cal-cell p-1 flex flex-col overflow-hidden">
+<span class="text-[12px] font-medium text-slate-200 self-center">22</span>
+<div class="mt-1 flex flex-col gap-1 overflow-y-auto overflow-x-hidden">
+<div class="event-chip rounded px-1.5 py-0.5 text-[10px] font-medium bg-fuchsia-950/60 text-fuchsia-300 border border-fuchsia-500/25 truncate">
+            allenamento
+          </div>
+</div>
+</div>
+<!-- Day 23 Set -->
+<div class="cal-cell p-1 flex flex-col overflow-hidden">
+<span class="text-[12px] font-medium text-slate-200 self-center">23</span>
+<div class="mt-1 flex flex-col gap-1 overflow-y-auto overflow-x-hidden">
+<div class="event-chip rounded px-1.5 py-0.5 text-[10px] font-semibold bg-rose-950/70 text-rose-300 border border-rose-500/40 flex items-center gap-1 leading-tight">
+<svg class="w-2.5 h-2.5 shrink-0 text-rose-400" fill="currentColor" viewBox="0 0 16 16"><path d="M14 4.5l-8.5 8.5L1.5 9l1.4-1.4 2.6 2.6L12.6 3.1z"></path></svg>
+<span class="truncate">verifica</span>
+</div>
+<div class="event-chip rounded px-1.5 py-0.5 text-[10px] font-medium bg-teal-950/70 text-teal-300 border border-teal-500/30 flex items-center gap-1 leading-tight">
+<span class="w-2 h-2 rounded-[2px] border border-teal-400 shrink-0"></span>
+<span class="truncate">leggere</span>
+</div>
+</div>
+</div>
+<!-- Day 24 Set -->
+<div class="cal-cell p-1 flex flex-col overflow-hidden">
+<span class="text-[12px] font-medium text-slate-200 self-center">24</span>
+<div class="mt-1 flex flex-col gap-1 overflow-y-auto overflow-x-hidden">
+<div class="event-chip rounded px-1.5 py-0.5 text-[10px] font-medium bg-orange-950/70 text-orange-200 border border-orange-500/30 flex items-center gap-1 leading-tight">
+<svg class="w-2.5 h-2.5 shrink-0 text-orange-400" fill="currentColor" viewBox="0 0 16 16"><path d="M14 4.5l-8.5 8.5L1.5 9l1.4-1.4 2.6 2.6L12.6 3.1z"></path></svg>
+<span class="truncate">ripetere</span>
+</div>
+<div class="event-chip rounded px-1.5 py-0.5 text-[10px] font-medium bg-emerald-950/70 text-emerald-300 border border-emerald-500/30 flex items-center gap-1 leading-tight">
+<svg class="w-2.5 h-2.5 shrink-0 text-emerald-400" fill="currentColor" viewBox="0 0 16 16"><path d="M14 4.5l-8.5 8.5L1.5 9l1.4-1.4 2.6 2.6L12.6 3.1z"></path></svg>
+<span class="truncate">studiare</span>
+</div>
+<div class="event-chip rounded px-1.5 py-0.5 text-[10px] font-semibold bg-fuchsia-950/70 text-fuchsia-300 border border-fuchsia-500/35 truncate">
+            partita
+          </div>
+</div>
+</div>
+<!-- Day 25 Set -->
+<div class="cal-cell p-1 flex flex-col overflow-hidden">
+<span class="text-[12px] font-medium text-slate-200 self-center">25</span>
+<div class="mt-1 flex flex-col gap-1 overflow-y-auto overflow-x-hidden">
+<div class="event-chip rounded px-1.5 py-0.5 text-[10px] font-medium bg-slate-800/80 text-slate-300 border border-slate-600/30 truncate">
+            casa
+          </div>
+</div>
+</div>
+<!-- Day 26 Set -->
+<div class="cal-cell p-1 flex flex-col overflow-hidden">
+<span class="text-[12px] font-medium text-slate-200 self-center">26</span>
+</div>
+<!-- Day 27 Set -->
+<div class="cal-cell p-1 flex flex-col overflow-hidden">
+<span class="text-[12px] font-medium text-slate-200 self-center">27</span>
+<div class="mt-1 flex flex-col gap-1 overflow-y-auto overflow-x-hidden">
+<div class="event-chip rounded px-1.5 py-0.5 text-[10px] font-medium bg-amber-950/70 text-amber-200 border border-amber-500/30 flex items-center gap-1 leading-tight">
+<svg class="w-2.5 h-2.5 shrink-0 text-amber-400" fill="currentColor" viewBox="0 0 16 16"><path d="M14 4.5l-8.5 8.5L1.5 9l1.4-1.4 2.6 2.6L12.6 3.1z"></path></svg>
+<span class="truncate">es. inglese</span>
+</div>
+<div class="event-chip rounded px-1.5 py-0.5 text-[10px] font-medium bg-fuchsia-950/60 text-fuchsia-300 border border-fuchsia-500/25 truncate">
+            allenamento
+          </div>
+</div>
+</div>
+<!-- ================= ROW 5 (Sep 28 - Oct 4) ================= -->
+<!-- Day 28 Set -->
+<div class="cal-cell p-1 flex flex-col overflow-hidden">
+<span class="text-[12px] font-medium text-slate-200 self-center">28</span>
+</div>
+<!-- Day 29 Set -->
+<div class="cal-cell p-1 flex flex-col overflow-hidden">
+<span class="text-[12px] font-medium text-slate-200 self-center">29</span>
+<div class="mt-1 flex flex-col gap-1 overflow-y-auto overflow-x-hidden">
+<div class="event-chip rounded px-1.5 py-0.5 text-[10px] font-semibold bg-rose-950/70 text-rose-300 border border-rose-500/40 flex items-center gap-1 leading-tight">
+<svg class="w-2.5 h-2.5 shrink-0 text-rose-400" fill="currentColor" viewBox="0 0 16 16"><path d="M14 4.5l-8.5 8.5L1.5 9l1.4-1.4 2.6 2.6L12.6 3.1z"></path></svg>
+<span class="truncate">verifica</span>
+</div>
+<div class="event-chip rounded px-1.5 py-0.5 text-[10px] font-medium bg-emerald-950/70 text-emerald-300 border border-emerald-500/30 flex items-center gap-1 leading-tight">
+<svg class="w-2.5 h-2.5 shrink-0 text-emerald-400" fill="currentColor" viewBox="0 0 16 16"><path d="M14 4.5l-8.5 8.5L1.5 9l1.4-1.4 2.6 2.6L12.6 3.1z"></path></svg>
+<span class="truncate">presentazione</span>
+</div>
+<div class="event-chip rounded px-1.5 py-0.5 text-[10px] font-medium bg-fuchsia-950/60 text-fuchsia-300 border border-fuchsia-500/25 truncate">
+            allenamento
+          </div>
+</div>
+</div>
+<!-- Day 30 Set -->
+<div class="cal-cell p-1 flex flex-col overflow-hidden">
+<span class="text-[12px] font-medium text-slate-200 self-center">30</span>
+</div>
+<!-- Day 1 Ott -->
+<div class="cal-cell p-1 flex flex-col bg-white/[0.015] overflow-hidden">
+<span class="text-[12px] font-medium text-slate-500 self-center">1</span>
+<div class="mt-1 flex flex-col gap-1 overflow-y-auto overflow-x-hidden">
+<div class="event-chip rounded px-1.5 py-0.5 text-[10px] font-medium bg-slate-800/80 text-slate-300 border border-slate-600/30 truncate">
+            casa
+          </div>
+</div>
+</div>
+<!-- Day 2 Ott -->
+<div class="cal-cell p-1 flex flex-col bg-white/[0.015] overflow-hidden">
+<span class="text-[12px] font-medium text-slate-500 self-center">2</span>
+</div>
+<!-- Day 3 Ott -->
+<div class="cal-cell p-1 flex flex-col bg-white/[0.015] overflow-hidden">
+<span class="text-[12px] font-medium text-slate-500 self-center">3</span>
+</div>
+<!-- Day 4 Ott -->
+<div class="cal-cell p-1 flex flex-col bg-white/[0.015] overflow-hidden">
+<span class="text-[12px] font-medium text-slate-500 self-center">4</span>
+</div>
+</div>
+</main>
+<!-- END: CalendarGrid -->
+<!-- BEGIN: FloatingActionButton -->
+<aside class="fixed right-5 bottom-20 z-40" data-purpose="floating-action-button">
+<button aria-label="Aggiungi Evento o Compito" class="w-14 h-14 rounded-full bg-gradient-to-tr from-sky-500 via-blue-500 to-cyan-400 text-white flex items-center justify-center fab-shadow active:scale-95 transition-transform" type="button">
+<svg class="w-8 h-8 drop-shadow" fill="none" stroke="currentColor" stroke-width="2.6" viewBox="0 0 24 24">
+<path d="M12 4.5v15m7.5-7.5h-15" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</button>
+</aside>
+<!-- END: FloatingActionButton -->
+<!-- BEGIN: BottomNavigationBar -->
+<nav class="fixed bottom-0 left-0 right-0 z-30 glass-nav px-5 pt-2 pb-5 select-none" data-purpose="bottom-bar">
+<div class="max-w-md mx-auto grid grid-cols-4 items-center text-center">
+<!-- Tab 1: Calendario (Active) -->
+<button class="flex flex-col items-center gap-1 group relative focus:outline-none" type="button">
+<!-- Top active neon highlight bar -->
+<span class="absolute -top-2 w-8 h-1 rounded-full bg-sky-400 shadow-[0_0_10px_rgba(56,189,248,0.9)]"></span>
+<svg class="w-6 h-6 text-sky-400 drop-shadow-[0_0_8px_rgba(56,189,248,0.4)]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<rect height="18" rx="2" ry="2" width="18" x="3" y="4"></rect>
+<line x1="16" x2="16" y1="2" y2="6"></line>
+<line x1="8" x2="8" y1="2" y2="6"></line>
+<line x1="3" x2="21" y1="10" y2="10"></line>
+</svg>
+<span class="text-[11px] font-semibold text-sky-400 tracking-tight">Calendario</span>
+</button>
+<!-- Tab 2: Compiti -->
+<button class="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-200 transition-colors focus:outline-none" type="button">
+<svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<path d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span class="text-[11px] font-medium tracking-tight">Compiti</span>
+</button>
+<!-- Tab 3: Note -->
+<button class="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-200 transition-colors focus:outline-none" type="button">
+<svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<path d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span class="text-[11px] font-medium tracking-tight">Note</span>
+</button>
+<!-- Tab 4: Il mio (Profile) -->
+<button class="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-200 transition-colors focus:outline-none" type="button">
+<svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<path d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span class="text-[11px] font-medium tracking-tight">Il mio</span>
+</button>
+</div>
+</nav>
+<!-- END: BottomNavigationBar -->
+</body></html>

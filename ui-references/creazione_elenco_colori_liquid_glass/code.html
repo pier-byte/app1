@@ -1,0 +1,228 @@
+<!DOCTYPE html><html class="dark" lang="it"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport">
+<title>Crea Nuovo Elenco di Attività</title>
+<!-- Tailwind CSS v3 with Forms & Container Queries -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            ios: {
+              bg: '#000000',
+              card: 'rgba(28, 28, 30, 0.75)',
+              dialog: 'rgba(38, 38, 42, 0.82)',
+              input: 'rgba(54, 54, 58, 0.65)',
+              accent: '#0A84FF',
+              textPrimary: '#FFFFFF',
+              textSecondary: '#8E8E93',
+              textTertiary: '#636366',
+              separator: 'rgba(84, 84, 88, 0.35)',
+            }
+          },
+          fontFamily: {
+            sans: [
+              '-apple-system',
+              'BlinkMacSystemFont',
+              '"SF Pro Display"',
+              '"SF Pro Text"',
+              'system-ui',
+              'sans-serif'
+            ],
+          },
+          boxShadow: {
+            'liquid-modal': '0 32px 64px -12px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.12) inset',
+            'inner-glow': 'inset 0 1px 1px 0 rgba(255, 255, 255, 0.18)',
+            'color-glow': '0 4px 14px -2px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.35)',
+            'swatch-selected': '0 0 0 2px #000000, 0 0 0 4px #0A84FF',
+          }
+        }
+      }
+    }
+  </script>
+<style data-purpose="liquid-glass-effects">
+    /* Background blurred simulation behind the modal */
+    .glass-backdrop {
+      background: radial-gradient(circle at 50% 30%, rgba(30, 41, 59, 0.45) 0%, rgba(0, 0, 0, 0.85) 100%);
+      backdrop-filter: blur(28px) saturate(180%);
+      -webkit-backdrop-filter: blur(28px) saturate(180%);
+    }
+
+    /* Luxury Liquid Glass Modal Surface */
+    .liquid-glass-surface {
+      background: linear-gradient(135deg, rgba(46, 46, 52, 0.88) 0%, rgba(26, 26, 30, 0.94) 100%);
+      backdrop-filter: blur(40px) saturate(190%);
+      -webkit-backdrop-filter: blur(40px) saturate(190%);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-top: 1px solid rgba(255, 255, 255, 0.28);
+    }
+
+    /* Special Rainbow Swatch Conic Gradient */
+    .rainbow-swatch {
+      background: conic-gradient(
+        from 0deg,
+        #FF3B30 0%,
+        #FF9500 16%,
+        #FFCC00 33%,
+        #34C759 50%,
+        #007AFF 66%,
+        #AF52DE 83%,
+        #FF2D55 100%
+      );
+    }
+
+    /* iOS smooth tap feel */
+    .ios-tap-active:active {
+      transform: scale(0.94);
+      opacity: 0.85;
+      transition: transform 0.12s cubic-bezier(0.2, 0, 0, 1), opacity 0.12s ease;
+    }
+  </style>
+</head>
+<body class="bg-black text-white antialiased font-sans flex items-center justify-center min-h-screen overflow-hidden select-none m-0 p-0">
+<!-- BEGIN: BlurredBackgroundScreen -->
+<!-- Underlying background representation of task creation screen -->
+<aside class="fixed inset-0 flex flex-col justify-between px-5 pt-12 pb-8 opacity-40 pointer-events-none select-none z-0">
+<!-- Top Bar Simulation -->
+<header class="flex justify-between items-center w-full">
+<div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
+<span class="text-white/60 text-lg font-light">✕</span>
+</div>
+<button class="px-5 py-1.5 rounded-full bg-ios-accent/40 text-ios-accent font-medium text-sm">
+        Salva
+      </button>
+</header>
+<!-- Underlying Content Placeholder Elements -->
+<div class="space-y-6 mt-8">
+<div class="h-6 w-48 bg-white/10 rounded-md"></div>
+<div class="h-4 w-28 bg-white/5 rounded-md"></div>
+<div class="h-14 w-full bg-white/5 rounded-2xl border border-white/5"></div>
+<div class="space-y-3 pt-4">
+<div class="h-12 w-full bg-white/5 rounded-xl"></div>
+<div class="h-12 w-full bg-white/5 rounded-xl"></div>
+<div class="h-12 w-full bg-white/5 rounded-xl"></div>
+</div>
+</div>
+<footer class="flex justify-end gap-6 text-sm text-white/30 pt-8">
+<span>Annulla</span>
+<span>Conferma</span>
+</footer>
+</aside>
+<!-- END: BlurredBackgroundScreen -->
+<!-- BEGIN: ModalOverlay -->
+<main class="fixed inset-0 z-50 flex items-center justify-center px-5 glass-backdrop">
+<!-- BEGIN: LiquidGlassModal -->
+<div aria-labelledby="modal-title" aria-modal="true" class="liquid-glass-surface w-full max-w-[364px] rounded-[28px] p-6 shadow-liquid-modal relative overflow-hidden transition-all transform animate-in fade-in zoom-in-95 duration-200" role="dialog">
+<!-- Top Subtle Edge Highlight Beam -->
+<div class="absolute top-0 left-6 right-6 h-[1px] bg-gradient-to-r from-transparent via-white/40 to-transparent pointer-events-none"></div>
+<!-- Modal Title -->
+<header class="mb-5">
+<h2 class="text-white font-semibold text-[19px] leading-tight tracking-tight" id="modal-title">
+          Crea un nuovo elenco di attività
+        </h2>
+</header>
+<!-- Input Field Section -->
+<section class="space-y-2 mb-6" data-purpose="list-name-input-group">
+<label class="block text-[13px] font-normal text-ios-textSecondary tracking-normal" for="list-name-input">
+          Nome dell'elenco attività
+        </label>
+<div class="relative flex items-center bg-ios-input rounded-[14px] border border-white/10 px-3.5 py-3 focus-within:border-ios-accent/80 focus-within:ring-1 focus-within:ring-ios-accent/50 shadow-inner-glow transition-all">
+<input class="w-full bg-transparent border-0 p-0 text-[15px] leading-normal text-white placeholder-ios-textTertiary focus:ring-0 focus:outline-none" id="list-name-input" maxlength="50" placeholder="Inserisci qui" type="text">
+<span class="text-[12px] text-ios-textTertiary font-medium ml-2 select-none pointer-events-none tracking-tight">
+            0/50
+          </span>
+</div>
+</section>
+<!-- Color Palette Grid Section -->
+<section class="space-y-3 mb-7" data-purpose="calendar-color-selection">
+<h3 class="text-[13px] font-normal text-ios-textSecondary tracking-normal">
+          Colore calendario
+        </h3>
+<!-- Swatch Grid: 6 columns x 4 rows -->
+<div aria-label="Seleziona colore calendario" class="grid grid-cols-6 gap-y-3.5 gap-x-2.5 justify-items-center items-center pt-1" role="radiogroup">
+<!-- Row 1 -->
+<!-- 1: Coral Red -->
+<button aria-label="Rosso corallo" class="ios-tap-active w-[38px] h-[38px] rounded-full bg-[#FF6259] shadow-color-glow border border-white/20 relative focus:outline-none" type="button"></button>
+<!-- 2: Amber Orange -->
+<button aria-label="Arancione ambra" class="ios-tap-active w-[38px] h-[38px] rounded-full bg-[#FF9A3E] shadow-color-glow border border-white/20 relative focus:outline-none" type="button"></button>
+<!-- 3: Yellow Gold -->
+<button aria-label="Giallo dorato" class="ios-tap-active w-[38px] h-[38px] rounded-full bg-[#FFD147] shadow-color-glow border border-white/20 relative focus:outline-none" type="button"></button>
+<!-- 4: Teal Mint -->
+<button aria-label="Verde acqua menta" class="ios-tap-active w-[38px] h-[38px] rounded-full bg-[#00C2A8] shadow-color-glow border border-white/20 relative focus:outline-none" type="button"></button>
+<!-- 5: Seafoam -->
+<button aria-label="Verde spuma di mare" class="ios-tap-active w-[38px] h-[38px] rounded-full bg-[#4BD9B3] shadow-color-glow border border-white/20 relative focus:outline-none" type="button"></button>
+<!-- 6: Sage Green -->
+<button aria-label="Verde salvia" class="ios-tap-active w-[38px] h-[38px] rounded-full bg-[#5FB87E] shadow-color-glow border border-white/20 relative focus:outline-none" type="button"></button>
+<!-- Row 2 -->
+<!-- 7: Lime Green -->
+<button aria-label="Verde lime" class="ios-tap-active w-[38px] h-[38px] rounded-full bg-[#95D963] shadow-color-glow border border-white/20 relative focus:outline-none" type="button"></button>
+<!-- 8: Electric Blue -->
+<button aria-label="Blu elettrico" class="ios-tap-active w-[38px] h-[38px] rounded-full bg-[#2986FF] shadow-color-glow border border-white/20 relative focus:outline-none" type="button"></button>
+<!-- 9: Sky Blue -->
+<button aria-label="Azzurro cielo" class="ios-tap-active w-[38px] h-[38px] rounded-full bg-[#529FF6] shadow-color-glow border border-white/20 relative focus:outline-none" type="button"></button>
+<!-- 10: Berry Magenta -->
+<button aria-label="Magenta bacca" class="ios-tap-active w-[38px] h-[38px] rounded-full bg-[#CE2D76] shadow-color-glow border border-white/20 relative focus:outline-none" type="button"></button>
+<!-- 11: Electric Purple -->
+<button aria-label="Viola elettrico" class="ios-tap-active w-[38px] h-[38px] rounded-full bg-[#8A2BE2] shadow-color-glow border border-white/20 relative focus:outline-none" type="button"></button>
+<!-- 12: Deep Lavender Purple -->
+<button aria-label="Lavanda scuro" class="ios-tap-active w-[38px] h-[38px] rounded-full bg-[#7544BE] shadow-color-glow border border-white/20 relative focus:outline-none" type="button"></button>
+<!-- Row 3 -->
+<!-- 13: Selected Indigo/Periwinkle with Checkmark -->
+<button aria-checked="true" aria-label="Indaco pervinca selezionato" class="ios-tap-active w-[38px] h-[38px] rounded-full bg-[#575CE6] shadow-color-glow border-2 border-white flex items-center justify-center relative focus:outline-none ring-2 ring-white/50" type="button">
+<!-- White Checkmark Icon -->
+<svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.6" viewBox="0 0 24 24">
+<polyline points="20 6 9 17 4 12"></polyline>
+</svg>
+</button>
+<!-- 14: Bronze / Khaki -->
+<button aria-label="Bronzo cachi" class="ios-tap-active w-[38px] h-[38px] rounded-full bg-[#A89069] shadow-color-glow border border-white/20 relative focus:outline-none" type="button"></button>
+<!-- 15: Neutral Gray -->
+<button aria-label="Grigio neutro" class="ios-tap-active w-[38px] h-[38px] rounded-full bg-[#999999] shadow-color-glow border border-white/20 relative focus:outline-none" type="button"></button>
+<!-- 16: Slate Blue -->
+<button aria-label="Grigio ardesia bluastro" class="ios-tap-active w-[38px] h-[38px] rounded-full bg-[#6C8D9E] shadow-color-glow border border-white/20 relative focus:outline-none" type="button"></button>
+<!-- 17: Vivid Green -->
+<button aria-label="Verde vivido" class="ios-tap-active w-[38px] h-[38px] rounded-full bg-[#3FD767] shadow-color-glow border border-white/20 relative focus:outline-none" type="button"></button>
+<!-- 18: Vivid Azure -->
+<button aria-label="Azzurro vivido" class="ios-tap-active w-[38px] h-[38px] rounded-full bg-[#36A8FF] shadow-color-glow border border-white/20 relative focus:outline-none" type="button"></button>
+<!-- Row 4 -->
+<!-- 19: Sunset Coral -->
+<button aria-label="Corallo tramonto" class="ios-tap-active w-[38px] h-[38px] rounded-full bg-[#FF5B55] shadow-color-glow border border-white/20 relative focus:outline-none" type="button"></button>
+<!-- 20: Rainbow Gradient Wheel Swatch -->
+<button aria-label="Tavolozza arcobaleno personalizzata" class="ios-tap-active w-[38px] h-[38px] rounded-full rainbow-swatch shadow-color-glow border border-white/30 relative focus:outline-none" type="button"></button>
+<!-- Empty grid cells for balance -->
+<div class="w-[38px] h-[38px]"></div>
+<div class="w-[38px] h-[38px]"></div>
+<div class="w-[38px] h-[38px]"></div>
+<div class="w-[38px] h-[38px]"></div>
+</div>
+</section>
+<!-- Action Buttons Footer -->
+<footer class="flex items-center justify-end space-x-6 pt-2" data-purpose="dialog-actions">
+<!-- Cancel Action -->
+<button class="ios-tap-active text-[15px] font-medium text-ios-textSecondary hover:text-white transition-colors duration-150 px-2 py-1.5 focus:outline-none" type="button">
+          Annulla
+        </button>
+<!-- Create Action (Action Blue) -->
+<button class="ios-tap-active text-[15px] font-semibold text-ios-accent hover:text-[#479DFF] transition-colors duration-150 px-2 py-1.5 focus:outline-none" type="button">
+          Creare
+        </button>
+</footer>
+</div>
+<!-- END: LiquidGlassModal -->
+</main>
+<!-- END: ModalOverlay -->
+<!-- Interactive script for demo character counter and active swatch -->
+<script data-purpose="modal-interaction">
+    document.addEventListener('DOMContentLoaded', () => {
+      const input = document.getElementById('list-name-input');
+      const counter = input.nextElementSibling;
+
+      input.addEventListener('input', (e) => {
+        const length = e.target.value.length;
+        counter.textContent = `${length}/50`;
+      });
+    });
+  </script>
+</body></html>

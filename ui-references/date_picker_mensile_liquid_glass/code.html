@@ -1,0 +1,407 @@
+<!DOCTYPE html><html class="dark" lang="it" style="width: 390px; height: 844px; overflow: hidden; position: relative;"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Seleziona Data - Calendario Liquid Glass</title>
+<!-- Tailwind CSS v3 with Forms & Container Queries -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Configuration -->
+<script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            appleBlue: {
+              DEFAULT: '#0066cc',
+              light: '#2997ff',
+              dark: '#0051a8',
+            },
+            glass: {
+              surface: 'rgba(28, 28, 30, 0.82)',
+              border: 'rgba(255, 255, 255, 0.14)',
+              chip: 'rgba(255, 255, 255, 0.08)',
+              chipHover: 'rgba(255, 255, 255, 0.16)'
+            }
+          },
+          fontFamily: {
+            sans: [
+              '-apple-system',
+              'BlinkMacSystemFont',
+              '"SF Pro Text"',
+              '"SF Pro Display"',
+              'Helvetica Neue',
+              'Arial',
+              'sans-serif'
+            ],
+          },
+          boxShadow: {
+            'liquid-glow': '0 0 20px -2px rgba(41, 151, 255, 0.45)',
+            'glass-elevated': '0 24px 60px -10px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.12) inset',
+            'specular': 'inset 0 1px 1px 0 rgba(255, 255, 255, 0.3)',
+          }
+        }
+      }
+    }
+  </script>
+<!-- BEGIN: Custom CSS Styles -->
+<style data-purpose="liquid-glass-effects">
+    /* iOS Specular highlights and Liquid Glass aesthetics */
+    .liquid-specular-top {
+      position: relative;
+    }
+    .liquid-specular-top::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 15%;
+      right: 15%;
+      height: 1px;
+      background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0) 100%);
+      pointer-events: none;
+    }
+    
+    /* Smooth scrollbar hiding for horizontal chip list */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+<!-- END: Custom CSS Styles -->
+</head>
+<body class="bg-[#0e0e10] text-white antialiased font-sans flex items-center justify-center min-h-screen p-0 sm:p-4 selection:bg-appleBlue-light selection:text-white">
+<!-- BEGIN: PhoneFrameContainer -->
+<!-- Mobile canvas simulating iOS screen dimensions (390px x 844px) -->
+<div class="relative w-full max-w-[390px] h-[844px] max-h-screen bg-[#0e0e10] overflow-hidden sm:rounded-[48px] shadow-2xl flex flex-col border border-white/10" data-purpose="mobile-viewport">
+<!-- BEGIN: BackgroundAppLayer -->
+<!-- Represents the underlying task & calendar view, blurred with iOS scrim -->
+<div aria-hidden="true" class="absolute inset-0 select-none overflow-hidden z-0" data-purpose="blurred-app-background">
+<!-- Top Bar of background app -->
+<div class="px-6 pt-14 pb-4 flex items-center justify-between border-b border-white/5 opacity-40">
+<div class="flex items-center space-x-3">
+<div class="w-5 h-0.5 bg-white rounded-full"></div>
+<span class="text-lg font-semibold tracking-tight">set 2026</span>
+</div>
+<div class="flex items-center space-x-2">
+<span class="px-2 py-0.5 text-xs bg-amber-500/20 text-amber-300 rounded-full font-medium">PRO</span>
+<div class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-xs">💬</div>
+</div>
+</div>
+<!-- Blurred Calendar Grid Placeholder Mockup -->
+<div class="p-6 grid grid-cols-7 gap-y-8 text-center text-xs opacity-25">
+<span class="text-white/40 font-medium">lun</span>
+<span class="text-white/40 font-medium">mar</span>
+<span class="text-white/40 font-medium">mer</span>
+<span class="text-sky-400 font-medium">gio</span>
+<span class="text-white/40 font-medium">ven</span>
+<span class="text-white/40 font-medium">sab</span>
+<span class="text-white/40 font-medium">dom</span>
+<span class="text-white/20">31</span>
+<span class="">1</span>
+<span class="">2</span>
+<span class="text-sky-400 font-bold">3</span>
+<span class="">4</span>
+<span class="">5</span>
+<span class="">6</span>
+<span class="">7</span>
+<span class="">8</span>
+<span class="">9</span>
+<span class="">10</span>
+<span class="">11</span>
+<span class="">12</span>
+<span class="">13</span>
+<span class="">14</span>
+<span class="">15</span>
+<span class="">16</span>
+<span class="">17</span>
+<span class="">18</span>
+<span class="">19</span>
+<span class="">20</span>
+<span class="">21</span>
+<span class="">22</span>
+<span class="">23</span>
+<span class="">24</span>
+<span class="">25</span>
+<span class="">26</span>
+<span class="">27</span>
+</div>
+<!-- Floating Action Button in background -->
+<div class="absolute bottom-24 right-6 w-14 h-14 rounded-full bg-sky-500 flex items-center justify-center text-2xl font-light text-white opacity-40">
+        +
+      </div>
+<!-- Blurred Bottom Tab Bar -->
+<div class="absolute bottom-0 inset-x-0 h-20 border-t border-white/5 bg-[#121214] flex justify-around items-center px-4 opacity-40">
+<div class="flex flex-col items-center gap-1">
+<div class="w-5 h-5 rounded bg-white/40"></div>
+<span class="text-[10px]">Calendario</span>
+</div>
+<div class="flex flex-col items-center gap-1">
+<div class="w-5 h-5 rounded bg-white/20"></div>
+<span class="text-[10px]">Compiti</span>
+</div>
+<div class="flex flex-col items-center gap-1">
+<div class="w-5 h-5 rounded bg-white/20"></div>
+<span class="text-[10px]">Note</span>
+</div>
+<div class="flex flex-col items-center gap-1">
+<div class="w-5 h-5 rounded bg-white/20"></div>
+<span class="text-[10px]">Il mio</span>
+</div>
+</div>
+</div>
+<!-- END: BackgroundAppLayer -->
+<!-- BEGIN: GlassOverlayBackdrop -->
+<!-- Heavy iOS scrim backdrop with glassmorphism blur -->
+<div class="absolute inset-0 bg-black/65 backdrop-blur-[28px] transition-all z-10" data-purpose="modal-scrim"></div>
+<!-- END: GlassOverlayBackdrop -->
+<!-- BEGIN: iOSStatusBar -->
+<header class="relative z-30 pt-3 px-7 flex justify-between items-center text-xs tracking-tight font-medium text-white/90 shrink-0" data-purpose="ios-status-bar">
+<!-- Time -->
+<time class="font-semibold text-[15px]">12:20</time>
+<!-- Hardware / Connectivity Indicators -->
+<div class="flex items-center space-x-2">
+<!-- Cellular Bars -->
+<svg class="w-4 h-3.5 fill-current" viewBox="0 0 17 12">
+<rect height="3" rx="0.5" width="2.5" x="0" y="9"></rect>
+<rect height="6" rx="0.5" width="2.5" x="4.5" y="6"></rect>
+<rect height="9" rx="0.5" width="2.5" x="9" y="3"></rect>
+<rect height="12" rx="0.5" width="2.5" x="13.5" y="0"></rect>
+</svg>
+<!-- Wi-Fi Icon -->
+<svg class="w-4 h-3.5 fill-current" viewBox="0 0 16 12">
+<path d="M8 9.5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Zm-3.5-3a5 5 0 0 1 7 0 .8.8 0 0 1-1.1 1.1 3.5 3.5 0 0 0-4.8 0 .8.8 0 1 1-1.1-1.1Zm-3-3a9.2 9.2 0 0 1 13 0 .8.8 0 0 1-1.1 1.1 7.7 7.7 0 0 0-10.8 0 .8.8 0 0 1-1.1-1.1Z"></path>
+</svg>
+<!-- Battery Pill -->
+<div class="flex items-center">
+<div class="w-6 h-3 border border-white/80 rounded-md p-0.5 flex items-center">
+<div class="h-full bg-white rounded-sm w-[88%]"></div>
+</div>
+<div class="w-0.5 h-1 bg-white/80 rounded-r-sm ml-[1px]"></div>
+</div>
+</div>
+</header>
+<!-- END: iOSStatusBar -->
+<!-- BEGIN: MainContentModalWrapper -->
+<main class="relative z-20 flex-1 flex items-center justify-center px-4 py-2" data-purpose="dialog-container">
+<!-- BEGIN: LiquidGlassDialogCard -->
+<section aria-labelledby="modal-title" aria-modal="true" class="liquid-specular-top w-full max-w-[358px] bg-[#1c1c1e]/85 backdrop-blur-3xl border border-white/15 rounded-[28px] shadow-glass-elevated flex flex-col p-4 sm:p-5 relative overflow-hidden" data-purpose="liquid-glass-modal" role="dialog">
+<!-- Top subtle inner radial reflection -->
+<div class="absolute -top-24 left-1/2 -translate-x-1/2 w-64 h-32 bg-white/5 rounded-full blur-2xl pointer-events-none"></div>
+<!-- Header: Title & Close/Minimize cue -->
+<div class="flex items-center justify-between pb-3 border-b border-white/[0.08]">
+<div class="flex items-center space-x-2">
+<!-- Calendar Icon Chip -->
+<div class="w-7 h-7 rounded-lg bg-appleBlue/20 border border-appleBlue/30 flex items-center justify-center text-appleBlue-light">
+<svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+<path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2Zm0 16H5V9h14v11Z"></path>
+</svg>
+</div>
+<h1 class="text-[19px] font-semibold tracking-tight text-white" id="modal-title">Seleziona data</h1>
+</div>
+<!-- Jump to "Oggi" button -->
+<button class="text-xs font-medium text-appleBlue-light hover:text-white px-2.5 py-1 rounded-full bg-appleBlue/15 hover:bg-appleBlue/30 border border-appleBlue/25 transition-colors focus:outline-none focus:ring-2 focus:ring-appleBlue-light/50" data-purpose="jump-to-today-action" type="button">
+            Oggi
+          </button>
+</div>
+<!-- Month Navigation Bar -->
+<div class="flex items-center justify-between pt-3.5 pb-2" data-purpose="month-navigation">
+<div class="flex items-baseline space-x-1.5 pl-1">
+<span class="text-base font-semibold text-white tracking-normal">Settembre</span>
+<span class="text-sm font-normal text-white/50">2026</span>
+</div>
+<!-- Chevron Navigation Controls -->
+<div class="flex items-center space-x-1.5">
+<button aria-label="Mese precedente" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/15 active:bg-white/20 border border-white/10 flex items-center justify-center text-white/80 transition-all focus:outline-none" type="button">
+<svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+<path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"></path>
+</svg>
+</button>
+<button aria-label="Mese successivo" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/15 active:bg-white/20 border border-white/10 flex items-center justify-center text-white/80 transition-all focus:outline-none" type="button">
+<svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+<path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"></path>
+</svg>
+</button>
+</div>
+</div>
+<!-- Days of Week Header -->
+<div class="grid grid-cols-7 gap-1 text-center py-2 border-b border-white/[0.06]" data-purpose="weekday-headers">
+<span class="text-[12px] font-medium text-white/40">Lun</span>
+<span class="text-[12px] font-medium text-white/40">Mar</span>
+<span class="text-[12px] font-medium text-white/40">Mer</span>
+<span class="text-[12px] font-medium text-white/40">Gio</span>
+<span class="text-[12px] font-medium text-white/40">Ven</span>
+<span class="text-[12px] font-medium text-white/40">Sab</span>
+<span class="text-[12px] font-medium text-white/40">Dom</span>
+</div>
+<!-- Calendar Month Matrix (7 columns x 5-6 rows) -->
+<div class="grid grid-cols-7 gap-y-1.5 gap-x-1 py-3 place-items-center text-[14px]" data-purpose="calendar-date-grid">
+<!-- Previous Month trailing days (Settembre 2026) -->
+<button class="w-9 h-9 flex flex-col items-center justify-center text-white/20 hover:text-white/40 rounded-full transition-colors" type="button">
+<span class="">28</span>
+</button>
+<button class="w-9 h-9 flex flex-col items-center justify-center text-white/20 hover:text-white/40 rounded-full transition-colors" type="button">
+<span class="">29</span>
+</button>
+<button class="w-9 h-9 flex flex-col items-center justify-center text-white/20 hover:text-white/40 rounded-full transition-colors" type="button">
+<span class="">30</span>
+</button>
+<!-- Current Month (Ottobre 2026) -->
+<!-- Day 1 -->
+<button class="w-9 h-9 flex flex-col items-center justify-center text-white/90 hover:bg-white/10 rounded-full transition-all relative" type="button">
+<span class="">1</span>
+
+</button>
+<!-- Day 2 -->
+<button class="w-9 h-9 flex flex-col items-center justify-center text-white/90 hover:bg-white/10 rounded-full transition-all" type="button">
+<span class="">2</span>
+</button>
+<!-- Day 3 -->
+<button class="w-9 h-9 flex flex-col items-center justify-center text-white/90 hover:bg-white/10 rounded-full transition-all relative" type="button">
+<span class="">3</span>
+
+</button>
+<!-- Day 4 -->
+<button class="w-9 h-9 flex flex-col items-center justify-center text-white/90 hover:bg-white/10 rounded-full transition-all" type="button">
+<span class="">4</span>
+</button>
+<!-- Day 5 -->
+<button class="w-9 h-9 flex flex-col items-center justify-center text-white/90 hover:bg-white/10 rounded-full transition-all" type="button">
+<span class="">5</span>
+</button>
+<!-- Day 6 -->
+<button class="w-9 h-9 flex flex-col items-center justify-center text-white/90 hover:bg-white/10 rounded-full transition-all" type="button">
+<span class="">6</span>
+</button>
+<!-- Day 7 -->
+<button class="w-9 h-9 flex flex-col items-center justify-center text-white/90 hover:bg-white/10 rounded-full transition-all" type="button">
+<span class="">7</span>
+</button>
+<!-- Day 8 -->
+<button class="w-9 h-9 flex flex-col items-center justify-center text-white/90 hover:bg-white/10 rounded-full transition-all" type="button">
+<span class="">8</span>
+</button>
+<!-- Day 9 -->
+<button class="w-9 h-9 flex flex-col items-center justify-center text-white/90 hover:bg-white/10 rounded-full transition-all" type="button">
+<span class="">9</span>
+</button>
+<!-- Day 10 -->
+<button class="w-9 h-9 flex flex-col items-center justify-center text-white/90 hover:bg-white/10 rounded-full transition-all" type="button">
+<span class="">10</span>
+</button>
+<!-- Day 11 -->
+<button class="w-9 h-9 flex flex-col items-center justify-center text-white/90 hover:bg-white/10 rounded-full transition-all" type="button">
+<span class="">11</span>
+</button>
+<!-- Day 12 (Today's Indicator with subtle Apple Blue ring) -->
+<button class="w-9 h-9 flex flex-col items-center justify-center text-appleBlue-light font-medium rounded-full ring-1 ring-appleBlue-light/70 bg-appleBlue/10 hover:bg-appleBlue/20 transition-all relative" type="button">
+<span class="">12</span>
+
+</button>
+<!-- Day 13 -->
+<button class="w-9 h-9 flex flex-col items-center justify-center text-white/90 hover:bg-white/10 rounded-full transition-all" type="button">
+<span class="">13</span>
+</button>
+<!-- Day 14 -->
+<button class="w-9 h-9 flex flex-col items-center justify-center text-white/90 hover:bg-white/10 rounded-full transition-all" type="button">
+<span class="">14</span>
+</button>
+<!-- Day 15 (Selected Day: Glowing Apple Action Blue Gradient) -->
+<button class="w-9 h-9 flex flex-col items-center justify-center text-white/90 hover:bg-white/10 rounded-full transition-all" type="button"><span class="">15</span></button>
+<!-- Day 16 -->
+<button class="w-9 h-9 flex flex-col items-center justify-center text-white/90 hover:bg-white/10 rounded-full transition-all relative" type="button">
+<span class="">16</span>
+
+</button>
+<!-- Day 17 -->
+<button class="w-9 h-9 flex flex-col items-center justify-center text-white/90 hover:bg-white/10 rounded-full transition-all" type="button">
+<span class="">17</span>
+</button>
+<!-- Day 18 -->
+<button class="w-9 h-9 flex flex-col items-center justify-center text-white/90 hover:bg-white/10 rounded-full transition-all" type="button">
+<span class="">18</span>
+</button>
+<!-- Day 19 -->
+<button class="w-9 h-9 flex flex-col items-center justify-center text-white/90 hover:bg-white/10 rounded-full transition-all" type="button">
+<span class="">19</span>
+</button>
+<!-- Day 20 -->
+<button class="w-9 h-9 flex flex-col items-center justify-center text-white/90 hover:bg-white/10 rounded-full transition-all" type="button">
+<span class="">20</span>
+</button>
+<!-- Day 21 -->
+<button class="w-9 h-9 flex flex-col items-center justify-center text-white/90 hover:bg-white/10 rounded-full transition-all" type="button">
+<span class="">21</span>
+</button>
+<!-- Day 22 -->
+<button class="w-9 h-9 flex flex-col items-center justify-center text-white/90 hover:bg-white/10 rounded-full transition-all" type="button">
+<span class="">22</span>
+</button>
+<!-- Day 23 -->
+<button class="w-9 h-9 flex flex-col items-center justify-center text-white/90 hover:bg-white/10 rounded-full transition-all relative" type="button">
+<span class="">23</span>
+
+</button>
+<!-- Day 24 -->
+<button class="w-9 h-9 flex flex-col items-center justify-center text-white/90 hover:bg-white/10 rounded-full transition-all" type="button">
+<span class="">24</span>
+</button>
+<!-- Day 25 -->
+<button class="w-9 h-9 flex flex-col items-center justify-center text-white/90 hover:bg-white/10 rounded-full transition-all" type="button">
+<span class="">25</span>
+</button>
+<!-- Day 26 -->
+<button class="w-9 h-9 flex flex-col items-center justify-center text-white/90 hover:bg-white/10 rounded-full transition-all" type="button">
+<span class="">26</span>
+</button>
+<!-- Day 27 -->
+<button class="w-9 h-9 flex flex-col items-center justify-center text-white/90 hover:bg-white/10 rounded-full transition-all" type="button">
+<span class="">27</span>
+</button>
+<!-- Day 28 -->
+<button class="w-9 h-9 flex flex-col items-center justify-center text-white/90 hover:bg-white/10 rounded-full transition-all" type="button">
+<span class="">28</span>
+</button>
+<!-- Day 29 -->
+<button class="w-9 h-9 flex flex-col items-center justify-center text-white/90 hover:bg-white/10 rounded-full transition-all" type="button">
+<span class="">29</span>
+</button>
+<!-- Day 30 -->
+<button class="w-9 h-9 flex flex-col items-center justify-center text-white/90 hover:bg-white/10 rounded-full transition-all" type="button">
+<span class="">30</span>
+</button>
+<!-- Day 31 -->
+<button class="w-9 h-9 flex flex-col items-center justify-center text-white/90 hover:bg-white/10 rounded-full transition-all" type="button">
+<span class="">31</span>
+</button>
+<!-- Next Month leading days (Novembre 2026) -->
+<button class="w-9 h-9 flex flex-col items-center justify-center text-white/20 hover:text-white/40 rounded-full transition-colors" type="button">
+<span class="">1</span>
+</button>
+</div>
+<!-- Quick Selection Filter Chips (Horizontal scrollable capsules) -->
+<div class="pt-2 pb-3 overflow-x-auto no-scrollbar flex items-center space-x-2 -mx-1 px-1" data-purpose="quick-date-presets"><button class="shrink-0 px-2.5 py-1 rounded-full text-[12px] font-medium bg-white/10 hover:bg-white/15 text-white/85 border border-white/10 transition-colors" type="button">Domani</button><button class="shrink-0 px-2.5 py-1 rounded-full text-[12px] font-medium bg-white/10 hover:bg-white/15 text-white/85 border border-white/10 transition-colors" type="button">Dopoomani</button><button class="shrink-0 px-2.5 py-1 rounded-full text-[12px] font-medium bg-white/10 hover:bg-white/15 text-white/85 border border-white/10 transition-colors" type="button">Prossima settimana</button></div>
+<!-- Modal Footer: Hairline divider & Actions -->
+<footer class="pt-3.5 border-t border-white/[0.08] flex items-center justify-between mt-1" data-purpose="dialog-actions">
+<!-- Cancel Button -->
+<button class="px-4 py-2 text-[15px] font-medium text-white/70 hover:text-white transition-colors focus:outline-none" data-purpose="cancel-button" type="button">
+            Annulla
+          </button>
+<!-- Confirm / Save CTA Button -->
+<button class="px-6 py-2.5 rounded-full text-[15px] font-semibold text-white bg-gradient-to-r from-appleBlue to-appleBlue-light hover:brightness-110 active:scale-[0.98] shadow-lg shadow-appleBlue/30 border border-white/20 transition-all focus:outline-none" data-purpose="confirm-button" type="button">Conferma</button>
+</footer>
+</section>
+<!-- END: LiquidGlassDialogCard -->
+</main>
+<!-- END: MainContentModalWrapper -->
+<!-- BEGIN: iOSHomeIndicator -->
+<footer class="relative z-30 pb-2 pt-1 flex justify-center shrink-0" data-purpose="home-indicator-container">
+<div class="w-32 h-1 bg-white/35 rounded-full"></div>
+</footer>
+<!-- END: iOSHomeIndicator -->
+</div>
+<!-- END: PhoneFrameContainer -->
+
+
+</body></html>

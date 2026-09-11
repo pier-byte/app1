@@ -1,0 +1,282 @@
+<!DOCTYPE html><html class="dark h-full" lang="it"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport">
+<title>Creazione Evento Rapida - Liquid Glass</title>
+<!-- Tailwind CSS v3 with Plugins -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              blue: '#007AFF',
+              accent: '#E02475',
+              glassBorder: 'rgba(255, 255, 255, 0.12)',
+              glassBg: 'rgba(28, 28, 30, 0.78)',
+              sheetBg: '#161618',
+              keyDark: '#2C2C2E',
+              keySpecial: '#1C1C1E',
+            }
+          },
+          fontFamily: {
+            sans: ['-apple-system', 'BlinkMacSystemFont', '"SF Pro Text"', '"SF Pro Display"', 'Inter', 'sans-serif'],
+          },
+          backdropBlur: {
+            xs: '2px',
+            xl: '24px',
+          }
+        }
+      }
+    }
+  </script>
+<!-- Phosphor Icons CDN for clean iOS-style outlines -->
+<script src="https://unpkg.com/@phosphor-icons/web"></script><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/regular/style.css"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/thin/style.css"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/light/style.css"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/bold/style.css"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/fill/style.css"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/duotone/style.css"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/regular/style.css"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/thin/style.css"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/light/style.css"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/bold/style.css"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/fill/style.css"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.2/src/duotone/style.css">
+<!-- BEGIN: Custom Glass & Keyboard Styles -->
+<style data-purpose="liquid-glass-effects">
+    .liquid-glass-sheet {
+      background: linear-gradient(180deg, rgba(34, 34, 38, 0.88) 0%, rgba(20, 20, 22, 0.94) 100%);
+      backdrop-filter: blur(40px) saturate(190%);
+      -webkit-backdrop-filter: blur(40px) saturate(190%);
+      box-shadow: 0 -12px 36px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.16);
+    }
+    
+    .liquid-glass-card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+
+    .key-press-effect {
+      box-shadow: 0 1px 0 rgba(0, 0, 0, 0.45);
+      transition: all 0.08s ease;
+    }
+    .key-press-effect:active {
+      transform: scale(0.96);
+      background-color: #3A3A3C;
+    }
+
+    /* Subtle cursor blink simulation */
+    @keyframes cursor-blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+    .active-cursor {
+      animation: cursor-blink 1s step-end infinite;
+    }
+  </style>
+<!-- END: Custom Glass & Keyboard Styles -->
+</head>
+<body class="bg-black text-white font-sans antialiased h-full overflow-hidden flex flex-col justify-between select-none">
+<!-- BEGIN: Dimmed Calendar Background Backdrop -->
+<!-- Mimics the darkened, blurred calendar view from the original screen -->
+<div class="fixed inset-0 z-0 bg-black/75 backdrop-blur-md pointer-events-none flex flex-col justify-start pt-3 px-5 opacity-40">
+<!-- Top Bar Simulation -->
+<div class="flex items-center justify-between py-2 text-zinc-400">
+<div class="flex items-center space-x-4">
+<i class="ph ph-list text-2xl"></i>
+<span class="text-xl font-medium tracking-tight text-white">ott 2026</span>
+</div>
+<div class="flex items-center space-x-3 text-sm">
+<span class="px-2.5 py-0.5 rounded-full border border-zinc-700 text-xs font-semibold text-zinc-400">PRO</span>
+<i class="ph ph-chat-text text-xl"></i>
+<i class="ph ph-dots-three-vertical text-xl"></i>
+</div>
+</div>
+<!-- Calendar Grid Simulation Header -->
+<div class="grid grid-cols-7 text-center text-xs font-medium text-zinc-500 mt-4 mb-2">
+<span>lun</span><span>mar</span><span>mer</span><span>gio</span><span>ven</span><span>sab</span><span>dom</span>
+</div>
+<div class="grid grid-cols-7 text-center text-lg font-normal text-zinc-600">
+<span>28</span><span>29</span><span>30</span><span class="text-white font-medium">1</span><span>2</span><span>3</span><span>4</span>
+</div>
+</div>
+<!-- END: Dimmed Calendar Background Backdrop -->
+<!-- Top transparent tap-dismiss area -->
+<div class="flex-1 w-full z-10" data-purpose="modal-backdrop-dismiss"></div>
+<!-- BEGIN: Quick Event Creation Bottom Sheet -->
+<section class="relative z-20 w-full liquid-glass-sheet rounded-t-[32px] pt-3 pb-2 transition-all" data-purpose="quick-event-sheet">
+<!-- Top Pill Grabber Bar -->
+<div class="flex justify-center mb-4">
+<div class="w-10 h-1 rounded-full bg-white/25 hover:bg-white/40 transition-colors"></div>
+</div>
+<div class="px-5 space-y-4">
+<!-- BEGIN: Event Title Input Row -->
+<div class="flex items-center gap-3.5 pt-1">
+<!-- Palette / Color Tag Button -->
+<button aria-label="Seleziona colore evento" class="w-9 h-9 rounded-full flex items-center justify-center bg-brand-accent/15 border border-brand-accent/30 text-brand-accent shadow-sm shrink-0 active:scale-95 transition-transform" type="button">
+<i class="ph-fill ph-palette text-xl"></i>
+</button>
+<!-- Simulated Input Box with Animated Blue Cursor -->
+<div class="relative flex-1 flex items-center py-2 text-lg">
+<span class="w-[2px] h-6 bg-brand-blue active-cursor mr-0.5 rounded-full"></span>
+<input autofocus="" class="w-full bg-transparent border-none p-0 text-lg font-normal placeholder-zinc-500 focus:outline-none focus:ring-0 text-white" placeholder="Inserisci qui l'evento" type="text" value="">
+</div>
+</div>
+<!-- END: Event Title Input Row -->
+<!-- BEGIN: All Day Toggle Row -->
+<div class="flex items-center justify-between py-1.5" data-purpose="toggle-all-day-row">
+<div class="flex items-center gap-4 text-zinc-300">
+<div class="w-6 flex justify-center text-zinc-400">
+<!-- 24h Clock Icon -->
+<i class="ph-bold ph-clock-countdown text-2xl"></i>
+</div>
+<span class="text-[17px] font-normal tracking-tight text-zinc-100">Tutto il giorno</span>
+</div>
+<!-- iOS Switch Toggle (Off state) -->
+<button aria-checked="false" class="w-12 h-7 bg-zinc-700/80 rounded-full relative p-0.5 transition-colors focus:outline-none cursor-pointer" role="switch" type="button">
+<div class="w-6 h-6 bg-white rounded-full shadow-md transform translate-x-0 transition-transform"></div>
+</button>
+</div>
+<!-- END: All Day Toggle Row -->
+<!-- BEGIN: Date & Time Picker Row -->
+<div class="flex items-center gap-3.5 py-1" data-purpose="time-range-row">
+<!-- Left Clock Icon -->
+<div class="w-6 flex justify-center text-zinc-400">
+<i class="ph ph-clock text-2xl"></i>
+</div>
+<!-- Start & End Date Time Badges with Arrow -->
+<div class="flex-1 flex items-center justify-between">
+<!-- Start Time Block -->
+<div class="flex flex-col cursor-pointer group">
+<span class="text-xs font-medium text-zinc-400 group-hover:text-zinc-300">gio 1 ott</span>
+<span class="text-xl font-semibold tracking-tight text-white">12:30</span>
+</div>
+<!-- Glass Arrow Divider -->
+<div class="px-3 text-zinc-500 flex items-center">
+<i class="ph-bold ph-caret-right text-lg"></i>
+</div>
+<!-- End Time Block -->
+<div class="flex flex-col cursor-pointer group text-left">
+<span class="text-xs font-medium text-zinc-400 group-hover:text-zinc-300">gio 1 ott</span>
+<span class="text-xl font-semibold tracking-tight text-white">13:30</span>
+</div>
+<div class="flex-1"></div>
+</div>
+</div>
+<!-- END: Date & Time Picker Row -->
+<!-- Divider with subtle glass glow -->
+<div class="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent my-2"></div>
+<!-- BEGIN: Bottom Actions Row -->
+<div class="flex items-center justify-between pb-3 pt-0.5">
+<!-- More Options Pill Button -->
+<button class="liquid-glass-card hover:bg-white/10 px-5 py-2.5 rounded-full flex items-center gap-2 text-zinc-200 text-sm font-medium tracking-wide active:scale-95 transition-all" type="button">
+<span>Più opzioni</span>
+<i class="ph-bold ph-caret-down text-xs text-zinc-400"></i>
+</button>
+<!-- Submit Event FAB (Action Blue Checkmark) -->
+<button aria-label="Salva evento" class="w-13 h-13 p-3.5 rounded-full bg-brand-blue hover:bg-blue-500 active:scale-95 text-white flex items-center justify-center shadow-lg shadow-blue-500/30 transition-transform" type="button">
+<i class="ph-bold ph-check text-2xl"></i>
+</button>
+</div>
+<!-- END: Bottom Actions Row -->
+</div>
+<!-- BEGIN: System Dark Virtual Keyboard -->
+<!-- Native-style on-screen keyboard mimicking Gboard/iOS Dark mode -->
+<div class="w-full bg-[#121214] pt-2 pb-6 px-1.5 border-t border-white/5 select-none" data-purpose="virtual-keyboard">
+<!-- Predictive Suggestion Bar -->
+<div class="flex items-center justify-around text-sm font-normal text-zinc-300 mb-2.5 py-1 px-4">
+<button class="w-8 flex justify-center text-zinc-400">
+<i class="ph-bold ph-caret-up text-sm"></i>
+</button>
+<span class="flex-1 text-center font-medium">ma</span>
+<div class="h-4 w-px bg-zinc-700"></div>
+<span class="flex-1 text-center font-medium">e</span>
+<div class="h-4 w-px bg-zinc-700"></div>
+<span class="flex-1 text-center font-medium">che</span>
+</div>
+<!-- Keyboard Rows Container -->
+<div class="flex flex-col gap-2 max-w-lg mx-auto text-white">
+<!-- Row 1: Numbers -->
+<div class="flex gap-1.5 justify-center">
+<span class="flex-1 h-11 rounded-md bg-brand-keyDark flex items-center justify-center text-lg font-medium key-press-effect">1</span>
+<span class="flex-1 h-11 rounded-md bg-brand-keyDark flex items-center justify-center text-lg font-medium key-press-effect">2</span>
+<span class="flex-1 h-11 rounded-md bg-brand-keyDark flex items-center justify-center text-lg font-medium key-press-effect">3</span>
+<span class="flex-1 h-11 rounded-md bg-brand-keyDark flex items-center justify-center text-lg font-medium key-press-effect">4</span>
+<span class="flex-1 h-11 rounded-md bg-brand-keyDark flex items-center justify-center text-lg font-medium key-press-effect">5</span>
+<span class="flex-1 h-11 rounded-md bg-brand-keyDark flex items-center justify-center text-lg font-medium key-press-effect">6</span>
+<span class="flex-1 h-11 rounded-md bg-brand-keyDark flex items-center justify-center text-lg font-medium key-press-effect">7</span>
+<span class="flex-1 h-11 rounded-md bg-brand-keyDark flex items-center justify-center text-lg font-medium key-press-effect">8</span>
+<span class="flex-1 h-11 rounded-md bg-brand-keyDark flex items-center justify-center text-lg font-medium key-press-effect">9</span>
+<span class="flex-1 h-11 rounded-md bg-brand-keyDark flex items-center justify-center text-lg font-medium key-press-effect">0</span>
+</div>
+<!-- Row 2: QWERTY -->
+<div class="flex gap-1.5 justify-center">
+<span class="flex-1 h-11 rounded-md bg-brand-keyDark flex flex-col items-center justify-center key-press-effect"><span class="text-xs text-zinc-500 leading-none">%</span><span class="text-base font-medium">q</span></span>
+<span class="flex-1 h-11 rounded-md bg-brand-keyDark flex flex-col items-center justify-center key-press-effect"><span class="text-xs text-zinc-500 leading-none">^</span><span class="text-base font-medium">w</span></span>
+<span class="flex-1 h-11 rounded-md bg-brand-keyDark flex flex-col items-center justify-center key-press-effect"><span class="text-xs text-zinc-500 leading-none">~</span><span class="text-base font-medium">e</span></span>
+<span class="flex-1 h-11 rounded-md bg-brand-keyDark flex flex-col items-center justify-center key-press-effect"><span class="text-xs text-zinc-500 leading-none">|</span><span class="text-base font-medium">r</span></span>
+<span class="flex-1 h-11 rounded-md bg-brand-keyDark flex flex-col items-center justify-center key-press-effect"><span class="text-xs text-zinc-500 leading-none">[</span><span class="text-base font-medium">t</span></span>
+<span class="flex-1 h-11 rounded-md bg-brand-keyDark flex flex-col items-center justify-center key-press-effect"><span class="text-xs text-zinc-500 leading-none">]</span><span class="text-base font-medium">y</span></span>
+<span class="flex-1 h-11 rounded-md bg-brand-keyDark flex flex-col items-center justify-center key-press-effect"><span class="text-xs text-zinc-500 leading-none">&lt;</span><span class="text-base font-medium">u</span></span>
+<span class="flex-1 h-11 rounded-md bg-brand-keyDark flex flex-col items-center justify-center key-press-effect"><span class="text-xs text-zinc-500 leading-none">&gt;</span><span class="text-base font-medium">i</span></span>
+<span class="flex-1 h-11 rounded-md bg-brand-keyDark flex flex-col items-center justify-center key-press-effect"><span class="text-xs text-zinc-500 leading-none">{</span><span class="text-base font-medium">o</span></span>
+<span class="flex-1 h-11 rounded-md bg-brand-keyDark flex flex-col items-center justify-center key-press-effect"><span class="text-xs text-zinc-500 leading-none">}</span><span class="text-base font-medium">p</span></span>
+</div>
+<!-- Row 3: ASDFGHJKL -->
+<div class="flex gap-1.5 justify-center px-2">
+<span class="flex-1 h-11 rounded-md bg-brand-keyDark flex flex-col items-center justify-center key-press-effect"><span class="text-xs text-zinc-500 leading-none">@</span><span class="text-base font-medium">a</span></span>
+<span class="flex-1 h-11 rounded-md bg-brand-keyDark flex flex-col items-center justify-center key-press-effect"><span class="text-xs text-zinc-500 leading-none">#</span><span class="text-base font-medium">s</span></span>
+<span class="flex-1 h-11 rounded-md bg-brand-keyDark flex flex-col items-center justify-center key-press-effect"><span class="text-xs text-zinc-500 leading-none">&amp;</span><span class="text-base font-medium">d</span></span>
+<span class="flex-1 h-11 rounded-md bg-brand-keyDark flex flex-col items-center justify-center key-press-effect"><span class="text-xs text-zinc-500 leading-none">*</span><span class="text-base font-medium">f</span></span>
+<span class="flex-1 h-11 rounded-md bg-brand-keyDark flex flex-col items-center justify-center key-press-effect"><span class="text-xs text-zinc-500 leading-none">-</span><span class="text-base font-medium">g</span></span>
+<span class="flex-1 h-11 rounded-md bg-brand-keyDark flex flex-col items-center justify-center key-press-effect"><span class="text-xs text-zinc-500 leading-none">+</span><span class="text-base font-medium">h</span></span>
+<span class="flex-1 h-11 rounded-md bg-brand-keyDark flex flex-col items-center justify-center key-press-effect"><span class="text-xs text-zinc-500 leading-none">=</span><span class="text-base font-medium">j</span></span>
+<span class="flex-1 h-11 rounded-md bg-brand-keyDark flex flex-col items-center justify-center key-press-effect"><span class="text-xs text-zinc-500 leading-none">(</span><span class="text-base font-medium">k</span></span>
+<span class="flex-1 h-11 rounded-md bg-brand-keyDark flex flex-col items-center justify-center key-press-effect"><span class="text-xs text-zinc-500 leading-none">)</span><span class="text-base font-medium">l</span></span>
+</div>
+<!-- Row 4: Shift, ZXCVBNM, Backspace -->
+<div class="flex gap-1.5 justify-center">
+<!-- Shift Key -->
+<span class="w-11 h-11 rounded-md bg-brand-keySpecial flex items-center justify-center key-press-effect text-zinc-300">
+<i class="ph-bold ph-arrow-fat-up text-lg"></i>
+</span>
+<span class="flex-1 h-11 rounded-md bg-brand-keyDark flex items-center justify-center text-base font-medium key-press-effect">z</span>
+<span class="flex-1 h-11 rounded-md bg-brand-keyDark flex items-center justify-center text-base font-medium key-press-effect">x</span>
+<span class="flex-1 h-11 rounded-md bg-brand-keyDark flex items-center justify-center text-base font-medium key-press-effect">c</span>
+<span class="flex-1 h-11 rounded-md bg-brand-keyDark flex items-center justify-center text-base font-medium key-press-effect">v</span>
+<span class="flex-1 h-11 rounded-md bg-brand-keyDark flex items-center justify-center text-base font-medium key-press-effect">b</span>
+<span class="flex-1 h-11 rounded-md bg-brand-keyDark flex items-center justify-center text-base font-medium key-press-effect">n</span>
+<span class="flex-1 h-11 rounded-md bg-brand-keyDark flex items-center justify-center text-base font-medium key-press-effect">m</span>
+<!-- Backspace Key -->
+<span class="w-11 h-11 rounded-md bg-brand-keySpecial flex items-center justify-center key-press-effect text-zinc-300">
+<i class="ph-bold ph-backspace text-xl"></i>
+</span>
+</div>
+<!-- Row 5: Numbers Mode, Emoji, Spacebar, Period, Enter -->
+<div class="flex gap-1.5 justify-center mt-0.5">
+<span class="w-12 h-11 rounded-md bg-brand-keySpecial flex items-center justify-center text-sm font-semibold key-press-effect">?123</span>
+<span class="w-10 h-11 rounded-md bg-brand-keySpecial flex items-center justify-center text-zinc-300 key-press-effect">
+<i class="ph ph-smiley text-xl"></i>
+</span>
+<span class="w-10 h-11 rounded-md bg-brand-keySpecial flex items-center justify-center text-zinc-300 key-press-effect">
+<i class="ph ph-microphone text-lg"></i>
+</span>
+<!-- Spacebar -->
+<span class="flex-1 h-11 rounded-md bg-brand-keyDark flex items-center justify-center text-xs text-zinc-500 font-medium tracking-wide key-press-effect">
+            italiano
+          </span>
+<span class="w-10 h-11 rounded-md bg-brand-keyDark flex flex-col items-center justify-center key-press-effect">
+<span class="text-[10px] text-zinc-500 leading-none">,!</span>
+<span class="text-base font-bold leading-none">.</span>
+</span>
+<!-- Enter Key -->
+<span class="w-12 h-11 rounded-md bg-brand-keySpecial flex items-center justify-center text-zinc-200 key-press-effect">
+<i class="ph-bold ph-arrow-elbow-down-left text-lg"></i>
+</span>
+</div>
+<!-- System Navigation Bar Indicator -->
+<div class="flex justify-between items-center px-4 pt-3 pb-1 text-zinc-500">
+<button class="p-1"><i class="ph-bold ph-caret-down text-lg"></i></button>
+<!-- Android/iOS Home Indicator Bar -->
+<div class="w-32 h-1 bg-white/40 rounded-full mx-auto"></div>
+<button class="p-1"><i class="ph-bold ph-dots-nine text-xl"></i></button>
+</div>
+</div>
+</div>
+<!-- END: System Dark Virtual Keyboard -->
+</section>
+<!-- END: Quick Event Creation Bottom Sheet -->
+</body></html>
