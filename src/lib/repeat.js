@@ -15,6 +15,92 @@ export function isoWeekday(date) {
   return getDay(date) === 0 ? 7 : getDay(date);
 }
 
+/** Numero massimo di istanze generate per una serie (protezione anti-loop). */
+export const MAX_SERIES_INSTANCES = 365;
+
+/** true se la regola di ripetizione è attiva (frequenza diversa da "none"). */
+export function hasRepeatRule(repeat) {
+  return !!repeat && !!repeat.frequency && repeat.frequency !== 'none';
+}
+
+/**
+ * Calcola tutte le date (YYYY-MM-DD) di una serie ricorrente, inclusa la data
+ * base come occorrenza #1. Usato per MATERIALIZZARE le istanze nel DB/stato:
+ * ogni data diventa un task reale, così serie e calendario restano coerenti.
+ *
+ * Regole:
+ * - endMode 'after' N → esattamente N istanze (base + N-1 successive)
+ * - endMode 'on' data → istanze fino a quella data (inclusa)
+ * - endMode 'never' → finestra di 365 giorni dalla base (modificando la serie
+ *   si rigenera la finestra)
+ * - mai più di `cap` istanze (default 365)
+ */
+export function computeOccurrenceDates(baseKey, repeat, options = {}) {
+  const cap = Math.min(Math.max(options.cap ?? MAX_SERIES_INSTANCES, 1), 1000);
+  const base = parseISO(baseKey);
+  if (Number.isNaN(base.getTime())) return [];
+  if (!hasRepeatRule(repeat)) return [baseKey];
+
+  const freq = repeat.frequency;
+  const endMode = repeat.endMode === 'after' || repeat.endMode === 'on' ? repeat.endMode : 'never';
+  const maxCount = endMode === 'after' ? Math.max(1, Math.floor(repeat.endAfter || 5)) : Infinity;
+  const endDate = endMode === 'on' && repeat.endDate ? repeat.endDate : null;
+  const windowEnd = endMode === 'never' ? toDateKey(addDays(base, MAX_SERIES_INSTANCES - 1)) : null;
+
+  // occorrenza #1 = sempre la data base (l'istanza principale della serie)
+  const out = [baseKey];
+  const accept = (key) => {
+    if (out.length >= cap) return 'stop';
+    if (out.length >= maxCount) return 'stop';
+    if (endDate && key > endDate) return 'stop';
+    if (windowEnd && key > windowEnd) return 'stop';
+    out.push(key);
+    return 'ok';
+  };
+
+  if (freq === 'monthly') {
+    // addMonths sulla base (niente deriva: 31 gen → 28 feb → 31 mar …)
+    for (let k = 1; k <= 1200; k++) {
+      if (accept(toDateKey(addMonths(base, k))) === 'stop') break;
+    }
+    return out;
+  }
+
+  const days = repeat.weekdays?.length ? repeat.weekdays : [isoWeekday(base)];
+  const matches = (d) => {
+    if (freq === 'daily') return true;
+    if (freq === 'weekdays') {
+      const wd = isoWeekday(d);
+      return wd >= 1 && wd <= 5;
+    }
+    if (freq === 'weekly') return days.includes(isoWeekday(d));
+    return false;
+  };
+
+  let cursor = addDays(base, 1);
+  for (;;) {
+    // guardia anti-loop: mai oltre ~3 anni dalla base
+    if (differenceInCalendarDays(cursor, base) > 366 * 3) break;
+    if (matches(cursor) && accept(toDateKey(cursor)) === 'stop') break;
+    cursor = addDays(cursor, 1);
+  }
+  return out;
+}
+
+/**
+ * Sposta i promemoria su un'altra data mantenendo l'ora locale
+ * (es. "09:00 del 7" → "09:00 dell'8") e azzera `notified`.
+ */
+export function shiftRemindersForDate(reminders, toKey) {
+  if (!reminders) return reminders;
+  const [y, m, d] = toKey.split('-').map(Number);
+  return reminders.map((r) => {
+    const dt = new Date(r.at);
+    if (Number.isNaN(dt.getTime())) return { ...r, notified: false };
+    dt.setFullYear(y, (m || 1) - 1, d || 1);
+    return { ...r, at: dt.toISOString(), notified: false };
+  });
+}
 
 const FREQ_LABELS = {
   none: 'Nessuno',
@@ -131,8 +217,34 @@ export function expandEventsForDate(events, dateKey) {
   return (events || []).filter((ev) => {
     if (!ev.date) return false;
     if (ev.date === dateKey) return true;
+    // Le serie materializzate sono già istanze reali: niente espansione
+    // (l'espansione resta solo per i task legacy creati prima della v1.4).
+    if (ev.materialized) return false;
+    if (!hasRepeatRule(ev.repeat)) return false;
     return occurrencesBetween(ev.date, target, target, ev.repeat).length > 0;
   });
+}
+
+/**
+ * Espande gli eventi su un intervallo di date → Map<dateKey, eventi[]>.
+ * Usato dalla griglia mensile (ogni giorno mostra le sue istanze).
+ */
+export function expandEventsForRange(events, startKey, endKey) {
+  const map = new Map();
+  const push = (key, ev) => {
+    if (!map.has(key)) map.set(key, []);
+    map.get(key).push(ev);
+  };
+  const from = parseISO(startKey);
+  const to = parseISO(endKey);
+  for (const ev of events || []) {
+    if (!ev.date) continue;
+    if (ev.date >= startKey && ev.date <= endKey) push(ev.date, ev);
+    if (ev.materialized || !hasRepeatRule(ev.repeat)) continue;
+    if (from > to) continue;
+    for (const key of occurrencesBetween(ev.date, from, to, ev.repeat)) push(key, ev);
+  }
+  return map;
 }
 
 /** Range di date base necessario per coprire le occorrenze nel range richiesto. */

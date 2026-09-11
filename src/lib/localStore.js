@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import { toDateKey, addDays, getMonday } from './dates';
+import { hasRepeatRule, computeOccurrenceDates, shiftRemindersForDate } from './repeat';
 import {
   DEFAULT_TASK_CATEGORIES,
   DEFAULT_ROUTINE_TEMPLATES,

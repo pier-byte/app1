@@ -15,6 +15,7 @@ function blank() {
     routineId: null,
     routineName: null,
     routineEmoji: null,
+    routineIcon: null,
     steps: [],
     currentIndex: 0,
     status: 'idle', // idle | running | paused | done
@@ -80,6 +81,7 @@ export const routineSession = {
       routineId: meta.routineId ?? null,
       routineName: meta.routineName ?? null,
       routineEmoji: meta.routineEmoji ?? null,
+      routineIcon: meta.routineIcon ?? null,
       startedAt: new Date().toISOString(),
       currentIndex: 0,
       status: 'running',

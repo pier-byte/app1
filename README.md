@@ -12,11 +12,21 @@ Design Apple Dark Mode, realtime con Convex DB, AI con Gemini 2.5 Flash, install
 - Persistenza sessione in `localStorage`, tasti freccia supportati su desktop
 
 ### 📅 Tab 1 — Calendario (home)
+- Vista **Mese fit-to-screen** (100dvh, niente scroll): pill colorate con stato check dentro ogni giorno, stile screenshot home
+- **Tap sul giorno → DaySheet** (~metà schermo): check/uncheck rapido, modifica titolo inline, cambio categoria al volo, aggiunta rapida, elimina singola/serie
+- Vista **Settimana** con strip + agenda con toggle bidirezionale; FAB → editor completo sulla data selezionata
 
 ### 🎓 Tab 2 — Compiti
 - Strip settimanale (Lun–Dom) + lista attività del giorno con categorie colorate e checkbox
 - **Editor completo stile iOS (screenshot 12)**: titolo/descrizione, scadenza, **tutto il giorno + orari**, **promemoria** (all'ora, 5/15/30 min prima, 1h/2h, giorno alle 09:00 → notifiche di sistema + banner in-app), **ripeti** (giornaliero, feriali, settimanale con giorni scelti, mensile + fine: mai / dopo N volte / in data), **elenco attività** (categorie personalizzabili) e **allegati** (foto, PDF, documenti)
+- **Serie ricorrenti materializzate**: al salvataggio ogni occorrenza diventa un task reale nel DB (max 365) con promemoria spostati sulla data giusta; il picker mostra l'anteprima "Verranno create N attività". Ogni istanza resta indipendente (check/sposta/modifica singola); modificare la regola sulla prima occorrenza rigenera la serie
+- Timer di studio 15:00–20:00, stima tempi e carico via Gemini 2.5 Flash
+- Menu contestuale: Modifica, Sposta a domani, Cambia data, Elimina, Elimina l'intera serie
 
+### 🔁 Tab 3 — Routine
+- **Più schede** (template) con **attività personalizzabili dentro**: nome, icona monocromatica, colore, step con nome/obiettivo minuti, ordine, aggiunta/rimozione; **eliminazione scheda** con conferma
+- **Vista panoramica "Tutte"**: griglia compatta di tutte le schede (icona, n° attività, durata) con avvio diretto
+- **Icone vettoriali monocromatiche** (31 lucide, toni di grigio): 5 in primo piano + pulsante "+N" con libreria in modale blur; le vecchie emoji migrano in automatico
 - Timer a scorrimento (carousel con scroll-snap) che registra i tempi effettivi per scheda
 - Riepilogo con confronto tempi reali vs obiettivo e salvataggio automatico
 
@@ -33,6 +43,12 @@ Design Apple Dark Mode, realtime con Convex DB, AI con Gemini 2.5 Flash, install
 - Budget settimanale, log rapido spese, indicatori di soglia 🟢 <50% · 🟡 50–80% · 🔴 >80%
 
 ### 📱 UX mobile (Android/iOS)
+- Touch target ≥44px, stepper +/−, chip di scelta, picker data/ora **nativi del sistema** (tamburo iOS/Android, dark-mode, 16px/44px)
+- Input ≥16px per evitare lo zoom automatico iOS, safe-area per notch e gesture bar, layout in `dvh`
+
+### ⚡ Performance
+- **Code-splitting**: ogni tab è un chunk lazy (`React.lazy` + `Suspense`), editor compiti lazy con preload intelligente, vendor separati (react/charts/motion/convex/genai)
+- Prefetch delle altre tab quando il browser è inattivo; pre-bundle esplicito (`optimizeDeps`) per un `npm run dev` più veloce
 
 ## 🚀 Avvio rapido
 
@@ -62,7 +78,7 @@ Chiave gratuita su [aistudio.google.com/apikey](https://aistudio.google.com/apik
 ### Notifiche promemoria (iOS/Android)
 - Su **PWA** le notifiche locali programmate non esistono: l'app, quando è aperta, mostra notifica di sistema + banner in-app al momento del promemoria
 - Su **iOS** l'app deve essere installata nella home e il permesso notifiche concesso
-
+- Ogni istanza di una serie ricorrente ha i propri promemoria sulla data corretta
 
 ## ☁️ Deploy su Cloudflare Pages
 
@@ -93,7 +109,8 @@ src/
 │   ├── layout/      # AppShell, WeekStrip (calendario swipeable), BottomNav
 │   ├── ui/          # BottomSheet, Dialog, ContextMenu, FAB, EmptyState, SegmentedControl, Toggle
 │   ├── school/      # StudyTimerCard, TaskCard, TaskFormSheet (promemoria/ripeti/allegati), ReminderPicker, RepeatPicker, AttachmentList, LoadInsightCard
-
+│   ├── calendar/    # MonthGrid (fit-to-screen), DaySheet (gestione rapida giorno)
+│   ├── routine/     # RoutineCarousel, RoutineIcon, IconPicker
 │   ├── nutrition/   # AiMealInput, GoalPlannerDialog (BMR/TDEE/macro), WeeklyPlanTable, MetricsCharts
 │   ├── notes/       # NoteEditorSheet
 │   └── wallet/      # ExpenseFormSheet
@@ -107,5 +124,5 @@ scripts/             # generate-icons.mjs, smoke-test.mjs
 ## 🧪 Test
 
 ```bash
-
+node scripts/smoke-test.mjs   # rendering SSR pagine/componenti + ripetizioni + serie (23 test)
 ```
