@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format, parseISO } from 'date-fns';
 import { it } from 'date-fns/locale';
-import { Wallet, Settings2, Plus, Trash2, Receipt, Pencil } from 'lucide-react';
+import { Wallet, Settings2, Plus, Trash2, Receipt, Pencil, ChevronLeft } from 'lucide-react';
 import { useExpenses, useBudget } from '../hooks/useData';
 import FAB from '../components/ui/FAB';
 import Dialog from '../components/ui/Dialog';
@@ -17,7 +17,7 @@ const euro = (n) => `€ ${n.toFixed(2).replace('.', ',')}`;
  * Tab 4 — Wallet: budget settimanale, log rapido spese e
  * indicatori visivi di soglia (verde <50%, giallo 50–80%, rosso >80%).
  */
-export default function WalletPage({ selectedDate, weekDates }) {
+export default function WalletPage({ selectedDate, weekDates, onBack } = {}) {
   const dateKey = toDateKey(selectedDate);
   const weekStartKey = toDateKey(getWeekDates(selectedDate)[0]);
   const weekEndKey = toDateKey(getWeekDates(selectedDate)[6]);
@@ -62,9 +62,16 @@ export default function WalletPage({ selectedDate, weekDates }) {
     <div className="h-full overflow-y-auto scrollable px-4 pt-2 pb-32">
       {/* Header */}
       <div className="flex items-end justify-between mb-4">
-        <div>
-          <h1 className="text-[28px] font-semibold text-label tracking-tight leading-tight">Wallet</h1>
-          <p className="text-[13px] text-label-secondary">{getWeekLabel(getWeekDates(selectedDate))}</p>
+        <div className="flex items-center gap-2.5 min-w-0">
+          {onBack && (
+            <button onClick={onBack} aria-label="Torna al profilo" className="tap-clean shrink-0 w-9 h-9 grid place-items-center rounded-full bg-white/[0.08] border border-white/[0.08] text-label-secondary active:text-label">
+              <ChevronLeft size={20} />
+            </button>
+          )}
+          <div>
+            <h1 className="text-[28px] font-semibold text-label tracking-tight leading-tight">Wallet</h1>
+            <p className="text-[13px] text-label-secondary">{getWeekLabel(getWeekDates(selectedDate))}</p>
+          </div>
         </div>
         <button
           onClick={openBudgetDialog}

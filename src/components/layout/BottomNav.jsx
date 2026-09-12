@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { CalendarDays, ListChecks, Dumbbell, UtensilsCrossed, StickyNote, Wallet } from 'lucide-react';
+import { CalendarDays, ListChecks, Dumbbell, UtensilsCrossed, CircleUserRound } from 'lucide-react';
 import { cn } from '../../lib/cn';
 
 const tabs = [
@@ -7,8 +7,7 @@ const tabs = [
   { id:'scuola', label:'Compiti', Icon:ListChecks },
   { id:'routine', label:'Routine', Icon:Dumbbell },
   { id:'nutrizione', label:'Nutrizione', Icon:UtensilsCrossed },
-  { id:'note', label:'Note', Icon:StickyNote },
-  { id:'wallet', label:'Wallet', Icon:Wallet },
+  { id:'profilo', label:'Profilo', Icon:CircleUserRound },
 ];
 
 /**

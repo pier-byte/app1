@@ -152,6 +152,17 @@ export function useRoutine(dateKey) {
   return { data, isLoading: false, saveRoutine: localMutations.saveRoutine };
 }
 
+/** Sessioni di routine in un intervallo (dashboard Profilo). */
+export function useRoutinesBetween(startKey, endKey) {
+  if (HAS_CONVEX) {
+    const data = useQuery(api.routines.listBetween, { start: startKey, end: endKey });
+    return { data, isLoading: data === undefined };
+  }
+  const state = useLocalState();
+  const data = useMemo(() => state.routines.filter((r) => r.date >= startKey && r.date <= endKey), [state.routines, startKey, endKey]);
+  return { data, isLoading: false };
+}
+
 export function useRoutineTemplates() {
   if (HAS_CONVEX) {
     const raw = useQuery(api.routineTemplates.listAll, {});
@@ -219,6 +230,17 @@ export function useMeals(dateKey) {
     updateMeal: (id, patch) => localMutations.updateMeal({ id, ...patch }),
     removeMeal: (id) => localMutations.removeMeal({ id }),
   };
+}
+
+/** Pasti in un intervallo di date (dashboard Profilo). */
+export function useMealsBetween(startKey, endKey) {
+  if (HAS_CONVEX) {
+    const data = useQuery(api.meals.listBetween, { start: startKey, end: endKey });
+    return { data, isLoading: data === undefined };
+  }
+  const state = useLocalState();
+  const data = useMemo(() => state.meals.filter((m) => m.date >= startKey && m.date <= endKey), [state.meals, startKey, endKey]);
+  return { data, isLoading: false };
 }
 
 export function useMealPlan(weekStartKey) {

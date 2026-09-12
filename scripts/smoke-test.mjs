@@ -46,6 +46,7 @@ const pages = [
   ['NutritionPage', { selectedDate: new Date() }],
   ['NotesPage', {}],
   ['WalletPage', { selectedDate: new Date(), weekDates: [] }],
+  ['ProfilePage', { selectedDate: new Date() }],
 ];
 
 for (const [name, props] of pages) {

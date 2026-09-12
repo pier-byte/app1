@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { StickyNote, Search, Pin, ListTodo, FileText, CheckCircle2, Circle, Plus } from 'lucide-react';
+import { StickyNote, Search, Pin, ListTodo, FileText, CheckCircle2, Circle, Plus , ChevronLeft } from 'lucide-react';
 import { useNotes } from '../hooks/useData';
 import NoteEditorSheet from '../components/notes/NoteEditorSheet';
 import SegmentedControl from '../components/ui/SegmentedControl';
@@ -11,7 +11,7 @@ import { cn } from '../lib/cn';
  * Tab — Note: appunti rapidi e checklist (stile Notion), con pin, colori,
  * ricerca e modalità testo/to-do.
  */
-export default function NotesPage() {
+export default function NotesPage({ onBack } = {}) {
   const { data: notes, isLoading, createNote, updateNote, removeNote } = useNotes();
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState('all');
@@ -40,8 +40,17 @@ export default function NotesPage() {
   return (
     <div className="h-full overflow-y-auto scrollable px-4 pt-2 pb-32">
       <div className="mb-4">
-        <h1 className="text-[28px] font-semibold text-label tracking-tight leading-tight">Note</h1>
-        <p className="text-[13px] text-label-secondary">Appunti e to-do list veloci</p>
+        <div className="flex items-center gap-2.5">
+          {onBack && (
+            <button onClick={onBack} aria-label="Torna al profilo" className="tap-clean shrink-0 w-9 h-9 grid place-items-center rounded-full bg-white/[0.08] border border-white/[0.08] text-label-secondary active:text-label">
+              <ChevronLeft size={20} />
+            </button>
+          )}
+          <div className="min-w-0">
+            <h1 className="text-[28px] font-semibold text-label tracking-tight leading-tight">Note</h1>
+            <p className="text-[13px] text-label-secondary">Appunti e to-do list veloci</p>
+          </div>
+        </div>
       </div>
 
       {/* Ricerca */}

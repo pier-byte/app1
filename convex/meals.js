@@ -52,3 +52,13 @@ export const update = mutation({
     await ctx.db.patch(id, clean);
   },
 });
+
+/** Pasti in un intervallo di date (per la dashboard Profilo). */
+export const listBetween = query({
+  args: { start: v.string(), end: v.string() },
+  handler: async (ctx, { start, end }) =>
+    await ctx.db
+      .query("meals")
+      .withIndex("by_date", (q) => q.gte("date", start).lte("date", end))
+      .collect(),
+});

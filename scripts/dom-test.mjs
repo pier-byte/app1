@@ -351,6 +351,57 @@ try {
   report('Drum picker snap', false, err.message);
 }
 
+// ═══════════ PROFILO: FUNZIONI STATISTICHE PURE ═══════════
+try {
+  memStore.clear();
+  const stats = await vite.ssrLoadModule('/src/lib/stats.js');
+  const sbc = stats.studyByCategory([
+    { category: 'Studiare', categoryColor: '#30d158', actualMinutes: 90 },
+    { category: 'Esercizi', categoryColor: '#ffd60a', actualMinutes: 30 },
+    { category: 'Studiare', categoryColor: '#30d158', actualMinutes: 60 },
+    { category: 'Leggere', categoryColor: '#66d4cf', actualMinutes: 0 },
+  ]);
+  report('Profilo stats: studio per tipologia (180 min, 75% teoria)', sbc.totalMinutes === 180 && sbc.rows[0].name === 'Studiare' && sbc.rows[0].pct === 83 && sbc.rows.length === 2);
+  const ws = stats.workoutStats([
+    { steps: [{ targetMinutes: 30, actualSeconds: 1800, completed: true }], completedAt: '2026-09-12T10:00:00' },
+    { steps: [{ targetMinutes: 30, actualSeconds: 0, completed: false }], completedAt: null },
+  ], 7);
+  report('Profilo stats: allenamenti (1 completato, 1/sett, 30 min)', ws.completed === 1 && ws.total === 2 && ws.perWeek === 1 && ws.totalMinutes === 30);
+  const wa = stats.walletSummary([{ amount: 5.5 }, { amount: 2.2 }], 35);
+  report('Profilo stats: wallet (speso €7,70, residuo €27,30)', wa.spent === 7.7 && wa.remaining === 27.3 && wa.usedPct === 22);
+  const ad = stats.nutritionAdherence([
+    { date: '2026-09-08', calories: 1900 },
+    { date: '2026-09-09', calories: 2100 },
+    { date: '2026-09-10', calories: 800 },
+  ], 2000);
+  report('Profilo stats: aderenza ≥95% (2 giorni on target su 3)', ad.daysOnTarget === 2 && ad.daysTracked === 3 && ad.pct === 67 && ad.days[0].ok === true && ad.days[2].ok === false);
+} catch (err) {
+  report('Profilo: stats pure', false, err.message);
+}
+
+// ═══════════ PAGINA PROFILO: DASHBOARD + NAVIGAZIONE INTERNA ═══════════
+try {
+  memStore.clear();
+  localStorage.setItem('app1_nutrition_goals_v2', JSON.stringify({ calories: 2000, protein: 150, carbs: 200, fat: 70, source: 'macro' }));
+  const { default: ProfilePage } = await vite.ssrLoadModule('/src/pages/ProfilePage.jsx');
+  const c9 = window.document.createElement('div');
+  window.document.body.appendChild(c9);
+  const r9 = createRoot(c9);
+  flushSync(() => r9.render(React.createElement(ProfilePage, { selectedDate: new Date() })));
+  await sleep(150);
+  const text = c9.textContent;
+  report('Profilo: card accesso rapido Note e Wallet', text.includes('Profilo') && text.includes('note salvate') && text.includes('Budget sett.'));
+  report('Profilo: toggle Settimanale/Mensile presente', !![...c9.querySelectorAll('button')].find((b) => b.textContent === 'Settimanale') && !![...c9.querySelectorAll('button')].find((b) => b.textContent === 'Mensile'));
+  report('Profilo: 4 sezioni analytics', text.includes('Studio e attività') && text.includes('Allenamenti completati') && text.includes('Bilancio wallet') && text.includes('Aderenza alimentare'));
+  report('Profilo: ore studio + aderenza 95% nel contenuto', text.includes('accumulate nel periodo') && text.includes("95% dell'obiettivo"));
+  // Toggle → mensile: cambia il label del periodo
+  click([...c9.querySelectorAll('button')].find((b) => b.textContent === 'Mensile'));
+  await sleep(80);
+  report('Profilo: toggle mensile aggiorna il periodo', c9.textContent.includes('settembre 2026') || c9.textContent.includes('Settembre 2026'));
+} catch (err) {
+  report('Profilo: dashboard', false, err.message);
+}
+
 const passed = results.filter((r) => r[1]).length;
 console.log(`\n${passed}/${results.length} test passati`);
 await vite.close();

@@ -12,8 +12,8 @@ const CalendarPage = lazy(() => import('./pages/CalendarPage'));
 const SchoolPage = lazy(() => import('./pages/SchoolPage'));
 const RoutinePage = lazy(() => import('./pages/RoutinePage'));
 const NutritionPage = lazy(() => import('./pages/NutritionPage'));
-const NotesPage = lazy(() => import('./pages/NotesPage'));
-const WalletPage = lazy(() => import('./pages/WalletPage'));
+const ProfilePage = lazy(() => import('./pages/ProfilePage'));
+// Nota/Wallet ora sono viste interne della sezione Profilo (lazy lì dentro).
 import { startReminderEngine, notify, showInAppToast } from './lib/notifications';
 import { useExpandedTasks, useTasks } from './hooks/useData';
 import { toDateKey } from './lib/dates';
@@ -34,8 +34,7 @@ export default function App() {
     if (activeTab === 'scuola') return <SchoolPage key="scuola" {...pageProps} />;
     if (activeTab === 'routine') return <RoutinePage key="routine" {...pageProps} />;
     if (activeTab === 'nutrizione') return <NutritionPage key="nutrizione" {...pageProps} />;
-    if (activeTab === 'note') return <NotesPage key="note" />;
-    if (activeTab === 'wallet') return <WalletPage key="wallet" {...pageProps} />;
+    if (activeTab === 'profilo') return <ProfilePage key="profilo" {...pageProps} />;
     return null;
   }, [activeTab, nav.selectedDate, nav.weekDates, nav.weekLabel, nav.goToPrevWeek, nav.goToNextWeek, nav.goToToday, nav.selectDate, calendarMode]);
 
@@ -78,6 +77,8 @@ export default function App() {
       import('./pages/SchoolPage');
       import('./pages/RoutinePage');
       import('./pages/NutritionPage');
+      import('./pages/ProfilePage');
+      // viste interne Profilo
       import('./pages/NotesPage');
       import('./pages/WalletPage');
     };
