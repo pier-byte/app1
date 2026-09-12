@@ -29,7 +29,7 @@ function categoryIcon(name) {
  */
 export default function TaskCard({ task, onToggle, onOpenMenu }) {
   const Icon = categoryIcon(task.category);
-  const color = task.categoryColor || '#0a84ff';
+  const color = task.categoryColor || '#2997ff';
   const hasRepeat = task.repeat && task.repeat.frequency && task.repeat.frequency !== 'none';
   const reminders = task.reminders?.length || 0;
   const attachments = task.attachments?.length || 0;
@@ -42,7 +42,7 @@ export default function TaskCard({ task, onToggle, onOpenMenu }) {
       exit={{ opacity: 0, scale: 0.96 }}
       transition={{ duration: 0.2 }}
       onClick={(e) => onOpenMenu(task, e)}
-      className="bg-surface-1 rounded-xl p-3.5 flex items-center gap-3 active:bg-surface-2 transition-colors cursor-pointer"
+      className="card p-3.5 flex items-center gap-3 active:bg-surface-2 transition-colors cursor-pointer"
     >
       {/* Icona categoria colorata */}
       <div

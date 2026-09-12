@@ -23,11 +23,11 @@ export const DEFAULT_TASK_CATEGORIES = [
   { name: 'Ricerche/presentazioni', color: '#ac8e68' },
 ];
 
-// ── Griglia colori per nuova categoria ──
+// ── Griglia colori per nuova categoria (tutti unici: usati come key React) ──
 export const CATEGORY_COLORS = [
   '#ff453a', '#ff6723', '#ffd60a', '#32d74b', '#66d4cf', '#30d158',
-  '#a2d149', '#0a84ff', '#5ac8fa', '#ff2d55', '#bf5af2', '#af52de',
-  '#5e5ce6', '#ac8e68', '#8e8e93', '#aeaeb2', '#30d158', '#64d2ff',
+  '#a2d149', '#0066cc', '#5ac8fa', '#ff2d55', '#bf5af2', '#af52de',
+  '#5e5ce6', '#ac8e68', '#8e8e93', '#aeaeb2', '#00c7be', '#64d2ff',
   '#ff6961', '#e0b0ff',
 ];
 
@@ -46,7 +46,7 @@ export const DEFAULT_ROUTINE_TEMPLATES = [
     id: 'post-volley',
     name: 'Post-volley',
     icon: 'Volleyball',
-    color: '#0a84ff',
+    color: '#0066cc',
     steps: DEFAULT_ROUTINE_STEPS,
   },
   {
@@ -76,7 +76,7 @@ export const DEFAULT_ROUTINE_TEMPLATES = [
 ];
 
 // ── Colori per routine personalizzate ──
-export const ROUTINE_COLORS = ['#0a84ff', '#30d158', '#ffd60a', '#ff375f', '#bf5af2', '#64d2ff', '#ff9f0a', '#66d4cf', '#5e5ce6', '#ff2d55'];
+export const ROUTINE_COLORS = ['#0066cc', '#30d158', '#ffd60a', '#ff375f', '#bf5af2', '#64d2ff', '#ff9f0a', '#66d4cf', '#5e5ce6', '#ff2d55'];
 
 // ── Libreria icone monocromatiche (nomi lucide-react) ──
 // Le prime 5 sono mostrate in primo piano, le altre nel modale "+N".
@@ -131,7 +131,7 @@ export const DEFAULT_WEEK_PLAN = [
 export const EXPENSE_CATEGORIES = ['Mensa', 'Trasporti', 'Scuola', 'Svago', 'Regali', 'Altro'];
 
 // ── Note ──
-export const NOTE_COLORS = ['#0a84ff', '#30d158', '#ffd60a', '#ff375f', '#bf5af2', '#64d2ff', '#ff9f0a', '#8e8e93'];
+export const NOTE_COLORS = ['#0066cc', '#30d158', '#ffd60a', '#ff375f', '#bf5af2', '#64d2ff', '#ff9f0a', '#8e8e93'];
 
 /** Tipo di nota: testo libero oppure checklist (stile Notion). */
 export function emptyNote() {

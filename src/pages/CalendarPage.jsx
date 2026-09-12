@@ -63,24 +63,24 @@ export default function CalendarPage({ selectedDate, selectDate, mode, setMode, 
       {mode === 'month' ? (
         <MonthGrid selectedDate={selectedDate} onSelectDate={openDay} />
       ) : (
-        <div className="flex-1 min-h-0 overflow-y-auto scrollable pb-28">
+        <div className="flex-1 min-h-0 overflow-y-auto scrollable pb-32">
           <section className="max-w-[900px] mx-auto px-4 pt-5">
             <div className="flex items-center justify-between mb-3">
               <div>
                 <p className="text-[12px] uppercase tracking-wide text-label-tertiary">Agenda</p>
                 <h2 className="text-[20px] font-semibold capitalize">{format(selectedDate, 'EEEE d MMMM', { locale: it })}</h2>
               </div>
-              <button onClick={onOpenTasks} className="h-10 px-4 rounded-full bg-accent text-white text-[13px] font-semibold flex items-center gap-2">
-                Apri compiti <ArrowRight size={15} />
+              <button onClick={onOpenTasks} className="shrink-0 h-10 px-4 rounded-full bg-accent border border-blue-400/25 text-white text-[13px] font-semibold flex items-center gap-2 shadow-sm shadow-blue-600/40">
+                Apri compiti <ArrowRight size={15} className="shrink-0" />
               </button>
             </div>
 
             {dayTasks.length === 0 ? (
-              <div className="rounded-2xl bg-surface-1 p-5 text-label-secondary text-[15px]">
+              <div className="card p-5 text-label-secondary text-[15px]">
                 Niente da fare in questo giorno.
               </div>
             ) : (
-              <div className="rounded-2xl bg-surface-1 overflow-hidden">
+              <div className="card overflow-hidden">
                 {dayTasks.slice(0, 30).map((t) => {
                   const done = t.completed;
                   const meta = [];
@@ -95,7 +95,7 @@ export default function CalendarPage({ selectedDate, selectDate, mode, setMode, 
                         aria-label={done ? 'Segna come non completato' : 'Segna come completato'}
                         className="w-10 h-10 grid place-items-center shrink-0 -ml-2"
                       >
-                        {done ? <CheckCircle2 size={20} className="text-sys-green" /> : <Circle size={20} style={{ color: t.categoryColor || '#0a84ff' }} />}
+                        {done ? <CheckCircle2 size={20} className="text-sys-green" /> : <Circle size={20} style={{ color: t.categoryColor || '#2997ff' }} />}
                       </button>
                       <button onClick={() => openDay(selectedDate)} className="flex-1 min-w-0 text-left">
                         <span className={done ? 'line-through text-label-tertiary' : 'text-label'}>{t.title}</span>

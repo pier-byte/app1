@@ -43,3 +43,13 @@ export const save = mutation({
     return await ctx.db.insert("routines", { date, ...patch });
   },
 });
+
+/** Sessioni di routine in un intervallo di date (per la dashboard Profilo). */
+export const listBetween = query({
+  args: { start: v.string(), end: v.string() },
+  handler: async (ctx, { start, end }) =>
+    await ctx.db
+      .query("routines")
+      .withIndex("by_date", (q) => q.gte("date", start).lte("date", end))
+      .collect(),
+});

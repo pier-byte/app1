@@ -308,6 +308,12 @@ export const localMutations = {
     update((s) => ({ meals: [...s.meals, doc] }));
     return doc._id;
   },
+  /** Modifica a posteriori di un pasto (descrizione, tipo, macro/kcal). */
+  updateMeal({ id, ...patch }) {
+    update((s) => ({
+      meals: s.meals.map((m) => (m._id === id ? { ...m, ...patch } : m)),
+    }));
+  },
   removeMeal({ id }) {
     update((s) => ({ meals: s.meals.filter((m) => m._id !== id) }));
   },
@@ -331,6 +337,14 @@ export const localMutations = {
   },
   removeBodyMetric({ id }) {
     update((s) => ({ bodyMetrics: s.bodyMetrics.filter((m) => m._id !== id) }));
+  },
+  /** Corregge una registrazione esistente (peso/altezza/data). */
+  updateBodyMetric({ id, ...patch }) {
+    update((s) => ({
+      bodyMetrics: s.bodyMetrics
+        .map((m) => (m._id === id ? { ...m, ...patch } : m))
+        .sort((a, b) => a.date.localeCompare(b.date)),
+    }));
   },
   // Note
   createNote(fields) {
@@ -356,6 +370,12 @@ export const localMutations = {
   },
   removeExpense({ id }) {
     update((s) => ({ expenses: s.expenses.filter((e) => e._id !== id) }));
+  },
+  /** Modifica a posteriori di una spesa (descrizione, importo, categoria, data). */
+  updateExpense({ id, ...patch }) {
+    update((s) => ({
+      expenses: s.expenses.map((e) => (e._id === id ? { ...e, ...patch } : e)),
+    }));
   },
   setBudget({ weekStart, budgetAmount }) {
     update((s) => {

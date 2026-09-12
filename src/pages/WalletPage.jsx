@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format, parseISO } from 'date-fns';
 import { it } from 'date-fns/locale';
-import { Wallet, Settings2, Plus, Trash2, Receipt } from 'lucide-react';
+import { Wallet, Settings2, Plus, Trash2, Receipt, Pencil, ChevronLeft } from 'lucide-react';
 import { useExpenses, useBudget } from '../hooks/useData';
 import FAB from '../components/ui/FAB';
 import Dialog from '../components/ui/Dialog';
@@ -17,15 +17,16 @@ const euro = (n) => `€ ${n.toFixed(2).replace('.', ',')}`;
  * Tab 4 — Wallet: budget settimanale, log rapido spese e
  * indicatori visivi di soglia (verde <50%, giallo 50–80%, rosso >80%).
  */
-export default function WalletPage({ selectedDate, weekDates }) {
+export default function WalletPage({ selectedDate, weekDates, onBack } = {}) {
   const dateKey = toDateKey(selectedDate);
   const weekStartKey = toDateKey(getWeekDates(selectedDate)[0]);
   const weekEndKey = toDateKey(getWeekDates(selectedDate)[6]);
 
-  const { data: expenses, isLoading, addExpense, removeExpense } = useExpenses(weekStartKey, weekEndKey);
+  const { data: expenses, isLoading, addExpense, updateExpense, removeExpense } = useExpenses(weekStartKey, weekEndKey);
   const { data: budget, isLoading: budgetLoading, setBudget } = useBudget(weekStartKey);
 
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [editingExpense, setEditingExpense] = useState(null);
   const [budgetDialogOpen, setBudgetDialogOpen] = useState(false);
   const [budgetInput, setBudgetInput] = useState('');
 
@@ -34,7 +35,7 @@ export default function WalletPage({ selectedDate, weekDates }) {
   const budgetAmount = budget?.budgetAmount ?? 0;
   const ratio = budgetAmount > 0 ? spent / budgetAmount : 0;
   const remaining = budgetAmount - spent;
-  const color = budgetAmount > 0 ? budgetColor(ratio) : '#0a84ff';
+  const color = budgetAmount > 0 ? budgetColor(ratio) : '#2997ff';
 
   // Raggruppa per giorno (desc)
   const grouped = useMemo(() => {
@@ -61,9 +62,16 @@ export default function WalletPage({ selectedDate, weekDates }) {
     <div className="h-full overflow-y-auto scrollable px-4 pt-2 pb-32">
       {/* Header */}
       <div className="flex items-end justify-between mb-4">
-        <div>
-          <h1 className="text-[28px] font-bold text-label tracking-tight leading-tight">Wallet</h1>
-          <p className="text-[13px] text-label-secondary">{getWeekLabel(getWeekDates(selectedDate))}</p>
+        <div className="flex items-center gap-2.5 min-w-0">
+          {onBack && (
+            <button onClick={onBack} aria-label="Torna al profilo" className="tap-clean shrink-0 w-9 h-9 grid place-items-center rounded-full bg-white/[0.08] border border-white/[0.08] text-label-secondary active:text-label">
+              <ChevronLeft size={20} />
+            </button>
+          )}
+          <div>
+            <h1 className="text-[28px] font-semibold text-label tracking-tight leading-tight">Wallet</h1>
+            <p className="text-[13px] text-label-secondary">{getWeekLabel(getWeekDates(selectedDate))}</p>
+          </div>
         </div>
         <button
           onClick={openBudgetDialog}
@@ -75,13 +83,13 @@ export default function WalletPage({ selectedDate, weekDates }) {
       </div>
 
       {/* Card budget */}
-      <div className="bg-surface-1 rounded-2xl p-5 mb-4">
+      <div className="card p-5 mb-4">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <Wallet size={18} className="text-accent" />
+            <Wallet size={18} className="text-sky" />
             <span className="text-[15px] font-semibold text-label">Budget settimanale</span>
           </div>
-          <button onClick={openBudgetDialog} className="text-[13px] font-semibold text-accent active:opacity-60">
+          <button onClick={openBudgetDialog} className="text-[13px] font-semibold text-sky active:opacity-60">
             {budgetAmount ? 'Modifica' : 'Imposta'}
           </button>
         </div>
@@ -89,7 +97,7 @@ export default function WalletPage({ selectedDate, weekDates }) {
         {budgetAmount > 0 ? (
           <>
             <div className="flex items-baseline gap-1.5 mb-3">
-              <span className="text-[36px] leading-none font-bold tracking-tight tabular-nums" style={{ color }}>
+              <span className="text-[36px] leading-none font-semibold tracking-tight tabular-nums" style={{ color }}>
                 {euro(Math.max(remaining, 0))}
               </span>
               <span className="text-[14px] text-label-tertiary">rimanenti su {euro(budgetAmount)}</span>
@@ -119,7 +127,7 @@ export default function WalletPage({ selectedDate, weekDates }) {
         ) : (
           <button
             onClick={openBudgetDialog}
-            className="w-full h-12 rounded-xl bg-accent/15 text-accent text-[15px] font-semibold active:opacity-70"
+            className="w-full h-12 rounded-xl bg-accent/15 text-sky text-[15px] font-semibold active:opacity-70"
           >
             Imposta il budget di questa settimana
           </button>
@@ -148,7 +156,7 @@ export default function WalletPage({ selectedDate, weekDates }) {
               {euro(items.reduce((s, e) => s + e.amount, 0))}
             </span>
           </div>
-          <div className="bg-surface-1 rounded-2xl overflow-hidden">
+          <div className="card overflow-hidden">
             <AnimatePresence initial={false}>
               {items.map((exp) => (
                 <motion.div
@@ -159,10 +167,17 @@ export default function WalletPage({ selectedDate, weekDates }) {
                   exit={{ opacity: 0, height: 0 }}
                   className="flex items-center gap-3 px-4 py-3 border-b border-separator last:border-0"
                 >
-                  <div className="flex-1 min-w-0">
+                  <button
+                    onClick={() => setEditingExpense(exp)}
+                    className="flex-1 min-w-0 text-left active:opacity-70 transition-opacity"
+                    aria-label={`Modifica ${exp.description}`}
+                  >
                     <p className="text-[15px] text-label">{exp.description}</p>
-                    {exp.category && <span className="text-[12px] text-label-tertiary">{exp.category}</span>}
-                  </div>
+                    <span className="text-[12px] text-label-tertiary flex items-center gap-1">
+                      {exp.category}
+                      <Pencil size={9} className="opacity-70" />
+                    </span>
+                  </button>
                   <span className="text-[15px] font-semibold text-label tabular-nums">−{euro(exp.amount)}</span>
                   <button
                     onClick={() => removeExpense(exp._id)}
@@ -181,12 +196,20 @@ export default function WalletPage({ selectedDate, weekDates }) {
       {/* FAB log rapido */}
       <FAB onClick={() => setSheetOpen(true)} icon={Plus} label="Nuova spesa" />
 
-      {/* Sheet nuova spesa */}
+      {/* Sheet nuova spesa / modifica spesa */}
       <ExpenseFormSheet
-        isOpen={sheetOpen}
-        onClose={() => setSheetOpen(false)}
+        key={editingExpense?._id ?? 'new'}
+        isOpen={sheetOpen || !!editingExpense}
+        onClose={() => {
+          setSheetOpen(false);
+          setEditingExpense(null);
+        }}
         defaultDate={dateKey}
-        onSave={(fields) => addExpense(fields)}
+        editing={editingExpense}
+        onSave={(fields) => {
+          if (editingExpense) updateExpense(editingExpense._id, fields);
+          else addExpense(fields);
+        }}
       />
 
       {/* Dialog budget */}
@@ -199,7 +222,7 @@ export default function WalletPage({ selectedDate, weekDates }) {
             <button onClick={() => setBudgetDialogOpen(false)} className="text-[17px] text-label-secondary font-medium active:opacity-60">
               Annulla
             </button>
-            <button onClick={confirmBudget} className="text-[17px] text-accent font-semibold active:opacity-60">
+            <button onClick={confirmBudget} className="text-[17px] text-sky font-semibold active:opacity-60">
               Salva
             </button>
           </>
@@ -207,7 +230,7 @@ export default function WalletPage({ selectedDate, weekDates }) {
       >
         <p className="text-[13px] text-label-secondary mb-3">Quanto puoi spendere a settimana?</p>
         <div className="flex items-center gap-2 my-2">
-          <span className="text-[28px] font-bold text-label-tertiary">€</span>
+          <span className="text-[28px] font-semibold text-label-tertiary">€</span>
           <input
             value={budgetInput}
             onChange={(e) => setBudgetInput(e.target.value.replace(/[^\d.,]/g, ''))}

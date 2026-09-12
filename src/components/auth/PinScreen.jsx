@@ -53,8 +53,8 @@ export default function PinScreen({ onAuthenticate }) {
         transition={{ duration: 0.4, ease: 'easeOut' }}
         className="mb-8"
       >
-        <div className="w-16 h-16 rounded-2xl bg-accent flex items-center justify-center mb-4 mx-auto">
-          <span className="text-white font-bold text-xl">a1</span>
+        <div className="w-16 h-16 rounded-[18px] bg-accent border border-blue-400/30 flex items-center justify-center mb-4 mx-auto shadow-lg shadow-blue-600/40">
+          <span className="text-white font-semibold text-xl tracking-tight">a1</span>
         </div>
         <h1 className="text-xl font-semibold text-label text-center tracking-tight">
           Inserisci il PIN
@@ -88,7 +88,7 @@ export default function PinScreen({ onAuthenticate }) {
               <button
                 key={i}
                 onClick={handleDelete}
-                className="flex items-center justify-center w-[72px] h-[72px] mx-auto rounded-full active:bg-surface-2 transition-colors"
+                className="flex items-center justify-center w-[72px] h-[72px] mx-auto rounded-full bg-white/[0.05] border border-white/[0.08] active:bg-white/[0.12] transition-colors"
               >
                 <Delete size={24} className="text-label" />
               </button>
@@ -100,7 +100,7 @@ export default function PinScreen({ onAuthenticate }) {
               key={i}
               onClick={() => handleDigit(digit)}
               whileTap={{ scale: 0.92 }}
-              className="flex items-center justify-center w-[72px] h-[72px] mx-auto rounded-full bg-surface-2 text-label text-2xl font-light active:bg-surface-3 transition-colors"
+              className="flex items-center justify-center w-[72px] h-[72px] mx-auto rounded-full bg-white/[0.07] border border-white/[0.1] text-label text-2xl font-light active:bg-white/[0.14] transition-colors"
             >
               {digit}
             </motion.button>

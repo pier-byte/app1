@@ -50,6 +50,7 @@ export default defineSchema({
     // Parent: seriesId = proprio _id; figlie: seriesId = _id del parent.
     seriesId: v.optional(v.string()),
     materialized: v.optional(v.boolean()),
+    createdAt: v.optional(v.number()),
   })
     .index("by_date", ["date"])
     .index("by_category", ["category"])
@@ -147,6 +148,7 @@ export default defineSchema({
     description: v.string(),
     amount: v.number(),
     category: v.optional(v.string()),
+    createdAt: v.optional(v.number()),
   }).index("by_date", ["date"]),
 
   weeklyBudget: defineTable({

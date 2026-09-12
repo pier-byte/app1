@@ -1,7 +1,7 @@
 # app1 — PWA Gestione Personale
 
 PWA ad alte prestazioni per la gestione personale: **Calendario**, **Compiti**, **Routine**, **Nutrizione**, **Note** e **Wallet**.
-Design Apple Dark Mode, realtime con Convex DB, AI con Gemini 2.5 Flash, installabile su iOS/Android/Desktop.
+Design **Liquid Glass su dark** (token da `DESIGN.md`: Action Blue #0066cc come unico colore interattivo, Sky Link Blue #2997ff per link/testi accesi su dark, SF Pro con tracking negativo, pesi max 600, card 18px con hairline, press scale 0.97, frosted blur saturate 180%) allineato alle schermate di `ui-references/`. Layout a colonna singola **max 430px** (visione standard smartphone). Realtime con Convex DB, AI con Gemini 2.5 Flash, installabile su iOS/Android/Desktop.
 
 ![Stack](https://img.shields.io/badge/React_19-Vite_6-61dafb) ![PWA](https://img.shields.io/badge/PWA-vite--plugin--pwa-5a0fc8) ![DB](https://img.shields.io/badge/Convex-Realtime-f3b331) ![AI](https://img.shields.io/badge/Gemini-2.5_Flash-8e75b2) ![Hosting](https://img.shields.io/badge/Cloudflare_Pages-€0/mese-f38020)
 
@@ -15,10 +15,12 @@ Design Apple Dark Mode, realtime con Convex DB, AI con Gemini 2.5 Flash, install
 - Vista **Mese fit-to-screen** (100dvh, niente scroll): pill colorate con stato check dentro ogni giorno, stile screenshot home
 - **Tap sul giorno → DaySheet** (~metà schermo): check/uncheck rapido, modifica titolo inline, cambio categoria al volo, aggiunta rapida, elimina singola/serie
 - Vista **Settimana** con strip + agenda con toggle bidirezionale; FAB → editor completo sulla data selezionata
+- **Dedup attivo**: se un giorno contiene un'attività normale e la sua duplicata (occorrenza espansa da una regola di ripetizione), viene mostrata solo quella normale
 
 ### 🎓 Tab 2 — Compiti
 - Strip settimanale (Lun–Dom) + lista attività del giorno con categorie colorate e checkbox
 - **Editor completo stile iOS (screenshot 12)**: titolo/descrizione, scadenza, **tutto il giorno + orari**, **promemoria** (all'ora, 5/15/30 min prima, 1h/2h, giorno alle 09:00 → notifiche di sistema + banner in-app), **ripeti** (giornaliero, feriali, settimanale con giorni scelti, mensile + fine: mai / dopo N volte / in data), **elenco attività** (categorie personalizzabili) e **allegati** (foto, PDF, documenti)
+- **Picker Liquid Glass** (ui-references): **orario a tamburo 3D** (ore/minuti, banda di selezione, chip +15/+30/+45 min e "Tutto il giorno"), **data mensile** (griglia con Oggi/Domani/Dopodomani/Prossima settimana, tap sul mese → **tamburo mese/anno 3D**), **selezione elenco attività** a bottom sheet con radio colorate + "Crea nuovo" (nome con contatore 0/50 e griglia colori)
 - **Serie ricorrenti materializzate**: al salvataggio ogni occorrenza diventa un task reale nel DB (max 365) con promemoria spostati sulla data giusta; il picker mostra l'anteprima "Verranno create N attività". Ogni istanza resta indipendente (check/sposta/modifica singola); modificare la regola sulla prima occorrenza rigenera la serie
 - Timer di studio 15:00–20:00, stima tempi e carico via Gemini 2.5 Flash
 - Menu contestuale: Modifica, Sposta a domani, Cambia data, Elimina, Elimina l'intera serie
@@ -31,10 +33,11 @@ Design Apple Dark Mode, realtime con Convex DB, AI con Gemini 2.5 Flash, install
 - Riepilogo con confronto tempi reali vs obiettivo e salvataggio automatico
 
 ### 🥗 Tab 4 — Nutrizione
-- **Kcal ↔ macro sempre collegate (regola 4-4-9)**: P·4 + C·4 + G·9 = kcal. I macro sono la fonte, le kcal si aggiornano in automatico; ogni pasto mostra il calcolo
-- Log macro/calorie via **prompt AI** ("150g pollo e riso" → Gemini estrae macro), con editor che evidenzia eventuali scostamenti
-- **Calcolo obiettivo** (Mifflin-St Jeor): BMR, TDEE, target kcal per **mantenere / aumentare / diminuire peso**, con surplus suggerito (+250/+500 kcal → ~0,25–0,5 kg/settimana), proteine 1,6–2,2 g/kg e macro suggeriti. Un tap applica i target
-- Tabella rotazione pasti Lun–Dom con swap rapido, grafici Peso/Altezza
+- **Kcal ↔ macro sempre collegate (regola 4-4-9)**: P·4 + C·4 + G·9 = kcal. I macro sono la fonte, le kcal si aggiornano in automatico
+- Log macro/calorie via **prompt AI** ("150g pollo e riso" → Gemini estrae macro)
+- **Editing in-post**: tap su un pasto registrato per correggere descrizione, tipo e grammature (kcal ricollegate ai macro); registrazioni peso/altezza modificabili ed eliminabili dall'Andamento
+- **Calcolo obiettivo** (Mifflin-St Jeor): BMR, TDEE, target kcal per **mantenere / aumentare / diminuire peso**, con surplus suggerito (+250/+500 kcal → ~0,25–0,5 kg/settimana), proteine 1,6–2,2 g/kg e macro suggeriti. "Applica" salva i target, chiude il dialog e aggiorna immediatamente la pagina
+- **Planner** (rotazione pasti Lun–Dom): tabella modificabile cella per cella con swap rapido tra giorni; grafici Peso/Altezza nell'Andamento
 
 ### 📝 Tab 5 — Note
 - **Note rapide e checklist stile Notion**: testo libero o to-do con checkbox, pin, colori, ricerca e filtro (tutte/note/to-do)
@@ -43,7 +46,8 @@ Design Apple Dark Mode, realtime con Convex DB, AI con Gemini 2.5 Flash, install
 - Budget settimanale, log rapido spese, indicatori di soglia 🟢 <50% · 🟡 50–80% · 🔴 >80%
 
 ### 📱 UX mobile (Android/iOS)
-- Touch target ≥44px, stepper +/−, chip di scelta, picker data/ora **nativi del sistema** (tamburo iOS/Android, dark-mode, 16px/44px)
+- Touch target ≥44px, stepper +/−, chip di scelta
+- **Picker data/ora Liquid Glass personalizzati**: tamburo 3D per orario e mese/anno, calendario mensile per la data (dark-mode, coerenti con le schermate di riferimento in `ui-references/`)
 - Input ≥16px per evitare lo zoom automatico iOS, safe-area per notch e gesture bar, layout in `dvh`
 
 ### ⚡ Performance
@@ -125,4 +129,5 @@ scripts/             # generate-icons.mjs, smoke-test.mjs
 
 ```bash
 node scripts/smoke-test.mjs   # rendering SSR pagine/componenti + ripetizioni + serie (23 test)
+npm run test:dom              # flussi DOM interattivi (jsdom): planner, obiettivo, dedup, picker, editing (17 test)
 ```

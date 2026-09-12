@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { X, Trash2, Pin, Plus, Check, Circle, CheckCircle2 } from 'lucide-react';
+import { X, Trash2, Pin, Plus, Check, Circle, CheckCircle2, FileText, ListTodo } from 'lucide-react';
 import BottomSheet from '../ui/BottomSheet';
 import SegmentedControl from '../ui/SegmentedControl';
 import { NOTE_COLORS, emptyNote } from '../../lib/constants';
@@ -73,22 +73,30 @@ export default function NoteEditorSheet({ isOpen, onClose, note, onSave, onDelet
         <button
           onClick={save}
           disabled={!canSave}
-          className={cn('h-10 px-5 rounded-full text-[14px] font-semibold', canSave ? 'bg-accent text-white active:bg-accent-pressed' : 'bg-fill-secondary text-label-tertiary')}
+          className={cn('h-10 px-5 rounded-full text-[14px] font-semibold shrink-0', canSave ? 'bg-accent text-white active:bg-accent-pressed' : 'bg-fill-secondary text-label-tertiary')}
         >
           Salva
         </button>
       </div>
 
-      {/* Tipo */}
+      {/* Tipo — definitivo: scelta solo alla creazione, poi immutabile */}
       <div className="mb-3">
-        <SegmentedControl
-          segments={[
-            { id: 'note', label: 'Nota' },
-            { id: 'todo', label: 'Checklist' },
-          ]}
-          value={draft.type}
-          onChange={(type) => patch({ type })}
-        />
+        {note ? (
+          <div className="flex items-center gap-2 h-10 px-3.5 bg-white/[0.05] border border-white/[0.07] rounded-[12px] w-fit">
+            {draft.type === 'todo' ? <ListTodo size={15} className="text-sky shrink-0" /> : <FileText size={15} className="text-sky shrink-0" />}
+            <span className="text-[13.5px] font-semibold text-label">{draft.type === 'todo' ? 'Checklist' : 'Nota'}</span>
+            <span className="text-[11px] text-label-tertiary">· tipo non modificabile</span>
+          </div>
+        ) : (
+          <SegmentedControl
+            segments={[
+              { id: 'note', label: 'Nota' },
+              { id: 'todo', label: 'Checklist' },
+            ]}
+            value={draft.type}
+            onChange={(type) => patch({ type })}
+          />
+        )}
       </div>
 
       {/* Titolo */}
@@ -156,21 +164,28 @@ export default function NoteEditorSheet({ isOpen, onClose, note, onSave, onDelet
         </div>
       )}
 
-      {/* Colore */}
-      <div className="flex items-center gap-2 mt-4">
-        <span className="text-[13px] text-label-secondary">Colore</span>
-        <div className="flex gap-2 flex-wrap">
-          {NOTE_COLORS.map((c) => (
-            <button
-              key={c}
-              onClick={() => patch({ color: c })}
-              className={cn('w-8 h-8 rounded-full grid place-items-center', draft.color === c && 'ring-2 ring-offset-2 ring-offset-surface-1')}
-              style={{ backgroundColor: c }}
-              aria-label={`Colore ${c}`}
-            >
-              {draft.color === c && <Check size={13} className="text-white" strokeWidth={3} />}
-            </button>
-          ))}
+      {/* Colore (ridisegnato: pallini 30px + check sull'attivo) */}
+      <div className="mt-5 pt-4 border-t border-white/[0.07]">
+        <p className="text-[11px] font-semibold text-[#8e8e93] uppercase tracking-[0.08em] mb-3">Colore</p>
+        <div className="flex gap-3 flex-wrap">
+          {NOTE_COLORS.map((c) => {
+            const active = draft.color === c;
+            return (
+              <button
+                key={c}
+                onClick={() => patch({ color: c })}
+                className={cn(
+                  'w-[30px] h-[30px] rounded-full grid place-items-center transition-transform active:scale-90',
+                  active ? 'ring-2 ring-white/85 ring-offset-2 ring-offset-[#1c1c1e] scale-105' : 'hover:scale-105'
+                )}
+                style={{ backgroundColor: c }}
+                aria-label={`Colore ${c}`}
+                aria-pressed={active}
+              >
+                {active && <Check size={14} className="text-white" strokeWidth={3.2} />}
+              </button>
+            );
+          })}
         </div>
       </div>
     </BottomSheet>

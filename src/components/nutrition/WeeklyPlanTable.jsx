@@ -89,7 +89,7 @@ export default function WeeklyPlanTable({ plan, onUpdatePlan }) {
         <motion.p
           initial={{ opacity: 0, y: -4 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-[12px] text-accent mb-2 px-1"
+          className="text-[12px] text-sky mb-2 px-1"
         >
           {swapFirst === null
             ? 'Tocca il primo giorno da scambiare…'
@@ -98,7 +98,7 @@ export default function WeeklyPlanTable({ plan, onUpdatePlan }) {
       )}
 
       {/* Tabella */}
-      <div className="bg-surface-1 rounded-2xl overflow-hidden">
+      <div className="card overflow-hidden">
         {/* Header colonne */}
         <div className="grid grid-cols-[64px_repeat(3,1fr)] bg-surface-2/60">
           <span className="px-2 py-2.5 text-[11px] font-semibold text-label-tertiary uppercase"></span>
@@ -121,7 +121,7 @@ export default function WeeklyPlanTable({ plan, onUpdatePlan }) {
               )}
               onClick={() => handleRowTap(dayIndex)}
             >
-              <span className={cn('px-2 py-3 text-[12px] font-semibold flex items-center', isSelectedFirst ? 'text-accent' : 'text-label-secondary')}>
+              <span className={cn('px-2 py-3 text-[12px] font-semibold flex items-center', isSelectedFirst ? 'text-sky' : 'text-label-secondary')}>
                 {day.day?.slice(0, 3)}
               </span>
               {MEAL_COLS.map((col) => (
@@ -155,7 +155,7 @@ export default function WeeklyPlanTable({ plan, onUpdatePlan }) {
             <button onClick={() => setEditCell(null)} className="text-[17px] text-label-secondary font-medium active:opacity-60">
               Annulla
             </button>
-            <button onClick={confirmEdit} className="flex items-center gap-1 text-[17px] text-accent font-semibold active:opacity-60">
+            <button onClick={confirmEdit} className="flex items-center gap-1 text-[17px] text-sky font-semibold active:opacity-60">
               <Check size={16} /> Salva
             </button>
           </>

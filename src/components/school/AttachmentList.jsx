@@ -86,7 +86,7 @@ export default function AttachmentList({ attachments = [], onChange }) {
                       onClick={() => open(att)}
                       className="flex items-center gap-2 flex-1 min-w-0 text-left"
                     >
-                      <Icon size={15} className="text-accent shrink-0" />
+                      <Icon size={15} className="text-sky shrink-0" />
                       <span className="text-[13px] text-label-secondary truncate">{att.name}</span>
                       <Download size={12} className="text-label-tertiary shrink-0" />
                     </button>
@@ -113,7 +113,7 @@ export default function AttachmentList({ attachments = [], onChange }) {
             e.target.value = '';
           }}
         />
-        <button onClick={() => inputRef.current?.click()} className="text-[14px] font-semibold text-accent min-h-10">
+        <button onClick={() => inputRef.current?.click()} className="text-[14px] font-semibold text-sky min-h-10">
           Aggiungi
         </button>
       </div>

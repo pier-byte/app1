@@ -2,8 +2,8 @@ import { useState, useMemo, useCallback, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
-import { ClipboardList, Plus, Timer } from 'lucide-react';
-import { useTasks, useExpandedTasks, useTaskCategories } from '../hooks/useData';
+import { ClipboardList, Plus, Timer, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useTasks, useExpandedTasksBetween, useTaskCategories } from '../hooks/useData';
 import TaskCard from '../components/school/TaskCard';
 // Editor lazy: scaricato solo alla prima apertura
 const TaskFormSheet = lazy(() => import('../components/school/TaskFormSheet'));
@@ -14,17 +14,29 @@ import WeekStrip from '../components/layout/WeekStrip';
 import ContextMenu from '../components/ui/ContextMenu';
 import EmptyState from '../components/ui/EmptyState';
 import FAB from '../components/ui/FAB';
-import { toDateKey, addDays } from '../lib/dates';
+import { toDateKey, addDays, getWeekDates } from '../lib/dates';
+import { cn } from '../lib/cn';
 
 /**
- * Tab — Compiti (screenshot 06): strip settimanale, lista attività/eventi
- * con orari, ripetizione, promemoria e allegati; timer studio e AI sotto.
+ * Tab — Compiti (ui-references/sezione_compiti_liquid_glass):
+ * navigazione tra le settimane con frecce ‹ › e pill "Oggi"; la lista mostra
+ * TUTTI i compiti della settimana selezionata, raggruppati per giorno
+ * (giorno corrente evidenziato in azzurro).
  */
 export default function SchoolPage({ selectedDate, weekDates, weekLabel, goToPrevWeek, goToNextWeek, goToToday, onSelectDate }) {
   const dateKey = toDateKey(selectedDate);
   const { data: tasks /* mutazioni */, createTask, updateTask, toggleTask, removeTask, removeSeries, moveTaskToDate, addTaskMinutes } = useTasks(dateKey);
-  const { data: expandedTasks, isLoading } = useExpandedTasks(dateKey);
   const { data: categories, createCategory } = useTaskCategories();
+
+  // Compiti dell'INTERA settimana selezionata, raggruppati per giorno
+  // (weekDates può mancare/incompleta → derivata dalla data selezionata)
+  const fullWeek = useMemo(
+    () => (Array.isArray(weekDates) && weekDates.length === 7 ? weekDates : getWeekDates(selectedDate)),
+    [weekDates, selectedDate]
+  );
+  const weekStartKey = toDateKey(fullWeek[0]);
+  const weekEndKey = toDateKey(fullWeek[6]);
+  const { data: weekTasksByDay, isLoading: weekLoading } = useExpandedTasksBetween(weekStartKey, weekEndKey);
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
@@ -33,8 +45,23 @@ export default function SchoolPage({ selectedDate, weekDates, weekLabel, goToPre
   const [dateChangeTask, setDateChangeTask] = useState(null);
   const [showStudy, setShowStudy] = useState(false);
 
-  const openTasks = useMemo(() => (expandedTasks ?? []).filter((t) => !t.completed), [expandedTasks]);
-  const doneTasks = useMemo(() => (expandedTasks ?? []).filter((t) => t.completed), [expandedTasks]);
+  const dayGroups = useMemo(
+    () =>
+      fullWeek.map((date) => {
+        const key = toDateKey(date);
+        const items = [...(weekTasksByDay?.get(key) ?? [])].sort(
+          (a, b) =>
+            Number(a.completed) - Number(b.completed) ||
+            String(a.startTime || '').localeCompare(String(b.startTime || '')) ||
+            (a.createdAt || 0) - (b.createdAt || 0)
+        );
+        return { date, key, items, isToday: key === toDateKey(new Date()), isSelected: key === dateKey };
+      }),
+    [fullWeek, weekTasksByDay, dateKey]
+  );
+
+  const weekTotal = dayGroups.reduce((s, g) => s + g.items.length, 0);
+  const weekOpen = dayGroups.reduce((s, g) => s + g.items.filter((t) => !t.completed).length, 0);
 
   const openMenu = useCallback((task, e) => {
     setMenuPos({ y: Math.min(e.clientY ?? 200, window.innerHeight - 260) });
@@ -55,16 +82,15 @@ export default function SchoolPage({ selectedDate, weekDates, weekLabel, goToPre
   const handleMoveTomorrow = (task) => moveTaskToDate(task._id, toDateKey(addDays(selectedDate, 1)));
 
   return (
-    <div className="h-full overflow-y-auto scrollable px-4 pt-3 pb-32">
+    <div className="h-full overflow-y-auto scrollable px-4 pt-2 pb-32">
       {/* Header pagina */}
-      <div className="mb-1">
-        <h1 className="text-[28px] font-bold text-label tracking-tight leading-tight">Compiti</h1>
+      <div className="mb-2.5">
+        <h1 className="text-[28px] font-semibold text-label tracking-tight leading-tight">Compiti</h1>
         <p className="text-[13px] text-label-secondary capitalize">{format(selectedDate, 'EEEE d MMMM', { locale: it })}</p>
       </div>
 
-      {/* Strip settimanale (screenshot 06) */}
+      {/* Navigazione settimana: ‹ 31 ago - 6 set › + Oggi (reference sezione_compiti) */}
       <WeekStrip
-        embedded
         weekDates={weekDates}
         selectedDate={selectedDate}
         weekLabel={weekLabel}
@@ -74,70 +100,73 @@ export default function SchoolPage({ selectedDate, weekDates, weekLabel, goToPre
         onToday={goToToday}
       />
 
-      {/* Carico AI */}
+      {/* Carico AI del giorno selezionato */}
       <div className="mb-4">
         <LoadInsightCard dateKey={dateKey} tasks={tasks ?? []} />
       </div>
 
-      {/* Compiti aperti */}
-      {(openTasks.length > 0 || doneTasks.length > 0) && (
-        <div>
-          <div className="flex items-center justify-between mb-2.5 px-1">
-            <h2 className="text-[15px] font-semibold text-label-secondary">Attività del giorno ({openTasks.length})</h2>
-          </div>
-          <div className="flex flex-col gap-2">
-            <AnimatePresence initial={false}>
-              {openTasks.map((task) => (
-                <TaskCard
-                  key={task._id}
-                  task={task}
-                  onToggle={toggleTask}
-                  onOpenMenu={openMenu}
-                />
-              ))}
-            </AnimatePresence>
-          </div>
+      {/* Elenco settimana */}
+      <div className="flex items-center justify-between mb-2.5 px-1">
+        <h2 className="text-[12px] font-semibold text-[#8e8e93] uppercase tracking-[0.08em] truncate">
+          Compiti con data <span className="tabular-nums">({weekTotal})</span>
+        </h2>
+        <span className="text-[12px] text-label-tertiary tabular-nums">{weekOpen} da fare</span>
+      </div>
 
-          {doneTasks.length > 0 && (
-            <>
-              <h2 className="text-[15px] font-semibold text-label-tertiary mt-5 mb-2.5 px-1">
-                Completati ({doneTasks.length})
-              </h2>
-              <div className="flex flex-col gap-2 opacity-70">
-                <AnimatePresence initial={false}>
-                  {doneTasks.map((task) => (
-                    <TaskCard
-                      key={task._id}
-                      task={task}
-                      onToggle={toggleTask}
-                      onOpenMenu={openMenu}
-                    />
-                  ))}
-                </AnimatePresence>
-              </div>
-            </>
-          )}
-        </div>
-      )}
-
-      {/* Vuoto */}
-      {!isLoading && expandedTasks.length === 0 && (
+      {!weekLoading && weekTotal === 0 ? (
         <EmptyState
-          title="Nessuna attività in questo giorno"
+          title="Nessun compito questa settimana"
           subtitle="Tocca + per aggiungere un compito"
           icon={ClipboardList}
         />
+      ) : (
+        <div className="flex flex-col gap-4">
+          {dayGroups.map((group) =>
+            group.items.length === 0 ? null : (
+              <section key={group.key}>
+                {/* Intestazione giorno (selezionato → azzurro, come reference) */}
+                <div className="flex items-center gap-2 mb-2 px-1">
+                  <h3
+                    className={cn(
+                      'text-[14px] font-semibold capitalize',
+                      group.isSelected ? 'text-sky' : group.isToday ? 'text-sky' : 'text-label-secondary'
+                    )}
+                  >
+                    {format(group.date, 'EEEE d MMMM', { locale: it })}
+                  </h3>
+                  {group.isToday && (
+                    <span className="text-[10px] font-semibold text-white bg-accent rounded-full px-2 py-0.5 uppercase tracking-wide">
+                      Oggi
+                    </span>
+                  )}
+                  <span className="flex-1 h-px bg-white/[0.06]" />
+                  <span className="text-[11.5px] text-label-tertiary tabular-nums">
+                    {group.items.filter((t) => !t.completed).length}/{group.items.length}
+                  </span>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <AnimatePresence initial={false}>
+                    {group.items.map((task) => (
+                      <TaskCard key={task._id} task={task} onToggle={toggleTask} onOpenMenu={openMenu} />
+                    ))}
+                  </AnimatePresence>
+                </div>
+              </section>
+            )
+          )}
+        </div>
       )}
 
       {/* Timer studio (collassabile, per non appesantire la lista) */}
       <div className="mt-5">
         <button
           onClick={() => setShowStudy((s) => !s)}
-          className="w-full flex items-center gap-2 px-1 mb-2 text-[14px] font-semibold text-label-secondary"
+          className="w-full flex items-center gap-2 px-1 mb-2 text-[14px] font-semibold text-label-secondary min-h-11"
         >
-          <Timer size={15} className="text-accent" />
+          <Timer size={15} className="text-sky shrink-0" />
           Timer di studio (15:00–20:00)
-          <span className="ml-auto text-[13px] text-accent">{showStudy ? 'Nascondi' : 'Mostra'}</span>
+          <span className="ml-auto text-[13px] text-sky shrink-0">{showStudy ? 'Nascondi' : 'Mostra'}</span>
         </button>
         {showStudy && (
           <StudyTimerCard
@@ -174,7 +203,7 @@ export default function SchoolPage({ selectedDate, weekDates, weekLabel, goToPre
         />
       </Suspense>
 
-      {/* Menu contestuale (screenshot 13) */}
+      {/* Menu contestuale (reference: Modifica/Copia/Sposta/Cambia data/Elimina) */}
       <ContextMenu
         isOpen={!!menuTask}
         onClose={() => setMenuTask(null)}

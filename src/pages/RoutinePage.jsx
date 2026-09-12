@@ -96,7 +96,7 @@ export default function RoutinePage({ selectedDate }) {
       {/* Header + toggle vista */}
       <div className="flex items-start justify-between gap-3 mb-3">
         <div>
-          <h1 className="text-[28px] font-bold text-label tracking-tight leading-tight">Routine</h1>
+          <h1 className="text-[28px] font-semibold text-label tracking-tight leading-tight">Routine</h1>
           <p className="text-[13px] text-label-secondary capitalize">
             {format(selectedDate, 'EEEE d MMMM', { locale: it })}
           </p>
@@ -170,6 +170,7 @@ export default function RoutinePage({ selectedDate }) {
           onPause={() => routineSession.pause()}
           onResume={() => routineSession.resume()}
           onComplete={() => routineSession.completeStep()}
+          onFinish={() => routineSession.finishEarly()}
         />
       )}
 
@@ -203,7 +204,7 @@ export default function RoutinePage({ selectedDate }) {
       {/* Intro / avvio */}
       {view === 'detail' && showIntro && activeTemplate && (
         <div>
-          <div className="bg-surface-1 rounded-2xl p-5 mb-4">
+          <div className="card p-5 mb-4">
             <div className="flex items-center gap-2 mb-4">
               <div
                 className="w-9 h-9 rounded-xl grid place-items-center shrink-0"
@@ -226,7 +227,7 @@ export default function RoutinePage({ selectedDate }) {
               </div>
               <button
                 onClick={() => setEditing(!editing)}
-                className="text-[13px] text-accent min-h-10 flex items-center gap-1.5"
+                className="text-[13px] text-sky min-h-10 flex items-center gap-1.5"
               >
                 <Pencil size={14} />
                 {editing ? 'Fine' : 'Personalizza'}
@@ -350,7 +351,7 @@ export default function RoutinePage({ selectedDate }) {
                     steps: [...activeTemplate.steps, { name: 'Nuova attività', targetMinutes: 10 }],
                   })
                 }
-                className="w-full h-11 mt-3 rounded-full border border-accent text-accent text-[14px] font-semibold flex items-center justify-center gap-2"
+                className="w-full h-11 mt-3 rounded-full border border-accent text-sky text-[14px] font-semibold flex items-center justify-center gap-2"
               >
                 <Plus size={16} /> Aggiungi attività
               </button>
@@ -387,7 +388,7 @@ export default function RoutinePage({ selectedDate }) {
 
       {/* Nessuna scheda (vista dettaglio) */}
       {view === 'detail' && !templatesLoading && (templates ?? []).length === 0 && (
-        <div className="bg-surface-1 rounded-2xl p-8 text-center">
+        <div className="card p-8 text-center">
           <Layers size={32} className="text-label-tertiary mx-auto mb-3" />
           <p className="text-[15px] text-label">Nessuna routine</p>
           <p className="text-[13px] text-label-tertiary mt-1 mb-4">Crea la tua prima scheda con le attività che preferisci.</p>
@@ -452,7 +453,7 @@ function OverviewGrid({ templates, activeId, onOpen, onStart, onNew }) {
             <div
               key={t._id}
               className={cn(
-                'bg-surface-1 rounded-2xl p-3.5 flex flex-col gap-2 text-left border',
+                'card p-3.5 flex flex-col gap-2 text-left border',
                 active ? 'border-accent/60' : 'border-transparent'
               )}
             >
@@ -472,7 +473,7 @@ function OverviewGrid({ templates, activeId, onOpen, onStart, onNew }) {
               </button>
               <button
                 onClick={() => onStart(t)}
-                className="h-10 rounded-full bg-accent/15 text-accent text-[13px] font-semibold flex items-center justify-center gap-1.5 active:bg-accent/25"
+                className="h-10 rounded-full bg-accent/15 text-sky text-[13px] font-semibold flex items-center justify-center gap-1.5 active:bg-accent/25"
                 aria-label={`Avvia ${t.name}`}
               >
                 <Play size={14} fill="currentColor" /> Avvia
@@ -524,7 +525,7 @@ function NewTemplateDialog({ isOpen, onClose, onCreate }) {
       actions={
         <>
           <button onClick={onClose} className="text-[17px] text-label-secondary font-medium active:opacity-60">Annulla</button>
-          <button onClick={create} disabled={!name.trim()} className="text-[17px] text-accent font-semibold active:opacity-60 disabled:opacity-40">Crea</button>
+          <button onClick={create} disabled={!name.trim()} className="text-[17px] text-sky font-semibold active:opacity-60 disabled:opacity-40">Crea</button>
         </>
       }
     >
@@ -573,7 +574,7 @@ function NewTemplateDialog({ isOpen, onClose, onCreate }) {
           </div>
         ))}
       </div>
-      <button onClick={addStep} className="w-full h-11 rounded-full border border-accent text-accent text-[14px] font-semibold">
+      <button onClick={addStep} className="w-full h-11 rounded-full border border-accent text-sky text-[14px] font-semibold">
         <Plus size={15} className="inline mr-1" /> Aggiungi attività
       </button>
     </Dialog>
@@ -586,7 +587,7 @@ function CompletionSummary({ session }) {
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="bg-surface-1 rounded-2xl p-6 flex flex-col items-center"
+      className="card p-6 flex flex-col items-center"
     >
       <motion.div
         initial={{ scale: 0 }}
@@ -596,7 +597,7 @@ function CompletionSummary({ session }) {
       >
         <Check size={40} className="text-sys-green" strokeWidth={3} />
       </motion.div>
-      <h2 className="text-[22px] font-bold text-label tracking-tight">
+      <h2 className="text-[22px] font-semibold text-label tracking-tight">
         {session.routineName ? `${session.routineName} completata!` : 'Routine completata!'}
       </h2>
       <p className="text-[14px] text-label-secondary mt-1 mb-5">
@@ -610,7 +611,7 @@ function CompletionSummary({ session }) {
 function SavedSummary({ routine, totalActual, onRepeat }) {
   return (
     <div>
-      <div className="bg-surface-1 rounded-2xl p-5 mb-4">
+      <div className="card p-5 mb-4">
         <div className="flex items-center justify-between mb-4">
           <span className="text-[15px] font-semibold text-label">
             {routine.routineName ? `${routine.routineName} — tempi effettivi` : 'Tempi effettivi di oggi'}
