@@ -11,9 +11,9 @@ export default function FAB({ onClick, icon: Icon = Plus, label = 'Aggiungi' }) 
       onClick={onClick}
       whileTap={{ scale: 0.92 }}
       whileHover={{ scale: 1.05 }}
-      className="fixed z-30 w-14 h-14 rounded-full bg-accent border border-blue-400/30 flex items-center justify-center shadow-lg shadow-blue-600/40 active:bg-accent-pressed transition-colors"
+      className="fixed z-30 shrink-0 w-14 h-14 rounded-full bg-accent border border-blue-400/30 flex items-center justify-center shadow-lg shadow-blue-600/40 active:bg-accent-pressed transition-colors"
       style={{
-        bottom: 'calc(86px + env(safe-area-inset-bottom, 8px) + 16px)',
+        bottom: 'calc(var(--bottom-nav-h, 78px) + env(safe-area-inset-bottom, 8px) + 20px)',
         right: 'max(20px, calc(50vw - 195px))',
       }}
       aria-label={label}

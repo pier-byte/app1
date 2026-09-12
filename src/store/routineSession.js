@@ -149,6 +149,27 @@ export const routineSession = {
     notify();
     return nextIndex;
   },
+  /**
+   * "Concludi Routine": termina subito la sessione salvando i progressi.
+   * Lo step in corso viene chiuso registrando i secondi effettivi e segnato
+   * done; gli step mai avviati restano pending (quindi non completati).
+   * Imposta status='done' + completedAt → la pagina salva su DB e mostra
+   * il riepilogo con il flash "Routine salvata".
+   */
+  finishEarly() {
+    if (internal.status === 'idle' || internal.status === 'done') return;
+    const step = internal.steps[internal.currentIndex];
+    if (step && step.status === 'active') {
+      step.actualSeconds = Math.max(step.actualSeconds || 0, internal.stepSeconds || 0);
+      step.status = 'done';
+      step.completed = true;
+    }
+    internal.status = 'done';
+    internal.completedAt = new Date().toISOString();
+    internal.segmentStart = null;
+    clearIntervalIfNeeded();
+    notify();
+  },
   /** Ripristina una sessione già completata (RIpeti). */
   reset() {
     internal = blank();

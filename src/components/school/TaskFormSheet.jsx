@@ -115,7 +115,7 @@ export default function TaskFormSheet({ isOpen, onClose, onSave, editingTask, de
             onClick={handleSave}
             disabled={!canSave}
             className={cn(
-              'h-10 px-5 rounded-full text-[15px] font-semibold transition-colors',
+              'h-10 px-5 rounded-full text-[15px] font-semibold transition-colors shrink-0',
               canSave ? 'bg-accent text-white active:bg-accent-pressed' : 'bg-fill-secondary text-label-tertiary'
             )}
           >

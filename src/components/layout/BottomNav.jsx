@@ -20,7 +20,11 @@ export default function BottomNav({activeTab,onTabChange}) {
   return (
     <nav
       className="flex items-end justify-around bg-void/80 backdrop-blur-dialog border-t border-white/[0.08] shrink-0"
-      style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 8px) + 6px)', minHeight: 78 }}
+      style={{
+        paddingBottom: 'calc(env(safe-area-inset-bottom, 8px) + 6px)',
+        minHeight: 78,
+        '--bottom-nav-h': '78px',
+      }}
     >
       {tabs.map(({id,label,Icon})=>{
         const active=activeTab===id;

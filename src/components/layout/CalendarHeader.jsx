@@ -12,7 +12,7 @@ export default function CalendarHeader({ mode, onModeChange, selectedDate, onPre
     <header className="border-b border-white/[0.06] bg-canvas/85 backdrop-blur-dialog shrink-0">
       <div className="max-w-[1100px] mx-auto w-full px-4 pt-3">
         <div className="flex items-center justify-between gap-3 mb-2">
-          <div>
+          <div className="min-w-0">
             <h1 className="text-[25px] font-semibold tracking-[-0.02em] capitalize leading-tight">
               {format(selectedDate, 'MMMM yyyy', { locale: it })}
             </h1>
@@ -20,7 +20,7 @@ export default function CalendarHeader({ mode, onModeChange, selectedDate, onPre
               Vai a oggi
             </button>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 shrink-0">
             <div className="flex bg-white/[0.08] border border-white/[0.06] rounded-full p-1" aria-label="Vista calendario">
               {['week', 'month'].map((v) => (
                 <button
@@ -35,10 +35,10 @@ export default function CalendarHeader({ mode, onModeChange, selectedDate, onPre
                 </button>
               ))}
             </div>
-            <button onClick={onPrev} aria-label="Periodo precedente" className="control-button">
+            <button onClick={onPrev} aria-label="Periodo precedente" className="control-button tap-clean">
               <ChevronLeft size={20} />
             </button>
-            <button onClick={onNext} aria-label="Periodo successivo" className="control-button">
+            <button onClick={onNext} aria-label="Periodo successivo" className="control-button tap-clean">
               <ChevronRight size={20} />
             </button>
           </div>

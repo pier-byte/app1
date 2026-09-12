@@ -64,7 +64,7 @@
   --spacing-safe-bottom: env(safe-area-inset-bottom, 0px);
   --spacing-safe-left: env(safe-area-inset-left, 0px);
   --spacing-safe-right: env(safe-area-inset-right, 0px);
-  --spacing-bottom-nav: 80px;
+  --spacing-bottom-nav: 78px;
 
   /* ── Border Radius ── */
   --radius-xs: 5px;
@@ -129,11 +129,12 @@ body {
   display: none;
 }
 
-/* Scrollbar orizzontale nascosta */
+/* Scrollbar orizzontale nascosta + respiro verticale per ring/ombre chip */
 .scrollable-x {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
+  padding-block: 2px;
 }
 .scrollable-x::-webkit-scrollbar {
   display: none;
@@ -238,6 +239,17 @@ input::placeholder, textarea::placeholder {
   }
 }
 
+/* Giorni dello strip/griglia: nessun anello di focus al tap (il giorno
+   selezionato è già evidenziato dal cerchio pieno) */
+.tap-clean {
+  outline: none !important;
+  -webkit-tap-highlight-color: transparent;
+}
+.tap-clean:focus-visible {
+  outline: 2px solid #0071e3 !important;
+  outline-offset: 2px !important;
+}
+
 /* ── Press state di sistema (DESIGN.md: scale on active) ── */
 button:active { transform: scale(0.97); }
 @media (prefers-reduced-motion: reduce) {
@@ -322,6 +334,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
 .drum-scroller::-webkit-scrollbar { display: none; }
 .drum-item {
   scroll-snap-align: center;
+  scroll-snap-stop: normal;
   transform-origin: center center;
   transition: transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.22s ease, color 0.22s ease;
   backface-visibility: hidden;

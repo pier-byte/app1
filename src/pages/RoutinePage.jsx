@@ -170,6 +170,7 @@ export default function RoutinePage({ selectedDate }) {
           onPause={() => routineSession.pause()}
           onResume={() => routineSession.resume()}
           onComplete={() => routineSession.completeStep()}
+          onFinish={() => routineSession.finishEarly()}
         />
       )}
 

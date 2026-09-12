@@ -6,13 +6,13 @@ import { cn } from '../../lib/cn';
 import { toDateKey } from '../../lib/dates';
 import { useExpandedTasksBetween } from '../../hooks/useData';
 
-const DAYS = ['lun', 'mar', 'mer', 'gio', 'ven', 'sab', 'dom'];
+const DAYS = ['LUN', 'MAR', 'MER', 'GIO', 'VEN', 'SAB', 'DOM'];
 
 /**
- * MonthGrid — Griglia mensile "fit-to-screen" (screenshot home):
- * riempie esattamente lo spazio disponibile (flex + righe 1fr, niente scroll),
- * celle separate da hairline, pill colorate con stato check per ogni attività.
- * Tap su un giorno → apre il DaySheet (vedi CalendarPage).
+ * MonthGrid — Griglia mensile "fit-to-screen" (ui-references
+ * calendario_mensile_full_screen_liquid_glass): intestazione maiuscoletta,
+ * colonna del giorno selezionato in vetro con bordo azzurro, pill compatte
+ * "check + titolo" con il colore della categoria. Tap sul giorno → DaySheet.
  */
 export default function MonthGrid({ selectedDate, onSelectDate }) {
   const monthStart = startOfMonth(selectedDate);
@@ -33,10 +33,10 @@ export default function MonthGrid({ selectedDate, onSelectDate }) {
 
   return (
     <div className="flex-1 min-h-0 flex flex-col">
-      {/* Intestazione giorni settimana */}
+      {/* Intestazione giorni settimana (maiuscolo, tenue — come reference) */}
       <div className="grid grid-cols-7 shrink-0" role="row">
         {DAYS.map((d) => (
-          <div key={d} className="text-center text-[11px] font-semibold text-label-tertiary py-1.5">
+          <div key={d} className="text-center text-[10.5px] font-semibold text-[#8e8e93] tracking-[0.08em] py-1.5">
             {d}
           </div>
         ))}
@@ -44,7 +44,7 @@ export default function MonthGrid({ selectedDate, onSelectDate }) {
 
       {/* Griglia: righe flessibili che riempiono lo schermo senza scroll */}
       <div
-        className="flex-1 min-h-0 grid grid-cols-7 gap-px bg-separator-opaque/60 border-y border-separator-opaque/60"
+        className="flex-1 min-h-0 grid grid-cols-7 gap-px bg-white/[0.04] border-y border-white/[0.05]"
         style={{ gridTemplateRows: `repeat(${rows}, minmax(0, 1fr))` }}
         role="grid"
         aria-label={format(selectedDate, 'MMMM yyyy', { locale: it })}
@@ -69,47 +69,50 @@ export default function MonthGrid({ selectedDate, onSelectDate }) {
               onClick={() => onSelectDate(date)}
               aria-label={`${format(date, 'd MMMM', { locale: it })}${dayTasks.length ? `, ${dayTasks.length} attività` : ''}`}
               className={cn(
-                'bg-canvas min-h-0 min-w-0 overflow-hidden flex flex-col items-stretch px-[3px] pt-1 pb-[3px] gap-[3px] active:bg-surface-1 transition-colors',
+                'tap-clean relative bg-canvas min-h-0 min-w-0 overflow-hidden flex flex-col items-stretch px-[3px] pt-1 pb-[3px] gap-[3px] transition-colors',
+                selected
+                  ? 'bg-white/[0.05] shadow-[inset_0_0_0_1.5px_rgba(41,151,255,0.65)] rounded-[10px]'
+                  : 'active:bg-white/[0.04]',
                 outside && 'opacity-45'
               )}
             >
               <span
                 className={cn(
-                  'mx-auto w-7 h-7 shrink-0 grid place-items-center rounded-full text-[14px] font-medium tabular-nums',
+                  'mx-auto w-7 h-7 shrink-0 grid place-items-center rounded-full text-[13.5px] font-medium tabular-nums',
                   today
-                    ? 'bg-accent text-white font-semibold shadow-sm shadow-blue-600/40'
+                    ? 'bg-accent text-white font-semibold shadow-sm shadow-blue-600/50'
                     : selected
-                      ? 'ring-[1.5px] ring-sky text-sky font-semibold'
+                      ? 'text-sky font-semibold'
                       : 'text-label'
                 )}
               >
                 {format(date, 'd')}
               </span>
 
-              <span className="flex flex-col gap-[2px] min-h-0 flex-1 overflow-hidden">
+              <span className="flex flex-col gap-[2.5px] min-h-0 flex-1 overflow-hidden justify-start">
                 {dayTasks.slice(0, maxPills).map((t) => {
                   const color = t.categoryColor || '#2997ff';
                   return (
                     <span
                       key={t._id}
                       className={cn(
-                        'flex items-center gap-[3px] rounded-[5px] px-[4px] py-[2px] text-[9px] leading-[1.2] font-medium truncate',
-                        t.completed && 'opacity-55'
+                        'flex items-center gap-[3px] rounded-full px-[5px] py-[2px] text-[9.5px] leading-[1.2] font-medium bg-white/[0.05] border border-white/[0.04] truncate',
+                        t.completed && 'opacity-50'
                       )}
-                      style={{ backgroundColor: `${color}26`, color }}
+                      style={{ color }}
                       title={t.title}
                     >
                       {t.completed ? (
-                        <Check size={10} strokeWidth={3.5} className="shrink-0" />
+                        <Check size={9.5} strokeWidth={3.5} className="shrink-0" />
                       ) : (
-                        <Square size={9} className="shrink-0 opacity-80" />
+                        <Square size={8.5} className="shrink-0 opacity-75" />
                       )}
                       <span className={cn('truncate', t.completed && 'line-through')}>{t.title}</span>
                     </span>
                   );
                 })}
                 {overflow > 0 && (
-                  <span className="text-[9px] leading-none text-label-tertiary font-semibold pl-[3px]">
+                  <span className="text-[9.5px] leading-none text-[#8e8e93] font-semibold pl-[5px]">
                     +{overflow}
                   </span>
                 )}

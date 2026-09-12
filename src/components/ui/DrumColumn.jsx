@@ -3,40 +3,41 @@ import { cn } from '../../lib/cn';
 
 /**
  * DrumColumn — colonna "a tamburo" 3D stile iOS Liquid Glass (ui-references:
- * time_picker / month_year_picker a tamburo). Scroll-snap nativo + tap per
- * selezionare; le righe lontane ruotano su X (effetto cilindro) e sfumano.
+ * time_picker / month_year_picker a tamburo).
  *
- * Non è controllata dal parent durante lo scroll: emette `onChange` ad ogni
- * scatto e si riallinea solo se `value` cambia dall'esterno.
+ * Snap: `scroll-snap-type: y mandatory` + `scroll-snap-align: center` con
+ * paddingi simmetrici → la voce selezionata si blocca ESATTAMENTE al centro
+ * della banda. Lo stile attivo (colore pieno, bold, opacità 1) spetta
+ * esclusivamente alla voce centrata; le adiacenti restano attenuate.
  */
 export default function DrumColumn({ values, value, onChange, itemHeight = 48, visibleCount = 4, format = (v) => String(v), className, label }) {
-  const CONTAINER_H = itemHeight * visibleCount + itemHeight * 0.34; // ~208px con 4+frizione
+  const CONTAINER_H = itemHeight * visibleCount + itemHeight * 0.34; // ~208px
+  const PAD = (CONTAINER_H - itemHeight) / 2;
   const scrollerRef = useRef(null);
   const rafRef = useRef(0);
-  const settleRef = useRef(0);
   const lastIndexRef = useRef(null);
   const [active, setActive] = useState(() => {
     const idx = values.indexOf(value);
     return idx >= 0 ? idx : 0;
   });
 
-  const PAD = (CONTAINER_H - itemHeight) / 2;
-
   // Allinea la selezione quando cambia `value` dall'esterno (o al mount)
   useEffect(() => {
     const idx = values.indexOf(value);
-    if (idx < 0) return;
-    if (idx === lastIndexRef.current) return;
+    if (idx < 0 || idx === lastIndexRef.current) return;
     lastIndexRef.current = idx;
     setActive(idx);
     const el = scrollerRef.current;
-    if (el) el.scrollTo({ top: idx * itemHeight, behavior: 'auto' });
+    if (!el) return;
+    if (typeof el.scrollTo === 'function') el.scrollTo({ top: idx * itemHeight, behavior: 'auto' });
+    else el.scrollTop = idx * itemHeight;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value, values]);
 
   const computeActive = useCallback(() => {
     const el = scrollerRef.current;
     if (!el) return;
+    // Centro esatto: round(scrollTop / itemHeight)
     const idx = Math.max(0, Math.min(values.length - 1, Math.round(el.scrollTop / itemHeight)));
     if (idx !== lastIndexRef.current) {
       lastIndexRef.current = idx;
@@ -48,26 +49,38 @@ export default function DrumColumn({ values, value, onChange, itemHeight = 48, v
   const handleScroll = useCallback(() => {
     cancelAnimationFrame(rafRef.current);
     rafRef.current = requestAnimationFrame(computeActive);
-    // "settle": normalizza lo scroll allo scatto esatto del tamburo
-    clearTimeout(settleRef.current);
-    settleRef.current = setTimeout(() => {
-      const el = scrollerRef.current;
-      if (!el) return;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [computeActive]);
+
+  // scrollend (dove disponibile): scatto finale → riallineamento esatto al centro
+  useEffect(() => {
+    const el = scrollerRef.current;
+    if (!el || typeof el.addEventListener !== 'function') return;
+    const onEnd = () => {
       const idx = Math.max(0, Math.min(values.length - 1, Math.round(el.scrollTop / itemHeight)));
-      el.scrollTo({ top: idx * itemHeight, behavior: 'smooth' });
+      const target = idx * itemHeight;
+      if (Math.abs(el.scrollTop - target) > 1) {
+        if (typeof el.scrollTo === 'function') el.scrollTo({ top: target, behavior: 'smooth' });
+        else el.scrollTop = target;
+      }
       computeActive();
-    }, 140);
+    };
+    el.addEventListener('scrollend', onEnd);
+    return () => el.removeEventListener('scrollend', onEnd);
   }, [computeActive, itemHeight, values.length]);
 
-  useEffect(() => () => { cancelAnimationFrame(rafRef.current); clearTimeout(settleRef.current); }, []);
+  useEffect(() => () => cancelAnimationFrame(rafRef.current), []);
 
   const tapSelect = (idx) => {
     const el = scrollerRef.current;
-    if (el) el.scrollTo({ top: idx * itemHeight, behavior: 'smooth' });
+    if (!el) return;
+    if (typeof el.scrollTo === 'function') el.scrollTo({ top: idx * itemHeight, behavior: 'smooth' });
+    else el.scrollTop = idx * itemHeight;
   };
 
   return (
     <div
+      ref={scrollerRef}
       className={cn('relative flex-1 min-w-0 drum-scroller overflow-y-auto', className)}
       style={{ height: CONTAINER_H }}
       onScroll={handleScroll}
@@ -78,31 +91,29 @@ export default function DrumColumn({ values, value, onChange, itemHeight = 48, v
       {values.map((v, i) => {
         const delta = i - active;
         const dist = Math.min(Math.abs(delta), 3);
+        const isActive = delta === 0;
         // Tamburo cilindrico: sopra rotateX positivo, sotto negativo
         const angle = dist === 1 ? 24 : 46;
-        const transform =
-          delta === 0
-            ? 'rotateX(0deg) translateZ(12px) scale(1.08)'
-            : `rotateX(${delta < 0 ? angle : -angle}deg) translateZ(${dist === 1 ? -12 : -34}px) scale(${dist === 1 ? 0.9 : 0.76})`;
-        const opacity = delta === 0 ? 1 : dist === 1 ? 0.68 : dist === 2 ? 0.32 : 0.16;
+        const transform = isActive
+          ? 'rotateX(0deg) translateZ(12px) scale(1.08)'
+          : `rotateX(${delta < 0 ? angle : -angle}deg) translateZ(${dist === 1 ? -12 : -34}px) scale(${dist === 1 ? 0.9 : 0.76})`;
+        const opacity = isActive ? 1 : dist === 1 ? 0.6 : dist === 2 ? 0.28 : 0.14;
         return (
           <button
             key={v}
             type="button"
             role="option"
-            aria-selected={delta === 0}
+            aria-selected={isActive}
             onClick={() => tapSelect(i)}
             className={cn(
-              'drum-item w-full flex items-center justify-center select-none cursor-pointer',
-              delta === 0 ? 'text-label font-semibold' : dist === 1 ? 'text-[#c7c7cc] font-medium' : 'text-[#8e8e93] font-medium'
+              'drum-item tap-clean w-full flex items-center justify-center select-none cursor-pointer',
+              isActive ? 'text-label font-bold' : 'text-[#98989d] font-medium'
             )}
-            style={{
-              height: itemHeight,
-              transform,
-              opacity,
-            }}
+            style={{ height: itemHeight, transform, opacity }}
           >
-            <span className={delta === 0 ? 'text-[24px] md:text-[26px]' : dist === 1 ? 'text-[21px]' : 'text-[19px]'}>{format(v)}</span>
+            <span className={isActive ? 'text-[26px] tabular-nums' : dist === 1 ? 'text-[21px] tabular-nums' : 'text-[19px] tabular-nums'}>
+              {format(v)}
+            </span>
           </button>
         );
       })}

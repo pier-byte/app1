@@ -97,7 +97,7 @@ try {
   report('Planner: flusso rotazione', false, err.message);
 }
 
-// ═══════════ OBIETTIVO NUTRIZIONE ═══════════
+// ═══════════ OBIETTIVO NUTRIZIONE (dati automatici + override manuale) ═══════════
 try {
   memStore.clear();
   const { default: NutritionPage } = await vite.ssrLoadModule('/src/pages/NutritionPage.jsx');
@@ -110,20 +110,20 @@ try {
   click($$('button').find((b) => b.textContent.includes('Obiettivo')));
   await sleep(60);
   report('Obiettivo: dialog aperto', container.textContent.includes('Obiettivo nutrizione'));
+  report('Obiettivo: dati automatici (sola lettura, sesso M fisso)', container.textContent.includes('I tuoi dati') && container.textContent.includes('Sesso') && !container.textContent.includes('Peso (kg)'));
 
-  const numInputs = $$('input[type="number"]');
-  const peso = numInputs.find((i) => i.closest('label')?.textContent.includes('Peso'));
-  const altezza = numInputs.find((i) => i.closest('label')?.textContent.includes('Altezza'));
-  if (peso) setInput(peso, '54');
-  if (altezza) setInput(altezza, '165');
-  await sleep(40);
-  click($$('button').find((b) => b.textContent.trim() === 'Applica'));
+  // Override manuale: la kcal inserita ricalcola macro e calorie
+  const manual = $$('input').find((i) => i.getAttribute('aria-label') === 'Obiettivo kcal manuale');
+  report('Obiettivo: campo override manuale presente', !!manual);
+  setInput(manual, '3000');
+  await sleep(50);
+  report('Obiettivo: override aggiorna macro al volo', container.textContent.includes('Override attivo') && container.textContent.includes('Target kcal'));
+  const aplicaBtn2 = $$('button').find((b) => b.textContent.trim() === 'Applica');
+  click(aplicaBtn2);
   await sleep(150);
-  const closed = !container.textContent.includes('Obiettivo nutrizione');
-  const goalsSaved = JSON.parse(localStorage.getItem('app1_nutrition_goals_v2') || 'null');
-  const kcal449 = goalsSaved && goalsSaved.calories === Math.round(goalsSaved.protein * 4 + goalsSaved.carbs * 4 + goalsSaved.fat * 9);
-  report('Obiettivo: Applica CHIUDE il dialog (pagina subito visibile)', closed);
-  report('Obiettivo: target salvati con kcal collegate 4-4-9', !!goalsSaved && kcal449, JSON.stringify(goalsSaved));
+  const goalsSaved2 = JSON.parse(localStorage.getItem('app1_nutrition_goals_v2') || 'null');
+  report('Obiettivo: Applica salva kcal manuale + macro coerenti', goalsSaved2?.calories === 3000 && goalsSaved2.calories === Math.round(goalsSaved2.protein * 4 + goalsSaved2.carbs * 4 + goalsSaved2.fat * 9), JSON.stringify(goalsSaved2));
+  report('Obiettivo: Applica chiude il dialog', !container.textContent.includes('Obiettivo nutrizione'));
 } catch (err) {
   report('Obiettivo: flusso', false, err.message);
 }
@@ -261,6 +261,94 @@ try {
   report('Nuovo elenco: dialog nome (0/50) + griglia colori', c4.textContent.includes('Crea un nuovo elenco') && c4.textContent.includes('0/50') && c4.textContent.includes('Colore calendario'));
 } catch (err) {
   report('Editor attività + elenco Liquid Glass', false, err.message);
+}
+
+
+// ═══════════ NOTE: TIPO IMMUTABILE + COLOR PICKER ═══════════
+try {
+  memStore.clear();
+  const { default: NoteEditorSheet } = await vite.ssrLoadModule('/src/components/notes/NoteEditorSheet.jsx');
+  const c5 = window.document.createElement('div');
+  window.document.body.appendChild(c5);
+  const r5 = createRoot(c5);
+  const notaEsistente = { id: 'n1', type: 'text', title: 'Nota aperta', body: 'corpo', color: '#ff9f0a', pinned: false, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+  flushSync(() => r5.render(React.createElement(NoteEditorSheet, { isOpen: true, onClose: () => {}, onSave: () => {}, note: notaEsistente })));
+  await sleep(60);
+  report('Nota esistente: tipo BLOCCATO (chip read-only, niente selettore Testo/Checklist)', c5.textContent.includes('Nota') && !c5.textContent.includes('Checklist'));
+  report('Nota: color picker con pallini e check sul selezionato', [...c5.querySelectorAll('button[aria-pressed]')].length >= 6 && !!c5.querySelector('button[aria-pressed="true"] svg'));
+
+  // Nuova nota → tipo scelgibile
+  const c6 = window.document.createElement('div');
+  window.document.body.appendChild(c6);
+  const r6 = createRoot(c6);
+  flushSync(() => r6.render(React.createElement(NoteEditorSheet, { isOpen: true, onClose: () => {}, onSave: () => {}, note: null })));
+  await sleep(60);
+  report('Nuova nota: selettore Testo/Checklist visibile', c6.textContent.includes('Checklist'));
+} catch (err) {
+  report('Note: tipo immutabile + color picker', false, err.message);
+}
+
+// ═══════════ ROUTINE: FINISHEARLY + CAROUSEL RENDER ═══════════
+try {
+  memStore.clear();
+  localStorage.removeItem('app1_routine_session_v1');
+  const { routineSession } = await vite.ssrLoadModule('/src/store/routineSession.js');
+  const { default: RoutineCarousel } = await vite.ssrLoadModule('/src/components/routine/RoutineCarousel.jsx');
+
+  const mkSteps = (n) => Array.from({ length: n }, (_, i) => ({ name: 'Task ' + (i + 1), targetMinutes: 1 }));
+  routineSession.begin('2026-09-12', mkSteps(2), { routineName: 'Routine A' });
+  routineSession.completeStep();
+  routineSession.finishEarly();
+  const snap = routineSession.getSnapshot();
+  report('Routine: finishEarly → stato done + completedAt', snap.status === 'done' && snap.completedAt != null);
+
+  const c7 = window.document.createElement('div');
+  window.document.body.appendChild(c7);
+  const r7 = createRoot(c7);
+  let finished = false;
+  routineSession.begin('2026-09-12', mkSteps(2), { routineName: 'Routine B' });
+  flushSync(() => r7.render(React.createElement(RoutineCarousel, { session: routineSession.getSnapshot(), onFinish: () => { finished = true; routineSession.finishEarly(); }, onPause: () => {}, onResume: () => {}, onComplete: () => {} })));
+  await sleep(60);
+  const finBtn = [...c7.querySelectorAll('button')].find((b) => b.textContent.includes('Concludi Routine'));
+  report('Carousel: bottone Concludi Routine renderizzato', !!finBtn);
+  click(finBtn);
+  await sleep(400);
+  report('Carousel: click su Concludi → onFinish invocato', finished && routineSession.getSnapshot().status === 'done');
+} catch (err) {
+  report('Routine: finishEarly + carousel', false, err.message);
+}
+
+// ═══════════ DRUM PICKER: SNAP AL CENTRO ═══════════
+try {
+  memStore.clear();
+  const { default: DrumColumn } = await vite.ssrLoadModule('/src/components/ui/DrumColumn.jsx');
+  const c8 = window.document.createElement('div');
+  window.document.body.appendChild(c8);
+  const r8 = createRoot(c8);
+  let picked = null;
+  // jsdom è senza layout: scrollTop sul prototype resta 0 → rendilo scrivibile per istanza
+  const realScrollTo = Element.prototype.scrollTo;
+  let fakeST = 0;
+  Element.prototype.scrollTo = function (opts) {
+    this.scrollTop = opts?.top ?? 0; // usa il setter definito sotto (istanza scroller)
+  };
+  flushSync(() => r8.render(React.createElement(DrumColumn, { values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], value: 3, onChange: (v) => { picked = v; }, format: (v) => String(v) })));
+  await sleep(120);
+  const scroller = c8.querySelector('.drum-scroller[role="listbox"]');
+  Object.defineProperty(scroller, 'scrollTop', { get: () => fakeST, set: (v) => { fakeST = v; }, configurable: true });
+  fakeST = 3 * 48; // posizione iniziale (valore 3 al centro)
+  report('Drum: scroller con PAD simmetrici + role listbox', !!scroller && !!c8.querySelector('.drum-item[aria-selected="true"]'));
+  report('Drum: item centrato = valore selezionato', c8.querySelector('.drum-item[aria-selected="true"]')?.textContent === '3');
+  // Tap sul valore 7 → tapSelect → scrollTo(7*48) → poi lo scrollend (nativo) riallinea e notifica onChange
+  const target = [...c8.querySelectorAll('.drum-item')].find((el) => el.textContent === '7');
+  click(target);
+  report('Drum: tap → scroll verso indice del valore', fakeST === 7 * 48, 'scrollTop=' + fakeST);
+  scroller.dispatchEvent(new window.Event('scrollend'));
+  await sleep(60);
+  Element.prototype.scrollTo = realScrollTo;
+  report('Drum: scrollend → onChange con il valore centrato', picked === 7, 'picked=' + picked);
+} catch (err) {
+  report('Drum picker snap', false, err.message);
 }
 
 const passed = results.filter((r) => r[1]).length;
