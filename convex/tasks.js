@@ -324,11 +324,12 @@ export const addActualMinutes = mutation({
 const DEFAULT_CATEGORIES = [
   { name: "Studiare", color: "#30d158", order: 0 },
   { name: "Esercizi", color: "#ffd60a", order: 1 },
-  { name: "Verifica/interrogazione", color: "#ff375f", order: 2 },
-  { name: "Ripetere", color: "#bf5af2", order: 3 },
-  { name: "Leggere", color: "#66d4cf", order: 4 },
-  { name: "Ricopiare", color: "#64d2ff", order: 5 },
-  { name: "Ricerche/presentazioni", color: "#ac8e68", order: 6 },
+  { name: "Allenamenti", color: "#ff9f0a", order: 2 },
+  { name: "Verifica/interrogazione", color: "#ff375f", order: 3 },
+  { name: "Ripetere", color: "#bf5af2", order: 4 },
+  { name: "Leggere", color: "#66d4cf", order: 5 },
+  { name: "Ricopiare", color: "#64d2ff", order: 6 },
+  { name: "Ricerche/presentazioni", color: "#ac8e68", order: 7 },
 ];
 
 /** Popola le categorie di default al primo avvio (chiamato dal client se vuote). */

@@ -52,18 +52,18 @@ function TimePickerContent({ onClose, value, onConfirm, onToggleAllDay, title = 
       <p className="text-center text-[13px] text-label-tertiary -mt-1 pb-2">{pad(hour)}:{pad(minute)}</p>
 
       {/* Tamburo: banda di selezione dietro le cifre + due colonne */}
-      <div className="relative w-full my-1 flex items-center justify-center overflow-hidden" style={{ height: 208 }}>
+      <div className="relative w-full my-1 flex items-center justify-center overflow-hidden" style={{ height: 240 }}>
         {/* Banda centrale (z-0, dietro i numeri) */}
         <div className="drum-band absolute inset-x-2 h-[48px] rounded-2xl pointer-events-none z-0">
           <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-transparent via-white/[0.07] to-transparent" />
         </div>
 
         <div className="relative z-10 w-full flex items-center justify-center px-2">
-          <DrumColumn values={hours} value={hour} onChange={setHour} label="Ore" format={pad} />
+          <DrumColumn values={hours} value={hour} onChange={setHour} label="Ore" format={pad} itemHeight={48} visibleCount={5} />
           <div className="w-8 flex items-center justify-center z-20 select-none">
-            <span className="text-[30px] font-semibold text-label leading-none">:</span>
+            <span className="text-[28px] font-semibold text-label leading-none">:</span>
           </div>
-          <DrumColumn values={minutes} value={minute} onChange={setMinute} label="Minuti" format={pad} />
+          <DrumColumn values={minutes} value={minute} onChange={setMinute} label="Minuti" format={pad} itemHeight={48} visibleCount={5} />
         </div>
       </div>
 

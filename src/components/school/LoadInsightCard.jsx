@@ -66,7 +66,7 @@ export default function LoadInsightCard({ dateKey, tasks }) {
         <div className="h-full rounded-full bg-sys-green transition-all duration-500" style={{ width: `${ratio * 100}%` }} />
       </div>
 
-      {hasGemini ? (
+      {hasGemini && (
         insight || cached ? (
           <div className="flex gap-2.5 bg-surface-2 rounded-xl p-3.5">
             <Sparkles size={15} className="text-sky shrink-0 mt-0.5" />
@@ -81,13 +81,9 @@ export default function LoadInsightCard({ dateKey, tasks }) {
             className="w-full h-10 rounded-full bg-accent/15 text-sky text-[14px] font-semibold flex items-center justify-center gap-2 active:opacity-70 disabled:opacity-50 transition-opacity"
           >
             {loading ? <Loader2 size={15} className="animate-spin" /> : <Sparkles size={15} />}
-            {loading ? 'Gemini sta analizzando…' : 'Analizza con Gemini AI'}
+            {loading ? 'Analisi in corso…' : 'Analizza carico giornaliero'}
           </button>
         )
-      ) : (
-        <p className="text-[12px] text-label-tertiary leading-relaxed">
-          Configura <span className="text-label-secondary">VITE_GEMINI_API_KEY</span> per l'analisi AI del carico.
-        </p>
       )}
     </div>
   );

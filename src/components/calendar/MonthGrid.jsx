@@ -58,7 +58,6 @@ export default function MonthGrid({ selectedDate, onSelectDate }) {
               (a.createdAt || 0) - (b.createdAt || 0)
           );
           const outside = !isSameMonth(date, selectedDate);
-          const selected = isSameDay(date, selectedDate);
           const today = isToday(date);
           const overflow = dayTasks.length - maxPills;
 
@@ -69,10 +68,7 @@ export default function MonthGrid({ selectedDate, onSelectDate }) {
               onClick={() => onSelectDate(date)}
               aria-label={`${format(date, 'd MMMM', { locale: it })}${dayTasks.length ? `, ${dayTasks.length} attività` : ''}`}
               className={cn(
-                'tap-clean relative bg-canvas min-h-0 min-w-0 overflow-hidden flex flex-col items-stretch px-[3px] pt-1 pb-[3px] gap-[3px] transition-colors',
-                selected
-                  ? 'bg-white/[0.05] shadow-[inset_0_0_0_1.5px_rgba(41,151,255,0.65)] rounded-[10px]'
-                  : 'active:bg-white/[0.04]',
+                'tap-clean relative bg-canvas min-h-0 min-w-0 overflow-hidden flex flex-col items-stretch px-[3px] pt-1 pb-[3px] gap-[3px] active:bg-white/[0.04] transition-colors',
                 outside && 'opacity-45'
               )}
             >
@@ -81,9 +77,7 @@ export default function MonthGrid({ selectedDate, onSelectDate }) {
                   'mx-auto w-7 h-7 shrink-0 grid place-items-center rounded-full text-[13.5px] font-medium tabular-nums',
                   today
                     ? 'bg-accent text-white font-semibold shadow-sm shadow-blue-600/50'
-                    : selected
-                      ? 'text-sky font-semibold'
-                      : 'text-label'
+                    : 'text-label'
                 )}
               >
                 {format(date, 'd')}

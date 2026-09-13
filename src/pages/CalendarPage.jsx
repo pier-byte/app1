@@ -6,6 +6,7 @@ import CalendarHeader from '../components/layout/CalendarHeader';
 import WeekStrip from '../components/layout/WeekStrip';
 import MonthGrid from '../components/calendar/MonthGrid';
 import DaySheet from '../components/calendar/DaySheet';
+import MonthYearPickerDialog from '../components/school/MonthYearPickerDialog';
 // Editor lazy: scaricato solo alla prima apertura (risparmia ~70kB al primo paint)
 const TaskFormSheet = lazy(() => import('../components/school/TaskFormSheet'));
 import FAB from '../components/ui/FAB';
@@ -24,6 +25,7 @@ export default function CalendarPage({ selectedDate, selectDate, mode, setMode, 
   const [sheetDate, setSheetDate] = useState(null);
   const [formOpen, setFormOpen] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
+  const [monthPickerOpen, setMonthPickerOpen] = useState(false);
   const { data: dayTasks = [] } = useExpandedTasks(dateKey);
   const { createTask, updateTask, toggleTask } = useTasks(dateKey);
   const { data: categories, createCategory } = useTaskCategories();
@@ -57,7 +59,18 @@ export default function CalendarPage({ selectedDate, selectDate, mode, setMode, 
         onPrev={goPrev}
         onNext={goNext}
         onToday={goToToday}
+        onHeaderClick={() => setMonthPickerOpen(true)}
         weekStrip={<WeekStrip embedded weekDates={weekDates} selectedDate={selectedDate} weekLabel={weekLabel} onSelectDate={selectDate} onPrevWeek={goToPrevWeek} onNextWeek={goToNextWeek} onToday={goToToday} />}
+      />
+
+      <MonthYearPickerDialog
+        isOpen={monthPickerOpen}
+        onClose={() => setMonthPickerOpen(false)}
+        value={selectedDate}
+        onConfirm={(newMonthDate) => {
+          selectDate(newMonthDate);
+          setMonthPickerOpen(false);
+        }}
       />
 
       {mode === 'month' ? (

@@ -16,8 +16,9 @@ export const TABS = [
 export const DEFAULT_TASK_CATEGORIES = [
   { name: 'Studiare', color: '#30d158' },
   { name: 'Esercizi', color: '#ffd60a' },
+  { name: 'Allenamenti', color: '#ff9f0a' },
   { name: 'Verifica/interrogazione', color: '#ff375f' },
-  { name: 'Ripetere', color: '#ff375f' },
+  { name: 'Ripetere', color: '#bf5af2' },
   { name: 'Leggere', color: '#66d4cf' },
   { name: 'Ricopiare', color: '#64d2ff' },
   { name: 'Ricerche/presentazioni', color: '#ac8e68' },

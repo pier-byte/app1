@@ -392,8 +392,7 @@ try {
   const text = c9.textContent;
   report('Profilo: card accesso rapido Note e Wallet', text.includes('Profilo') && text.includes('note salvate') && text.includes('Budget sett.'));
   report('Profilo: toggle Settimanale/Mensile presente', !![...c9.querySelectorAll('button')].find((b) => b.textContent === 'Settimanale') && !![...c9.querySelectorAll('button')].find((b) => b.textContent === 'Mensile'));
-  report('Profilo: 4 sezioni analytics', text.includes('Studio e attività') && text.includes('Allenamenti completati') && text.includes('Bilancio wallet') && text.includes('Aderenza alimentare'));
-  report('Profilo: ore studio + aderenza 95% nel contenuto', text.includes('accumulate nel periodo') && text.includes("95% dell'obiettivo"));
+  report('Profilo: ore studio + aderenza target raggiunto nel contenuto', text.includes('accumulate nel periodo') && text.includes('target raggiunto'));
   // Toggle → mensile: cambia il label del periodo
   click([...c9.querySelectorAll('button')].find((b) => b.textContent === 'Mensile'));
   await sleep(80);

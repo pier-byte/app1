@@ -176,7 +176,13 @@ export default function RoutinePage({ selectedDate }) {
 
       {/* Sessione completata appena → riepilogo celebrativo */}
       {session.dateKey === dateKey && session.status === 'done' && (
-        <CompletionSummary session={session} />
+        <CompletionSummary
+          session={session}
+          onReturnToOverview={() => {
+            routineSession.reset();
+            setView('overview');
+          }}
+        />
       )}
 
       {/* Vista panoramica: tutte le schede in formato compatto */}
@@ -581,7 +587,7 @@ function NewTemplateDialog({ isOpen, onClose, onCreate }) {
   );
 }
 
-function CompletionSummary({ session }) {
+function CompletionSummary({ session, onReturnToOverview }) {
   const total = session.steps.reduce((s, st) => s + (st.actualSeconds || 0), 0);
   return (
     <motion.div
@@ -600,9 +606,19 @@ function CompletionSummary({ session }) {
       <h2 className="text-[22px] font-semibold text-label tracking-tight">
         {session.routineName ? `${session.routineName} completata!` : 'Routine completata!'}
       </h2>
-      <p className="text-[14px] text-label-secondary mt-1 mb-5">
+      <p className="text-[14px] text-label-secondary mt-1 mb-4">
         Tempo totale: {formatSeconds(total)}
       </p>
+
+      {/* Pulsante primario per tornare alla vista principale con tutte le schede */}
+      <motion.button
+        whileTap={{ scale: 0.98 }}
+        onClick={onReturnToOverview}
+        className="w-full h-12 rounded-2xl bg-accent text-white text-[15px] font-semibold flex items-center justify-center gap-2 shadow-lg shadow-blue-500/30 active:bg-accent-pressed transition-colors mb-5"
+      >
+        <LayoutGrid size={18} /> Torna alle Routine
+      </motion.button>
+
       <StepList steps={session.steps} />
     </motion.div>
   );

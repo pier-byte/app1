@@ -42,7 +42,7 @@ export default function MealLogDialog({ isOpen, onClose, onConfirm, defaultMealT
     if (!value || loading) return;
 
     if (!hasGemini) {
-      setError('AI non attiva: aggiungi VITE_GEMINI_API_KEY. Puoi inserire i valori manualmente.');
+      setError('Riconoscimento automatico non disponibile. Puoi inserire i valori nutrizionali manualmente nei campi sottostanti.');
       return;
     }
 

@@ -2,17 +2,36 @@ import { useSyncExternalStore } from 'react';
 import { toDateKey, formatSeconds } from '../lib/dates';
 
 /**
- * StudioTimer — store singleton del timer di studio.
- * Sopravvive ai cambi tab e al reload della pagina (localStorage),
- * conta in avanti dalla partenza (finestra 15:00–20:00).
+ * StudioTimer — store singleton del timer di studio flessibile e multi-sessione.
+ * Supporta configurazione libera dell'orario di fine sessione (es. 17:30, 20:00).
+ * Calcola sia il tempo trascorso dall'avvio della sessione corrente,
+ * sia il tempo rimanente al raggiungimento dell'orario di fine.
  *
  * Stati: idle → running ⇄ paused → (stop) → idle
  */
 
-const STORAGE_KEY = 'app1_study_timer_v1';
+const STORAGE_KEY = 'app1_study_timer_v2';
 
-let internal = { status: 'idle', baseSeconds: 0, segmentStart: null, dateKey: null };
-let snapshot = { ...internal, seconds: 0 };
+const pad = (n) => String(n).padStart(2, '0');
+
+function defaultEndTimeStr() {
+  const d = new Date(Date.now() + 90 * 60 * 1000); // default 1h30m da adesso
+  // arrotonda ai 5 minuti successivi
+  const rem = d.getMinutes() % 5;
+  if (rem > 0) d.setMinutes(d.getMinutes() + (5 - rem));
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+let internal = {
+  status: 'idle',
+  baseSeconds: 0,
+  segmentStart: null,
+  dateKey: null,
+  targetEndTime: defaultEndTimeStr(),
+  sessionStart: null,
+};
+
+let snapshot = { ...internal, seconds: 0, remainingSeconds: 0 };
 let interval = null;
 const listeners = new Set();
 
@@ -23,8 +42,34 @@ function computeSeconds() {
   return internal.baseSeconds + live;
 }
 
+function computeRemainingSeconds(targetTimeStr) {
+  if (!targetTimeStr) return 0;
+  const [h, m] = targetTimeStr.split(':').map(Number);
+  if (!Number.isFinite(h) || !Number.isFinite(m)) return 0;
+
+  const targetDate = new Date();
+  targetDate.setHours(h, m, 0, 0);
+
+  // Se l'orario di fine è già passato rispetto alla mezzanotte/inizio ma siamo in sessione notturna
+  const now = Date.now();
+  let diffMs = targetDate.getTime() - now;
+  if (diffMs < -12 * 60 * 60 * 1000) {
+    // Probabilmente il target è domani
+    targetDate.setDate(targetDate.getDate() + 1);
+    diffMs = targetDate.getTime() - now;
+  }
+
+  return Math.max(0, Math.floor(diffMs / 1000));
+}
+
 function notify() {
-  snapshot = { ...internal, seconds: computeSeconds() };
+  const secs = computeSeconds();
+  const remSecs = computeRemainingSeconds(internal.targetEndTime);
+  snapshot = {
+    ...internal,
+    seconds: secs,
+    remainingSeconds: remSecs,
+  };
   persist();
   listeners.forEach((l) => l());
 }
@@ -32,7 +77,7 @@ function notify() {
 function persist() {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...internal, savedAt: Date.now() }));
-  } catch { /* spazio esaurito: ignora */ }
+  } catch { /* ignora */ }
 }
 
 function tick() {
@@ -50,26 +95,43 @@ function clearIntervalIfNeeded() {
   }
 }
 
-// Ripristino dopo reload (solo se della giornata corrente)
+// Ripristino dopo reload
 try {
   const raw = localStorage.getItem(STORAGE_KEY);
   if (raw) {
     const saved = JSON.parse(raw);
     if (saved.dateKey === toDateKey(new Date()) && saved.status !== 'idle') {
-      // Riparte in pausa (non riprende da solo il conteggio)
       let base = saved.baseSeconds || 0;
       if (saved.status === 'running' && saved.segmentStart) {
         base += Math.floor((Date.now() - saved.segmentStart) / 1000);
       }
-      internal = { status: 'paused', baseSeconds: base, segmentStart: null, dateKey: saved.dateKey };
+      internal = {
+        status: 'paused',
+        baseSeconds: base,
+        segmentStart: null,
+        dateKey: saved.dateKey,
+        targetEndTime: saved.targetEndTime || defaultEndTimeStr(),
+        sessionStart: saved.sessionStart || null,
+      };
+    } else if (saved.targetEndTime) {
+      internal.targetEndTime = saved.targetEndTime;
     }
   }
 } catch { /* ignora */ }
 notify();
 
 export const studyTimer = {
-  start(dateKey) {
-    internal = { status: 'running', baseSeconds: 0, segmentStart: Date.now(), dateKey };
+  start(dateKey, customEndTime) {
+    const now = Date.now();
+    const end = customEndTime || internal.targetEndTime || defaultEndTimeStr();
+    internal = {
+      status: 'running',
+      baseSeconds: 0,
+      segmentStart: now,
+      dateKey: dateKey || toDateKey(new Date()),
+      targetEndTime: end,
+      sessionStart: now,
+    };
     ensureInterval();
     notify();
   },
@@ -88,10 +150,28 @@ export const studyTimer = {
     ensureInterval();
     notify();
   },
-  /** Termina la sessione e restituisce i secondi totali. */
+  setTargetEndTime(timeStr) {
+    if (!timeStr) return;
+    internal.targetEndTime = timeStr;
+    notify();
+  },
+  extendMinutes(minutes) {
+    const [h, m] = (internal.targetEndTime || defaultEndTimeStr()).split(':').map(Number);
+    const d = new Date();
+    d.setHours(h, m + minutes, 0, 0);
+    internal.targetEndTime = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    notify();
+  },
   stop() {
     const total = computeSeconds();
-    internal = { status: 'idle', baseSeconds: 0, segmentStart: null, dateKey: null };
+    internal = {
+      status: 'idle',
+      baseSeconds: 0,
+      segmentStart: null,
+      dateKey: null,
+      targetEndTime: internal.targetEndTime,
+      sessionStart: null,
+    };
     clearIntervalIfNeeded();
     notify();
     return total;
@@ -105,7 +185,6 @@ export const studyTimer = {
   },
 };
 
-/** Hook React: snapshot reattivo del timer di studio. */
 export function useStudyTimer() {
   return useSyncExternalStore(studyTimer.subscribe, studyTimer.getSnapshot, studyTimer.getSnapshot);
 }

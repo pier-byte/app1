@@ -1,34 +1,29 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Pause, Square, Check, GraduationCap } from 'lucide-react';
+import { Play, Pause, Square, Check, GraduationCap, Clock, Plus, Hourglass } from 'lucide-react';
 import { useStudyTimer, studyTimer } from '../../store/studyTimer';
-import { formatSeconds, formatMinutes, isToday, toDateKey } from '../../lib/dates';
+import { formatSeconds, formatMinutes, toDateKey } from '../../lib/dates';
+import TimePickerDialog from './TimePickerDialog';
 import { cn } from '../../lib/cn';
 
 /**
- * StudyTimerCard — Timer di studio con finestra 15:00–20:00, pausa e ripresa.
- * Alla chiusura propone l'attribuzione dei minuti a uno dei task del giorno.
+ * StudyTimerCard — Timer di studio flessibile e multi-sessione.
+ * Senza blocchi orari rigidi predefiniti. Consente di configurare liberamente
+ * l'orario di fine sessione e mostra sia il tempo trascorso sia il tempo rimanente.
  */
 export default function StudyTimerCard({ selectedDate, tasks, onAssignMinutes }) {
   const timer = useStudyTimer();
   const [assignOpen, setAssignOpen] = useState(false);
+  const [timePickerOpen, setTimePickerOpen] = useState(false);
   const [pendingMinutes, setPendingMinutes] = useState(0);
 
   const dateKey = toDateKey(selectedDate);
-  const isTodayDate = isToday(selectedDate);
   const sessionForToday = !timer.dateKey || timer.dateKey === dateKey;
-
-  // Finestra di studio 15:00–20:00
-  const now = new Date();
-  const minutesNow = now.getHours() * 60 + now.getMinutes();
-  const inWindow = isTodayDate && minutesNow >= 15 * 60 && minutesNow < 20 * 60;
 
   const studiedToday = useMemo(
     () => tasks.reduce((sum, t) => sum + (t.actualMinutes || 0), 0),
     [tasks]
   );
-  const maxSeconds = 5 * 60 * 60; // 5h finestra
-  const progress = Math.min(timer.seconds / maxSeconds, 1);
 
   const handleStop = () => {
     const total = studyTimer.stop();
@@ -43,20 +38,33 @@ export default function StudyTimerCard({ selectedDate, tasks, onAssignMinutes })
   return (
     <>
       <div className="card p-5">
-        {/* Header */}
+        {/* Header con orario di fine configurabile */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <GraduationCap size={18} className="text-sky" />
             <span className="text-[15px] font-semibold text-label">Sessione di studio</span>
           </div>
-          <span className="text-[12px] text-label-tertiary tabular-nums">15:00 – 20:00</span>
+
+          <button
+            type="button"
+            onClick={() => setTimePickerOpen(true)}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.08] hover:bg-white/[0.14] border border-white/10 active:scale-95 transition-all"
+            title="Modifica orario fine sessione"
+          >
+            <Clock size={12} className="text-sky" />
+            <span className="text-[11.5px] font-medium text-label-secondary">Fine:</span>
+            <span className="text-[12px] font-semibold text-label tabular-nums">{timer.targetEndTime}</span>
+          </button>
         </div>
 
-        {/* Timer grande */}
+        {/* Display Timer: Tempo trascorso (principale) */}
         <div className="flex flex-col items-center py-2">
+          <span className="text-[11.5px] font-semibold text-label-tertiary uppercase tracking-wider mb-1">
+            Tempo trascorso
+          </span>
           <motion.span
             key={timer.status}
-            initial={{ opacity: 0.6 }}
+            initial={{ opacity: 0.8 }}
             animate={{ opacity: 1 }}
             className={cn(
               'text-[52px] leading-none font-light tabular-nums tracking-tight',
@@ -66,37 +74,88 @@ export default function StudyTimerCard({ selectedDate, tasks, onAssignMinutes })
             {formatSeconds(timer.seconds)}
           </motion.span>
 
+          {/* Indicatore di stato */}
           <div className="flex items-center gap-1.5 mt-2.5">
             {timer.status === 'running' && <span className="w-1.5 h-1.5 rounded-full bg-sys-green animate-pulse" />}
             <span className="text-[12px] text-label-secondary">
-              {timer.status === 'idle' && (inWindow ? 'Sei nella finestra di studio' : 'Timer non avviato')}
+              {timer.status === 'idle' && 'Sessione pronta per l’avvio'}
               {timer.status === 'running' && 'Registrazione in corso…'}
-              {timer.status === 'paused' && 'In pausa'}
+              {timer.status === 'paused' && 'Sessione in pausa'}
             </span>
           </div>
 
-          {/* Barra progresso finestra 5h */}
-          <div className="w-full h-1 rounded-full bg-fill-tertiary mt-4 overflow-hidden">
-            <motion.div
-              className="h-full rounded-full bg-accent"
-              animate={{ width: `${progress * 100}%` }}
-              transition={{ duration: 0.5 }}
-            />
+          {/* Box Tempo rimanente al target orario */}
+          <div className="w-full max-w-[280px] bg-white/[0.05] border border-white/[0.08] rounded-2xl p-3 mt-4 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Hourglass size={15} className={timer.remainingSeconds > 0 ? 'text-sky' : 'text-sys-green'} />
+              <div className="flex flex-col text-left">
+                <span className="text-[11px] font-medium text-label-tertiary leading-tight">
+                  Tempo rimanente
+                </span>
+                <span className="text-[10px] text-label-secondary">
+                  fino alle {timer.targetEndTime}
+                </span>
+              </div>
+            </div>
+            <div className="text-right">
+              {timer.remainingSeconds > 0 ? (
+                <span className="text-[17px] font-semibold text-label tabular-nums">
+                  {formatSeconds(timer.remainingSeconds)}
+                </span>
+              ) : (
+                <span className="text-[13px] font-semibold text-sys-green">
+                  Obiettivo raggiunto!
+                </span>
+              )}
+            </div>
           </div>
-          <div className="w-full flex justify-between mt-1.5 text-[11px] text-label-tertiary">
-            <span>Oggi: {formatMinutes(studiedToday)} registrati</span>
-            <span>{Math.round(progress * 100)}% di 5h</span>
+
+          {/* Chip rapide per estendere/cambiare orario */}
+          <div className="flex items-center justify-center gap-2 mt-3.5">
+            <button
+              type="button"
+              onClick={() => studyTimer.extendMinutes(15)}
+              className="px-2.5 py-1 rounded-full bg-white/[0.06] hover:bg-white/[0.12] active:scale-95 text-[11px] font-medium text-white/80 border border-white/10 transition-all"
+            >
+              +15m
+            </button>
+            <button
+              type="button"
+              onClick={() => studyTimer.extendMinutes(30)}
+              className="px-2.5 py-1 rounded-full bg-white/[0.06] hover:bg-white/[0.12] active:scale-95 text-[11px] font-medium text-white/80 border border-white/10 transition-all"
+            >
+              +30m
+            </button>
+            <button
+              type="button"
+              onClick={() => studyTimer.extendMinutes(60)}
+              className="px-2.5 py-1 rounded-full bg-white/[0.06] hover:bg-white/[0.12] active:scale-95 text-[11px] font-medium text-white/80 border border-white/10 transition-all"
+            >
+              +1h
+            </button>
+            <button
+              type="button"
+              onClick={() => setTimePickerOpen(true)}
+              className="px-2.5 py-1 rounded-full bg-sky/15 hover:bg-sky/25 active:scale-95 text-[11px] font-semibold text-sky border border-sky/20 transition-all"
+            >
+              Imposta fine
+            </button>
+          </div>
+
+          {/* Totale studiato oggi */}
+          <div className="w-full text-center mt-3 text-[11.5px] text-label-tertiary">
+            <span>Oggi: {formatMinutes(studiedToday)} registrati in totale</span>
           </div>
         </div>
 
-        {/* Controlli */}
+        {/* Controlli sessione */}
         <div className="flex items-center justify-center gap-3 mt-4">
           {timer.status === 'idle' && (
             <button
               onClick={() => studyTimer.start(dateKey)}
-              className="flex items-center gap-2 px-6 h-11 rounded-full bg-accent text-white text-[15px] font-semibold active:bg-accent-pressed transition-colors"
+              className="flex items-center gap-2 px-6 h-11 rounded-full bg-accent text-white text-[15px] font-semibold active:bg-accent-pressed transition-colors shadow-lg shadow-blue-500/30"
             >
-              <Play size={17} fill="currentColor" /> Avvia
+              <Play size={17} fill="currentColor" /> Avvia sessione
             </button>
           )}
           {timer.status === 'running' && (
@@ -119,7 +178,7 @@ export default function StudyTimerCard({ selectedDate, tasks, onAssignMinutes })
             <>
               <button
                 onClick={() => studyTimer.resume()}
-                className="flex items-center gap-2 px-6 h-11 rounded-full bg-accent text-white text-[15px] font-semibold active:bg-accent-pressed transition-colors"
+                className="flex items-center gap-2 px-6 h-11 rounded-full bg-accent text-white text-[15px] font-semibold active:bg-accent-pressed transition-colors shadow-lg shadow-blue-500/30"
               >
                 <Play size={17} fill="currentColor" /> Riprendi
               </button>
@@ -134,13 +193,25 @@ export default function StudyTimerCard({ selectedDate, tasks, onAssignMinutes })
           {timer.status === 'paused' && !sessionForToday && (
             <button
               onClick={() => studyTimer.start(dateKey)}
-              className="flex items-center gap-2 px-6 h-11 rounded-full bg-accent text-white text-[15px] font-semibold active:bg-accent-pressed transition-colors"
+              className="flex items-center gap-2 px-6 h-11 rounded-full bg-accent text-white text-[15px] font-semibold active:bg-accent-pressed transition-colors shadow-lg shadow-blue-500/30"
             >
               <Play size={17} fill="currentColor" /> Nuova sessione
             </button>
           )}
         </div>
       </div>
+
+      {/* Dialog scelta orario di fine */}
+      <TimePickerDialog
+        isOpen={timePickerOpen}
+        onClose={() => setTimePickerOpen(false)}
+        value={timer.targetEndTime}
+        title="Orario fine sessione"
+        onConfirm={(timeStr) => {
+          studyTimer.setTargetEndTime(timeStr);
+          setTimePickerOpen(false);
+        }}
+      />
 
       {/* Dialog attribuzione minuti */}
       <AnimatePresence>
