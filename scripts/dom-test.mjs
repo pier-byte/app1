@@ -82,17 +82,43 @@ try {
   await sleep(80);
   report('Planner: conferma modifica aggiorna il piano', saved?.[0]?.pranzo === 'Pasta al pesto', `pranzo lunedì = ${saved?.[0]?.pranzo}`);
 
-  // Swap giorni (le righe dati contengono i pulsanti dei pasti; l'header no)
-  const rowsBefore = saved.map((d) => d.pranzo).join('|');
-  const swapBtn = $$('button').find((b) => b.textContent.includes('Scambia giorni'));
+  // Swap pasti: SOLO stesso tipo (Pranzo ↔ Pranzo), mai giornate intere
+  const colBefore = saved.map((d) => d.colazione).join('|');
+  const cenaBefore = saved.map((d) => d.cena).join('|');
+  const swapBtn = $$('button').find((b) => b.textContent.includes('Scambia pasti'));
   click(swapBtn);
   await sleep(30);
-  const rows = $$('div').filter((d) => typeof d.className === 'string' && d.className.includes('grid-cols-[64px') && d.querySelector('button'));
-  click(rows[0]);
-  click(rows[1]);
+  const rows = $$('div').filter((d) => typeof d.className === 'string' && d.className.includes('grid-cols-[56px') && d.querySelector('button'));
+  const pranzoCells = rows.map((r) => [...r.querySelectorAll('button')][1]); // colonna Pranzo
+  click(pranzoCells[0]); // Pranzo lunedì ("Pasta al pesto" dopo la modifica)
+  await sleep(20);
+  click(pranzoCells[1]); // Pranzo martedì ("Riso con tonno")
   await sleep(80);
-  const rowsAfter = saved.map((d) => d.pranzo).join('|');
-  report('Planner: swap giorni scambia i pasti', rowsBefore !== rowsAfter && saved[0].pranzo === 'Riso con tonno', `lunedì ora = ${saved[0].pranzo}`);
+  report(
+    'Planner: swap stesso tipo scambia solo il pranzo',
+    saved[0].pranzo === 'Riso con tonno' && saved[1].pranzo === 'Pasta al pomodoro' &&
+    saved.map((d) => d.colazione).join('|') === colBefore && saved.map((d) => d.cena).join('|') === cenaBefore,
+    `lun=${saved[0].pranzo}, mar=${saved[1].pranzo}`
+  );
+
+  // Pasti eterogenei: niente swap (colazione ↔ pranzo rifiutato)
+  const swapBtn2 = $$('button').find((b) => b.textContent.includes('Scambia pasti'));
+  click(swapBtn2);
+  await sleep(20);
+  const rows2 = $$('div').filter((d) => typeof d.className === 'string' && d.className.includes('grid-cols-[56px') && d.querySelector('button'));
+  const beforeHetero = JSON.stringify(saved);
+  click([...rows2[0].querySelectorAll('button')][0]); // Colazione lunedì
+  await sleep(20);
+  click([...rows2[0].querySelectorAll('button')][1]); // Pranzo lunedì → eterogeneo
+  await sleep(60);
+  report(
+    'Planner: swap eterogeneo rifiutato (stesso tipo obbligatorio)',
+    JSON.stringify(saved) === beforeHetero,
+    saved[0].colazione
+  );
+  const annulla = $$('button').find((b) => b.textContent.includes('Annulla'));
+  if (annulla) click(annulla);
+  await sleep(20);
 } catch (err) {
   report('Planner: flusso rotazione', false, err.message);
 }
@@ -186,7 +212,7 @@ try {
   const monthBtn = [...c2.querySelectorAll('button')].find((b) => b.getAttribute('aria-label') === 'Scegli mese e anno');
   click(monthBtn);
   await sleep(50);
-  report('Data: tap sul mese apre il tamburo mese/anno', !!c2.textContent.includes('Anno') || $$('div').some((d) => d.textContent?.includes('Gennaio')));
+  report('Data: tap sul mese apre il tamburo mese/anno', !!c2.querySelector('[aria-label="Anno"]') || c2.textContent.includes('Settembre') || c2.textContent.includes('Dicembre'));
 
   const c3 = window.document.createElement('div');
   window.document.body.appendChild(c3);
@@ -318,7 +344,7 @@ try {
   report('Routine: finishEarly + carousel', false, err.message);
 }
 
-// ═══════════ DRUM PICKER: SNAP AL CENTRO ═══════════
+// ═══════════ DRUM PICKER: FISICA + SNAP AL CENTRO ═══════════
 try {
   memStore.clear();
   const { default: DrumColumn } = await vite.ssrLoadModule('/src/components/ui/DrumColumn.jsx');
@@ -326,27 +352,38 @@ try {
   window.document.body.appendChild(c8);
   const r8 = createRoot(c8);
   let picked = null;
-  // jsdom è senza layout: scrollTop sul prototype resta 0 → rendilo scrivibile per istanza
-  const realScrollTo = Element.prototype.scrollTo;
-  let fakeST = 0;
-  Element.prototype.scrollTo = function (opts) {
-    this.scrollTop = opts?.top ?? 0; // usa il setter definito sotto (istanza scroller)
-  };
   flushSync(() => r8.render(React.createElement(DrumColumn, { values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], value: 3, onChange: (v) => { picked = v; }, format: (v) => String(v) })));
   await sleep(120);
   const scroller = c8.querySelector('.drum-scroller[role="listbox"]');
-  Object.defineProperty(scroller, 'scrollTop', { get: () => fakeST, set: (v) => { fakeST = v; }, configurable: true });
-  fakeST = 3 * 48; // posizione iniziale (valore 3 al centro)
-  report('Drum: scroller con PAD simmetrici + role listbox', !!scroller && !!c8.querySelector('.drum-item[aria-selected="true"]'));
-  report('Drum: item centrato = valore selezionato', c8.querySelector('.drum-item[aria-selected="true"]')?.textContent === '3');
-  // Tap sul valore 7 → tapSelect → scrollTo(7*48) → poi lo scrollend (nativo) riallinea e notifica onChange
-  const target = [...c8.querySelectorAll('.drum-item')].find((el) => el.textContent === '7');
-  click(target);
-  report('Drum: tap → scroll verso indice del valore', fakeST === 7 * 48, 'scrollTop=' + fakeST);
-  scroller.dispatchEvent(new window.Event('scrollend'));
-  await sleep(60);
-  Element.prototype.scrollTo = realScrollTo;
-  report('Drum: scrollend → onChange con il valore centrato', picked === 7, 'picked=' + picked);
+  const slots = c8.querySelectorAll('.drum-slot');
+  report('Drum: scroller role listbox + 7 slot virtuali (niente lista lunga)', !!scroller && slots.length === 7, `slot=${slots.length}`);
+  report('Drum: item centrato = valore selezionato', c8.querySelector('.drum-slot[aria-selected="true"]')?.textContent === '3');
+
+  // Tap sullo slot +2 rispetto al centro → snap morbido su 5 (onChange)
+  const ptr = (type, y) => scroller.dispatchEvent(new window.MouseEvent(type, { bubbles: true, cancelable: true, clientY: y }));
+  ptr('pointerdown', 216); // centro 120 + 2*48 → slot "5"
+  ptr('pointerup', 216);
+  await sleep(450);
+  report('Drum: tap su slot → snap istantaneo e onChange', picked === 5, 'picked=' + picked);
+  report('Drum: centro allineato dopo lo snap', c8.querySelector('.drum-slot[aria-selected="true"]')?.textContent === '5');
+
+  // Tastiera: ArrowDown → step +1 con snap
+  scroller.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true }));
+  await sleep(450);
+  report('Drum: tastiera ArrowDown → step e snap', picked === 6, 'picked=' + picked);
+
+  // Drag con inerzia: trascinamento veloce verso l'alto → il valore cambia e
+  // dopo l'inerzia lo snap riporta il centro su un indice intero
+  const before = picked;
+  ptr('pointerdown', 200);
+  ptr('pointermove', 160);
+  await sleep(16);
+  ptr('pointermove', 110);
+  await sleep(16);
+  ptr('pointerup', 110);
+  await sleep(900);
+  const centered = c8.querySelector('.drum-slot[aria-selected="true"]')?.textContent;
+  report('Drum: drag con inerzia → nuovo valore + snap su indice intero', picked !== before && centered === String(picked), `picked=${picked}, centro=${centered}`);
 } catch (err) {
   report('Drum picker snap', false, err.message);
 }
@@ -384,21 +421,137 @@ try {
   memStore.clear();
   localStorage.setItem('app1_nutrition_goals_v2', JSON.stringify({ calories: 2000, protein: 150, carbs: 200, fat: 70, source: 'macro' }));
   const { default: ProfilePage } = await vite.ssrLoadModule('/src/pages/ProfilePage.jsx');
+  const { getWeekDates, getWeekLabel, addDays, toDateKey } = await vite.ssrLoadModule('/src/lib/dates.js');
+  // Data selezionata FUTURA (mese diverso): la settimana del Profilo deve
+  // restare quella corrente, il default deve essere "Mensile".
+  const futureDate = addDays(new Date(), 40);
+  // Render 1: data corrente → contenuti analytics popolati dai dati seed
+  const c9a = window.document.createElement('div');
+  window.document.body.appendChild(c9a);
+  const r9a = createRoot(c9a);
+  flushSync(() => r9a.render(React.createElement(ProfilePage, { selectedDate: new Date() })));
+  await sleep(150);
+  const textToday = c9a.textContent;
+  report('Profilo: ore studio + aderenza target raggiunto nel contenuto', textToday.includes('accumulate nel periodo') && textToday.includes('target raggiunto'));
+
+  // Render 2: data FUTURA → default Mensile + settimana sempre corrente
   const c9 = window.document.createElement('div');
   window.document.body.appendChild(c9);
   const r9 = createRoot(c9);
-  flushSync(() => r9.render(React.createElement(ProfilePage, { selectedDate: new Date() })));
+  flushSync(() => r9.render(React.createElement(ProfilePage, { selectedDate: futureDate })));
   await sleep(150);
   const text = c9.textContent;
   report('Profilo: card accesso rapido Note e Wallet', text.includes('Profilo') && text.includes('note salvate') && text.includes('Budget sett.'));
   report('Profilo: toggle Settimanale/Mensile presente', !![...c9.querySelectorAll('button')].find((b) => b.textContent === 'Settimanale') && !![...c9.querySelectorAll('button')].find((b) => b.textContent === 'Mensile'));
-  report('Profilo: ore studio + aderenza target raggiunto nel contenuto', text.includes('accumulate nel periodo') && text.includes('target raggiunto'));
-  // Toggle → mensile: cambia il label del periodo
+  // Default al caricamento: vista MENSILE (niente etichetta settimana corrente)
+  report('Profilo: default al caricamento = Mensile', !text.includes('settimana corrente'));
+  // Vista settimanale SEMPRE corrente, anche con data selezionata futura
+  click([...c9.querySelectorAll('button')].find((b) => b.textContent === 'Settimanale'));
+  await sleep(80);
+  const weekStart = getWeekDates(new Date())[0];
+  const startLabel = new Intl.DateTimeFormat('it-IT', { day: 'numeric', month: 'short' }).format(weekStart).replace('.', '');
+  report(
+    'Profilo: settimana sempre corrente (ignora data Calendario)',
+    c9.textContent.includes('(settimana corrente)') && c9.textContent.includes(startLabel),
+    `start=${startLabel}`
+  );
+  // Toggle → mensile: segue il mese della data selezionata
   click([...c9.querySelectorAll('button')].find((b) => b.textContent === 'Mensile'));
   await sleep(80);
-  report('Profilo: toggle mensile aggiorna il periodo', c9.textContent.includes('settembre 2026') || c9.textContent.includes('Settembre 2026'));
+  const monthLabel = new Intl.DateTimeFormat('it-IT', { month: 'long', year: 'numeric' }).format(futureDate);
+  const capMonth = monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1);
+  report('Profilo: mensile segue il mese selezionato', c9.textContent.includes(capMonth), capMonth);
 } catch (err) {
   report('Profilo: dashboard', false, err.message);
+}
+
+// ═══════════ ROUTINE: DEFAULT VISTA "TUTTE" ═══════════
+try {
+  memStore.clear();
+  const { default: RoutinePage } = await vite.ssrLoadModule('/src/pages/RoutinePage.jsx');
+  const c10 = window.document.createElement('div');
+  window.document.body.appendChild(c10);
+  const r10 = createRoot(c10);
+  flushSync(() => r10.render(React.createElement(RoutinePage, { selectedDate: new Date() })));
+  await sleep(250);
+  report(
+    'Routine: default al caricamento = vista "Tutte"',
+    c10.textContent.includes('tocca per aprire') && !c10.textContent.includes('Avvia routine')
+  );
+} catch (err) {
+  report('Routine: default vista', false, err.message);
+}
+
+// ═══════════ RICORRENTI: TARGETDATE + MATERIALIZZAZIONE ISTANZA ═══════════
+try {
+  memStore.clear();
+  const { expandEventsForRange } = await vite.ssrLoadModule('/src/lib/repeat.js');
+  const { localMutations, getState } = await vite.ssrLoadModule('/src/lib/localStore.js');
+  const { toDateKey, addDays, getMonday } = await vite.ssrLoadModule('/src/lib/dates.js');
+  const monday = toDateKey(getMonday(new Date()));
+  const wed = toDateKey(addDays(new Date(`${monday}T12:00:00`), 2));
+  const nextWed = toDateKey(addDays(new Date(`${wed}T12:00:00`), 7));
+  // Serie "legacy": regola di ripetizione senza istanze materializzate
+  const id = localMutations.createTask({ title: 'Inglese — lettura', category: 'Leggere', categoryColor: '#66d4cf', date: wed, completed: false });
+  localMutations.updateTask({ id, repeat: { frequency: 'weekly', weekdays: [3], endMode: 'never' } });
+  const map = expandEventsForRange(getState().tasks, monday, nextWed);
+  const virt = (map.get(nextWed) ?? [])[0];
+  report(
+    'Ricorrenti: occorrenza virtuale con targetDate/instanceId del giorno',
+    !!virt && virt.virtual === true && virt.targetDate === nextWed && virt.instanceId === `${id}@${nextWed}`,
+    virt?.instanceId
+  );
+  // Interazione sul giorno → materializzazione dell'istanza ESATTA
+  const idx = localMutations.materializeSeries({ id });
+  const childId = (idx || []).find((c) => c.date === nextWed)?._id;
+  const map2 = expandEventsForRange(getState().tasks, monday, nextWed);
+  const conc = (map2.get(nextWed) ?? [])[0];
+  report(
+    'Ricorrenti: materializeSeries crea l’istanza reale del giorno cliccato',
+    !!childId && !!conc && conc.virtual === false && conc._id === childId && conc.targetDate === nextWed
+  );
+  localMutations.toggleTask({ id: childId });
+  const done = getState().tasks.find((t) => t._id === childId);
+  const baseUntouched = getState().tasks.find((t) => t._id === id);
+  report('Ricorrenti: check indipendente sull’istanza del giorno', done?.completed === true && baseUntouched?.completed === false);
+} catch (err) {
+  report('Ricorrenti: istanze', false, err.message);
+}
+
+// ═══════════ CARICO DI STUDIO: SCADENZA ≠ GIORNATA DI SVOLGIMENTO ═══════════
+try {
+  memStore.clear();
+  const sp = await vite.ssrLoadModule('/src/lib/studyPlan.js');
+  const { toDateKey, addDays } = await vite.ssrLoadModule('/src/lib/dates.js');
+  const d0 = toDateKey(new Date());
+  const d1 = toDateKey(addDays(new Date(), 1));
+  const d2 = toDateKey(addDays(new Date(), 2));
+  const map = new Map([
+    [d0, [
+      { _id: 'a', date: d0, estimatedMinutes: 30 }, // scadenza oggi, auto
+      { _id: 'b', date: d0, studyDate: d1, estimatedMinutes: 20 }, // pianificato domani → escluso
+    ]],
+    [d1, [
+      { _id: 'c', date: d1, studyDate: d0, estimatedMinutes: 45 }, // scadenza domani, studiato oggi
+    ]],
+    [d2, [
+      { _id: 'd', date: d2, estimatedMinutes: 60, completed: true },
+      { _id: 'e', date: d2, studyDate: d0, estimatedMinutes: 15 }, // scadenza tra 2 giorni, studiato oggi
+    ]],
+  ]);
+  const load = sp.collectStudyTasks(map, d0);
+  const ids = load.map((t) => t._id).sort().join(',');
+  report('Studio: carico = assegnate a oggi + scadenze odierne non pianificate altrove', ids === 'a,c,e', ids);
+  report('Studio: somma minuti solo sulle attività aperte', sp.studyLoadMinutes(load) === 90, `min=${sp.studyLoadMinutes(load)}`);
+  const groups = sp.buildUpcomingGroups(map, d0, 2);
+  report(
+    'Studio: selettore con gruppi oggi/domani/+2 (completi esclusi)',
+    groups.length === 3 && groups[0].items.map((t) => t._id).join(',') === 'a,b' && groups[2].items.map((t) => t._id).join(',') === 'e',
+    groups.map((g) => g.key).join('|')
+  );
+  report('Studio: isAssignedToStudyDay coerente', sp.isAssignedToStudyDay(map.get(d0)[0], d0) === true && sp.isAssignedToStudyDay(map.get(d0)[1], d0) === false);
+} catch (err) {
+  report('Carico di studio', false, err.message);
 }
 
 const passed = results.filter((r) => r[1]).length;

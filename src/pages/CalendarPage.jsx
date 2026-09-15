@@ -27,7 +27,7 @@ export default function CalendarPage({ selectedDate, selectDate, mode, setMode, 
   const [editingTask, setEditingTask] = useState(null);
   const [monthPickerOpen, setMonthPickerOpen] = useState(false);
   const { data: dayTasks = [] } = useExpandedTasks(dateKey);
-  const { createTask, updateTask, toggleTask } = useTasks(dateKey);
+  const { createTask, updateTaskInstance, toggleTaskInstance } = useTasks(dateKey);
   const { data: categories, createCategory } = useTaskCategories();
 
   const openDay = (date) => {
@@ -43,7 +43,9 @@ export default function CalendarPage({ selectedDate, selectDate, mode, setMode, 
 
   const handleSave = async (fields) => {
     if (editingTask) {
-      await updateTask(editingTask._id, fields);
+      // updateTaskInstance materializza l'occorrenza virtuale sul giorno
+      // focalizzato (targetDate) prima di applicare la modifica
+      await updateTaskInstance(editingTask, fields);
     } else {
       await createTask(fields);
     }
@@ -74,9 +76,15 @@ export default function CalendarPage({ selectedDate, selectDate, mode, setMode, 
       />
 
       {mode === 'month' ? (
-        <MonthGrid selectedDate={selectedDate} onSelectDate={openDay} />
+        /* Vista mese: fit-to-screen perfetto (100dvh, zero scroll verticale) */
+        <MonthGrid
+          selectedDate={selectedDate}
+          onSelectDate={openDay}
+          onPrevMonth={goPrev}
+          onNextMonth={goNext}
+        />
       ) : (
-        <div className="flex-1 min-h-0 overflow-y-auto scrollable pb-32">
+        <div className="flex-1 min-h-0 overflow-y-auto scrollable page-bottom-pad">
           <section className="max-w-[900px] mx-auto px-4 pt-5">
             <div className="flex items-center justify-between mb-3">
               <div>
@@ -104,9 +112,9 @@ export default function CalendarPage({ selectedDate, selectDate, mode, setMode, 
                   return (
                     <div key={t._id} className="flex items-center gap-3 px-4 py-2.5 border-b border-separator last:border-0">
                       <button
-                        onClick={() => toggleTask(t._id)}
+                        onClick={() => toggleTaskInstance(t)}
                         aria-label={done ? 'Segna come non completato' : 'Segna come completato'}
-                        className="w-10 h-10 grid place-items-center shrink-0 -ml-2"
+                        className="w-11 h-11 grid place-items-center shrink-0 -ml-2"
                       >
                         {done ? <CheckCircle2 size={20} className="text-sys-green" /> : <Circle size={20} style={{ color: t.categoryColor || '#2997ff' }} />}
                       </button>

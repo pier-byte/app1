@@ -39,6 +39,7 @@ const taskFields = {
   reminders: v.optional(v.array(reminderValidator)),
   repeat: v.optional(repeatValidator),
   attachments: v.optional(v.array(attachmentValidator)),
+  studyDate: v.optional(v.string()),
 };
 
 // ── Query ──
@@ -259,9 +260,62 @@ export const update = mutation({
     reminders: v.optional(v.array(reminderValidator)),
     repeat: v.optional(repeatValidator),
     attachments: v.optional(v.array(attachmentValidator)),
+    studyDate: v.optional(v.string()),
   },
   handler: async (ctx, { id, ...patch }) => {
     await applyUpdate(ctx, id, patch);
+  },
+});
+
+/**
+ * Materializza una serie legacy (regola di ripetizione con occorrenze ancora
+ * virtuali): crea le istanze figlie mancanti e marca il base come parent.
+ * Ritorna l'_id dell'istanza reale relativa alla data richiesta → il client
+ * può così focalizzare/modificare l'occorrenza ESATTA del giorno cliccato.
+ */
+export const materialize = mutation({
+  args: { id: v.id("tasks"), date: v.string() },
+  handler: async (ctx, { id, date }) => {
+    const base = await ctx.db.get(id);
+    if (!base) return null;
+    const sid = String(id);
+    const existing = await ctx.db
+      .query("tasks")
+      .withIndex("by_series", (q) => q.eq("seriesId", sid))
+      .collect();
+    const byDate = new Map(existing.map((c) => [c.date, String(c._id)]));
+    if (byDate.has(date)) return byDate.get(date);
+    if (!hasRepeatC(base.repeat) || !base.date) return null;
+    const dates = computeOccurrences(base.date, base.repeat);
+    for (const key of dates) {
+      if (key === base.date || byDate.has(key)) continue;
+      const childId = await ctx.db.insert(
+        "tasks",
+        stripUndefined({
+          title: base.title,
+          description: base.description,
+          category: base.category,
+          categoryColor: base.categoryColor,
+          date: key,
+          completed: false,
+          estimatedMinutes: base.estimatedMinutes,
+          actualMinutes: 0,
+          priority: base.priority,
+          startTime: base.startTime,
+          endTime: base.endTime,
+          allDay: base.allDay,
+          reminders: shiftRemindersC(base.reminders, key),
+          repeat: base.repeat,
+          attachments: [],
+          seriesId: sid,
+          materialized: true,
+          createdAt: (base.createdAt ?? Date.now()) + dates.indexOf(key) + 1,
+        })
+      );
+      byDate.set(key, String(childId));
+    }
+    await ctx.db.patch(id, { seriesId: sid, materialized: true });
+    return byDate.get(date) ?? null;
   },
 });
 

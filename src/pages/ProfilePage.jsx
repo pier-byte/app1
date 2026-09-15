@@ -15,7 +15,8 @@ import {
   useTasksBetween, useRoutinesBetween, useMealsBetween,
   useExpenses, useBudget, useNotes,
 } from '../hooks/useData';
-import { toDateKey, getWeekDates } from '../lib/dates';
+import { toDateKey, getWeekDates, parseISO } from '../lib/dates';
+import { useDeviceClock } from '../hooks/useDeviceClock';
 import { budgetColor } from '../lib/constants';
 import {
   studyByCategory, workoutStats, walletSummary,
@@ -74,19 +75,25 @@ function ViewLoader() {
 // ═══════════════════════ DASHBOARD ═══════════════════════
 
 function Dashboard({ selectedDate, onOpenView }) {
-  const [period, setPeriod] = useState('week'); // week | month
+  // Default di navigazione: al caricamento è sempre attiva la vista "Mensile"
+  const [period, setPeriod] = useState('month'); // month | week
   const [workoutModalOpen, setWorkoutModalOpen] = useState(false);
+  // Orologio locale del dispositivo (niente offset UTC, sync a mezzanotte)
+  const todayKey = useDeviceClock();
 
-  // Intervallo del periodo selezionato (segue la data selezionata nell'app)
+  // Intervallo del periodo selezionato.
+  // DECOUPLING: la vista SETTIMANALE mostra SEMPRE la settimana corrente
+  // (lun–dom dell'orologio del dispositivo), ignorando la data selezionata
+  // nel Calendario; la vista mensile segue invece il mese selezionato.
   const range = useMemo(() => {
     if (period === 'week') {
-      const days = getWeekDates(selectedDate);
-      return { start: days[0], end: days[6], count: 7, label: `${format(days[0], 'd MMM', { locale: it })} – ${format(days[6], 'd MMM', { locale: it })}` };
+      const days = getWeekDates(parseISO(todayKey));
+      return { start: days[0], end: days[6], count: 7, label: `${format(days[0], 'd MMM', { locale: it })} – ${format(days[6], 'd MMM', { locale: it })} (settimana corrente)` };
     }
     const start = startOfMonth(selectedDate);
     const end = endOfMonth(selectedDate);
     return { start, end, count: differenceInCalendarDays(end, start) + 1, label: cap(format(start, 'MMMM yyyy', { locale: it })) };
-  }, [period, selectedDate]);
+  }, [period, selectedDate, todayKey]);
 
   const startKey = toDateKey(range.start);
   const endKey = toDateKey(range.end);
@@ -102,7 +109,8 @@ function Dashboard({ selectedDate, onOpenView }) {
   const { data: monthRoutines } = useRoutinesBetween(monthStartKey, monthEndKey);
   const { data: meals } = useMealsBetween(startKey, endKey);
   const { data: expenses } = useExpenses(startKey, endKey);
-  const weekStartKey = toDateKey(getWeekDates(selectedDate)[0]);
+  // Budget settimanale: sempre la settimana corrente del dispositivo
+  const weekStartKey = toDateKey(getWeekDates(parseISO(todayKey))[0]);
   const { data: budget } = useBudget(weekStartKey);
   const { data: notes } = useNotes();
 
@@ -113,7 +121,7 @@ function Dashboard({ selectedDate, onOpenView }) {
   const adherence = useMemo(() => nutritionAdherence(meals ?? [], targetKcal), [meals, targetKcal]);
 
   return (
-    <div className="h-full overflow-y-auto scrollable px-4 pt-2 pb-32">
+    <div className="h-full overflow-y-auto scrollable px-4 pt-2 page-bottom-pad">
       {/* Header */}
       <div className="mb-4">
         <h1 className="text-[28px] font-semibold text-label tracking-tight leading-tight">Profilo</h1>

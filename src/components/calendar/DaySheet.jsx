@@ -15,8 +15,13 @@ import { cn } from '../../lib/cn';
  */
 export default function DaySheet({ date, onClose, onEditFull, categories = [] }) {
   const dateKey = toDateKey(date);
+  // useExpandedTasks include le istanze delle serie ricorrenti: ogni occorrenza
+  // è taggata con targetDate = giorno mostrato, così il sheet focalizza
+  // ESATTAMENTE l'istanza del giorno cliccato (concreta o materializzata).
   const { data: tasks = [] } = useExpandedTasks(dateKey);
-  const { createTask, updateTask, toggleTask, removeTask, removeSeries } = useTasks(dateKey);
+  const {
+    createTask, updateTaskInstance, toggleTaskInstance, removeTaskInstance, removeSeries,
+  } = useTasks(dateKey);
   const [quickTitle, setQuickTitle] = useState('');
   const [editingId, setEditingId] = useState(null);
   const [editingTitle, setEditingTitle] = useState('');
@@ -47,14 +52,14 @@ export default function DaySheet({ date, onClose, onEditFull, categories = [] })
   const commitTitle = async (task) => {
     const title = editingTitle.trim();
     setEditingId(null);
-    if (title && title !== task.title) await updateTask(task._id, { title });
+    if (title && title !== task.title) await updateTaskInstance(task, { title });
   };
 
   const cycleCategory = async (task) => {
     if (categories.length < 2) return;
     const idx = categories.findIndex((c) => c.name === task.category);
     const next = categories[(idx + 1) % categories.length];
-    await updateTask(task._id, { category: next.name, categoryColor: next.color });
+    await updateTaskInstance(task, { category: next.name, categoryColor: next.color });
   };
 
   return (
@@ -103,9 +108,9 @@ export default function DaySheet({ date, onClose, onEditFull, categories = [] })
           const hasRepeat = task.repeat?.frequency && task.repeat.frequency !== 'none';
           return (
             <div key={task._id} className="flex items-center gap-1 py-1 border-b border-separator last:border-0">
-              {/* Check/uncheck bidirezionale */}
+              {/* Check/uncheck bidirezionale (istanza del giorno) */}
               <button
-                onClick={() => toggleTask(task._id)}
+                onClick={() => toggleTaskInstance(task)}
                 aria-label={done ? 'Segna come non completato' : 'Segna come completato'}
                 className="w-11 h-11 grid place-items-center shrink-0"
               >
@@ -181,9 +186,9 @@ export default function DaySheet({ date, onClose, onEditFull, categories = [] })
                 </button>
               )}
 
-              {/* Elimina singola istanza */}
+              {/* Elimina singola istanza del giorno */}
               <button
-                onClick={() => removeTask(task._id)}
+                onClick={() => removeTaskInstance(task)}
                 className="w-10 h-11 grid place-items-center text-label-tertiary active:text-sys-red shrink-0"
                 aria-label="Elimina attività"
               >

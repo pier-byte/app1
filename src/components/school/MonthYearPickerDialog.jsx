@@ -41,6 +41,19 @@ function MonthYearContent({ onClose, value, onConfirm, showDay = false, title = 
       isOpen
       onClose={onClose}
       title={title}
+      titleRight={
+        <button
+          onClick={() => {
+            const n = new Date();
+            setMonth(n.getMonth());
+            setYear(n.getFullYear());
+            if (showDay) setDay(n.getDate());
+          }}
+          className="text-xs font-medium text-[#2997ff] px-2.5 py-1.5 rounded-full bg-accent/15 hover:bg-accent/30 border border-accent/25 transition-colors"
+        >
+          Oggi
+        </button>
+      }
       maxWidth={showDay ? 360 : 342}
       footer={<LiquidFooterActions onCancel={onClose} onConfirm={confirm} />}
     >
@@ -59,6 +72,7 @@ function MonthYearContent({ onClose, value, onConfirm, showDay = false, title = 
               label="Giorno"
               itemHeight={44}
               visibleCount={5}
+              infinite={false}
               format={(d) => String(d).padStart(2, '0')}
               className="flex-[0.8] min-w-0"
             />
@@ -80,6 +94,7 @@ function MonthYearContent({ onClose, value, onConfirm, showDay = false, title = 
             label="Anno"
             itemHeight={44}
             visibleCount={5}
+            infinite={false}
             className="flex-1 min-w-0"
           />
         </div>

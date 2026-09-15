@@ -27,7 +27,8 @@ export default function RoutinePage({ selectedDate }) {
   const [activeTemplateId, setActiveTemplateId] = useState(() => localStorage.getItem('app1_routine_active') || null);
   const [newTemplateOpen, setNewTemplateOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [view, setView] = useState('detail'); // detail | overview (panoramica compatta)
+  // Default di navigazione: al caricamento è sempre attiva la vista "Tutte"
+  const [view, setView] = useState('overview'); // overview ("Tutte") | detail
 
   const activeTemplate = useMemo(() => {
     const list = templates ?? [];
@@ -92,29 +93,34 @@ export default function RoutinePage({ selectedDate }) {
   const begin = () => beginWith(activeTemplate);
 
   return (
-    <div className="h-full overflow-y-auto scrollable px-4 pt-2 pb-32">
-      {/* Header + toggle vista */}
-      <div className="flex items-start justify-between gap-3 mb-3">
-        <div>
-          <h1 className="text-[28px] font-semibold text-label tracking-tight leading-tight">Routine</h1>
-          <p className="text-[13px] text-label-secondary capitalize">
-            {format(selectedDate, 'EEEE d MMMM', { locale: it })}
-          </p>
+    <div className="h-full overflow-y-auto scrollable px-4 pt-2 page-bottom-pad">
+      {/* Header + toggle vista: impilati su mobile (max 430px) così il
+          segmented non va mai in overflow e resta centrato/coerente */}
+      <div className="flex flex-col gap-2.5 mb-3">
+        <div className="flex items-center justify-between gap-3 min-w-0">
+          <div className="min-w-0">
+            <h1 className="text-[28px] font-semibold text-label tracking-tight leading-tight">Routine</h1>
+            <p className="text-[13px] text-label-secondary capitalize truncate">
+              {format(selectedDate, 'EEEE d MMMM', { locale: it })}
+            </p>
+          </div>
         </div>
-        <div className="flex bg-surface-2 rounded-full p-1 shrink-0" aria-label="Vista routine">
+        {/* Segmented full-width: target 44px, icone centrate orizz./vert. */}
+        <div className="grid grid-cols-2 gap-1 bg-surface-2 rounded-full p-1 w-full" aria-label="Vista routine" role="group">
           {[
-            { id: 'detail', label: 'Scheda', Icon: Square },
             { id: 'overview', label: 'Tutte', Icon: LayoutGrid },
+            { id: 'detail', label: 'Scheda', Icon: Square },
           ].map(({ id, label, Icon }) => (
             <button
               key={id}
               onClick={() => setView(id)}
+              aria-pressed={view === id}
               className={cn(
-                'h-8 px-3 rounded-full text-[12px] font-semibold flex items-center gap-1.5',
+                'h-11 min-h-[44px] px-2 rounded-full text-[13px] font-semibold flex items-center justify-center gap-1.5 min-w-0 transition-colors',
                 view === id ? 'bg-accent text-white' : 'text-label-secondary'
               )}
             >
-              <Icon size={13} /> {label}
+              <Icon size={15} className="shrink-0" /> <span className="truncate">{label}</span>
             </button>
           ))}
         </div>
@@ -130,7 +136,7 @@ export default function RoutinePage({ selectedDate }) {
                 key={t._id}
                 onClick={() => setActiveTemplateId(t._id)}
                 className={cn(
-                  'flex items-center gap-2 h-11 px-4 rounded-full text-[14px] font-semibold shrink-0 transition-colors',
+                  'flex items-center justify-center gap-2 h-11 min-h-[44px] px-4 rounded-full text-[14px] font-semibold shrink-0 transition-colors',
                   active ? 'text-white' : 'bg-surface-2 text-label-secondary'
                 )}
                 style={active ? { backgroundColor: t.color } : undefined}
@@ -142,7 +148,7 @@ export default function RoutinePage({ selectedDate }) {
           })}
           <button
             onClick={() => setNewTemplateOpen(true)}
-            className="flex items-center gap-1.5 h-11 px-4 rounded-full bg-surface-2 text-label-secondary text-[14px] font-semibold shrink-0 border border-dashed border-label-quaternary"
+            className="flex items-center justify-center gap-1.5 h-11 min-h-[44px] px-4 rounded-full bg-surface-2 text-label-secondary text-[14px] font-semibold shrink-0 border border-dashed border-label-quaternary"
           >
             <Plus size={15} /> Nuova scheda
           </button>
@@ -233,7 +239,7 @@ export default function RoutinePage({ selectedDate }) {
               </div>
               <button
                 onClick={() => setEditing(!editing)}
-                className="text-[13px] text-sky min-h-10 flex items-center gap-1.5"
+                className="text-[13px] text-sky min-h-11 px-2 flex items-center justify-center gap-1.5 shrink-0"
               >
                 <Pencil size={14} />
                 {editing ? 'Fine' : 'Personalizza'}
@@ -256,7 +262,7 @@ export default function RoutinePage({ selectedDate }) {
                     <button
                       key={c}
                       onClick={() => saveTemplate(activeTemplate._id, { color: c })}
-                      className={cn('w-8 h-8 rounded-full grid place-items-center', activeTemplate.color === c && 'ring-2 ring-offset-2 ring-offset-surface-1')}
+                      className={cn('w-11 h-11 rounded-full grid place-items-center shrink-0', activeTemplate.color === c && 'ring-2 ring-offset-2 ring-offset-surface-1')}
                       style={{ backgroundColor: c, boxShadow: activeTemplate.color === c ? `0 0 0 2px ${c}` : undefined }}
                       aria-label={`Colore ${c}`}
                     >
@@ -302,12 +308,12 @@ export default function RoutinePage({ selectedDate }) {
                         <button onClick={() => {
                           const steps = activeTemplate.steps.map((s, j) => (j === i ? { ...s, targetMinutes: Math.max(1, s.targetMinutes - 1) } : s));
                           saveTemplate(activeTemplate._id, { steps });
-                        }} className="w-9 h-9 rounded-full bg-surface-2 text-label-secondary grid place-items-center" aria-label="Riduci tempo">−</button>
+                        }} className="w-11 h-11 rounded-full bg-surface-2 text-label-secondary grid place-items-center shrink-0" aria-label="Riduci tempo">−</button>
                         <span className="w-10 text-center text-[14px] text-label tabular-nums">{step.targetMinutes} min</span>
                         <button onClick={() => {
                           const steps = activeTemplate.steps.map((s, j) => (j === i ? { ...s, targetMinutes: Math.min(180, s.targetMinutes + 1) } : s));
                           saveTemplate(activeTemplate._id, { steps });
-                        }} className="w-9 h-9 rounded-full bg-surface-2 text-label-secondary grid place-items-center" aria-label="Aumenta tempo">+</button>
+                        }} className="w-11 h-11 rounded-full bg-surface-2 text-label-secondary grid place-items-center shrink-0" aria-label="Aumenta tempo">+</button>
                         <button
                           onClick={() => {
                             if (i === 0) return;
@@ -316,7 +322,7 @@ export default function RoutinePage({ selectedDate }) {
                             saveTemplate(activeTemplate._id, { steps });
                           }}
                           disabled={i === 0}
-                          className="w-9 h-9 rounded-full bg-surface-2 grid place-items-center text-label-secondary disabled:opacity-30"
+                          className="w-11 h-11 rounded-full bg-surface-2 grid place-items-center text-label-secondary disabled:opacity-30 shrink-0"
                           aria-label="Sposta su"
                         >
                           <ChevronUp size={15} />
@@ -329,14 +335,14 @@ export default function RoutinePage({ selectedDate }) {
                             saveTemplate(activeTemplate._id, { steps });
                           }}
                           disabled={i === activeTemplate.steps.length - 1}
-                          className="w-9 h-9 rounded-full bg-surface-2 grid place-items-center text-label-secondary disabled:opacity-30"
+                          className="w-11 h-11 rounded-full bg-surface-2 grid place-items-center text-label-secondary disabled:opacity-30 shrink-0"
                           aria-label="Sposta giù"
                         >
                           <ChevronDown size={15} />
                         </button>
                         <button
                           onClick={() => saveTemplate(activeTemplate._id, { steps: activeTemplate.steps.filter((_, j) => j !== i) })}
-                          className="w-9 h-9 grid place-items-center text-sys-red"
+                          className="w-11 h-11 grid place-items-center text-sys-red shrink-0"
                           aria-label="Rimuovi attività"
                         >
                           <Trash2 size={15} />
@@ -369,7 +375,7 @@ export default function RoutinePage({ selectedDate }) {
             </div>
 
             {!editing && (
-              <button onClick={() => setConfirmDelete(true)} className="mx-auto mt-3 flex items-center gap-1 text-[12px] text-label-tertiary min-h-8">
+              <button onClick={() => setConfirmDelete(true)} className="mx-auto mt-3 flex items-center justify-center gap-1.5 text-[12px] text-label-tertiary min-h-11 px-3">
                 <Trash2 size={12} /> Elimina questa scheda
               </button>
             )}
@@ -479,7 +485,7 @@ function OverviewGrid({ templates, activeId, onOpen, onStart, onNew }) {
               </button>
               <button
                 onClick={() => onStart(t)}
-                className="h-10 rounded-full bg-accent/15 text-sky text-[13px] font-semibold flex items-center justify-center gap-1.5 active:bg-accent/25"
+                className="h-11 min-h-[44px] rounded-full bg-accent/15 text-sky text-[13px] font-semibold flex items-center justify-center gap-1.5 active:bg-accent/25"
                 aria-label={`Avvia ${t.name}`}
               >
                 <Play size={14} fill="currentColor" /> Avvia
@@ -570,11 +576,11 @@ function NewTemplateDialog({ isOpen, onClose, onCreate }) {
               aria-label={`Attività ${i + 1}`}
             />
             <div className="flex items-center gap-1">
-              <button onClick={() => setSteps(steps.map((s, j) => (j === i ? { ...s, targetMinutes: Math.max(1, s.targetMinutes - 1) } : s)))} className="w-9 h-9 rounded-full bg-surface-2 text-label-secondary">−</button>
+              <button onClick={() => setSteps(steps.map((s, j) => (j === i ? { ...s, targetMinutes: Math.max(1, s.targetMinutes - 1) } : s)))} className="w-11 h-11 rounded-full bg-surface-2 text-label-secondary grid place-items-center shrink-0">−</button>
               <span className="w-9 text-center text-[13px] tabular-nums text-label-secondary">{step.targetMinutes}</span>
-              <button onClick={() => setSteps(steps.map((s, j) => (j === i ? { ...s, targetMinutes: Math.min(180, s.targetMinutes + 1) } : s)))} className="w-9 h-9 rounded-full bg-surface-2 text-label-secondary">+</button>
+              <button onClick={() => setSteps(steps.map((s, j) => (j === i ? { ...s, targetMinutes: Math.min(180, s.targetMinutes + 1) } : s)))} className="w-11 h-11 rounded-full bg-surface-2 text-label-secondary grid place-items-center shrink-0">+</button>
             </div>
-            <button onClick={() => removeStep(i)} className="w-9 h-9 grid place-items-center text-sys-red" aria-label="Rimuovi">
+            <button onClick={() => removeStep(i)} className="w-11 h-11 grid place-items-center text-sys-red shrink-0" aria-label="Rimuovi">
               <X size={15} />
             </button>
           </div>

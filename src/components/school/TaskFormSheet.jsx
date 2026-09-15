@@ -58,7 +58,9 @@ export default function TaskFormSheet({ isOpen, onClose, onSave, editingTask, de
       setCategory(
         categories.find((c) => c.name === editingTask?.category) ?? categories[0] ?? null
       );
-      setDate(editingTask?.date ?? defaultDate);
+      // Per le occorrenze virtuali di una serie: parti dal giorno focalizzato
+      // (targetDate), non dalla data base della regola.
+      setDate(editingTask?.targetDate ?? editingTask?.date ?? defaultDate);
       setAllDay(editingTask?.allDay ?? true);
       setStartTime(editingTask?.startTime ?? '16:00');
       setEndTime(editingTask?.endTime ?? '17:00');

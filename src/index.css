@@ -391,13 +391,14 @@ textarea:focus-visible {
 
 /* ═══════════════════════════════════════════════════
    DRUM PICKER 3D — tamburo stile iOS (time / mese-anno)
+   Fisica custom (pointer events + inerzia + snap): niente
+   scroll nativo né scroll-snap, così il fast-swipe resta a
+   60fps e lo snap al centro è immediato e senza glitch.
    ═══════════════════════════════════════════════════ */
 .drum-scroller {
-  scroll-snap-type: y mandatory;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  overscroll-behavior-y: contain;
   perspective: 800px;
+  touch-action: none;
+  cursor: grab;
   mask-image: linear-gradient(to bottom,
       transparent 0%,
       rgba(0, 0, 0, 0.85) 14%,
@@ -414,17 +415,89 @@ textarea:focus-visible {
       transparent 100%);
 }
 
-.drum-scroller::-webkit-scrollbar {
-  display: none;
+.drum-scroller:active {
+  cursor: grabbing;
 }
 
-.drum-item {
-  scroll-snap-align: center;
-  scroll-snap-stop: normal;
+/* Slot virtuali del tamburo: posizionati via transform imperativo */
+.drum-slot {
   transform-origin: center center;
-  transition: opacity 0.15s ease, color 0.15s ease;
   backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  will-change: transform, opacity;
   -webkit-font-smoothing: antialiased;
+  pointer-events: none;
+}
+
+/* ═══════════════════════════════════════════════════
+   CALENDARIO MENSILE FULL-SCREEN (ui-references)
+   ═══════════════════════════════════════════════════ */
+
+/* Bottoni/pill in vetro liquido della top bar */
+.glass-btn {
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.glass-btn:active {
+  transform: scale(0.96);
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* Hairline della griglia: solo destra/sinistra come nel reference */
+.cal-cell {
+  border-right: 1px solid rgba(255, 255, 255, 0.045);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.045);
+}
+
+.cal-cell:nth-child(7n) {
+  border-right: none;
+}
+
+.cal-cell:nth-last-child(-n+7) {
+  border-bottom: none;
+}
+
+/* Colonna del giorno attivo (oggi/selezionato): vetro azzurrato */
+.cal-cell-active {
+  background: rgba(8, 47, 73, 0.22);
+  box-shadow: inset 0 0 0 1px rgba(56, 189, 248, 0.3);
+}
+
+.cal-day-glow {
+  box-shadow: 0 0 12px rgba(14, 165, 233, 0.7);
+}
+
+.cal-today-glow {
+  text-shadow: 0 0 8px rgba(56, 189, 248, 0.5);
+}
+
+/* Pill compatta evento dentro la cella del mese */
+.event-chip {
+  letter-spacing: -0.015em;
+  line-height: 1.15;
+  min-width: 0;
+}
+
+/* ═══════════════════════════════════════════════════
+   TOUCH TARGET — minimo 44×44px (HIG iOS/Android)
+   ═══════════════════════════════════════════════════ */
+.touch-target {
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Padding inferiore standard delle pagine scrollabili:
+   lascia respiro sopra la bottom nav + safe-area, senza
+   far "cadere" i contenuti troppo in basso. */
+.page-bottom-pad {
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 96px);
 }
 
 /* Banda di selezione dietro le cifre: centrata perfettamente in asse */

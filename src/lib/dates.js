@@ -20,6 +20,22 @@ export function toDateKey(date) {
 }
 
 /**
+ * Chiave del giorno corrente nell'orologio LOCALE del dispositivo
+ * (nessuna conversione UTC: usa direttamente getFullYear/getMonth/getDate).
+ */
+export function todayKey() {
+  const d = new Date();
+  const p = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+
+/** Data "oggi" locale (mezzanotte locale), coerente con todayKey(). */
+export function getToday() {
+  const d = new Date();
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 12, 0, 0, 0);
+}
+
+/**
  * Restituisce le 7 date della settimana (lun-dom)
  * contenente la data passata
  */

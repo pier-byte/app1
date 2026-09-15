@@ -2,34 +2,83 @@ import { useState, useMemo, useCallback, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
-import { ClipboardList, Plus, Timer, CalendarRange, CheckCircle2, ChevronRight, X } from 'lucide-react';
-import { useTasks, useExpandedTasksBetween, useTaskCategories } from '../hooks/useData';
+import { ClipboardList, Plus, Timer, CalendarRange, CheckCircle2, ChevronRight } from 'lucide-react';
+import { useTasks, useExpandedTasks, useExpandedTasksBetween, useTaskCategories } from '../hooks/useData';
 import TaskCard from '../components/school/TaskCard';
 // Editor lazy: scaricato solo alla prima apertura
 const TaskFormSheet = lazy(() => import('../components/school/TaskFormSheet'));
 import StudyTimerCard from '../components/school/StudyTimerCard';
 import LoadInsightCard from '../components/school/LoadInsightCard';
+import StudyPlanSheet from '../components/school/StudyPlanSheet';
 import DatePickerDialog from '../components/school/DatePickerDialog';
 import WeekStrip from '../components/layout/WeekStrip';
 import ContextMenu from '../components/ui/ContextMenu';
 import EmptyState from '../components/ui/EmptyState';
 import LiquidDialog from '../components/ui/LiquidDialog';
 import FAB from '../components/ui/FAB';
+import { useDeviceClock } from '../hooks/useDeviceClock';
 import { toDateKey, addDays, getWeekDates } from '../lib/dates';
+import { collectStudyTasks, buildUpcomingGroups, isAssignedToStudyDay } from '../lib/studyPlan';
 import { cn } from '../lib/cn';
 
 /**
- * Tab — Compiti:
+ * Tab — Compiti (ui-references/sezione_compiti_liquid_glass):
  * - Filtro su singolo giorno: la lista principale mostra ESCLUSIVAMENTE
- *   le attività del giorno selezionato nella strip settimanale;
- * - Vista settimanale separata: pulsante dedicato in alto a destra
- *   ("Panoramica Settimanale") che apre una modale/sheet con l'aggregato dell'intera settimana;
- * - Timer studio flessibile e multi-sessione senza vincoli orari rigidi.
+ *   le attività del giorno selezionato nella strip settimanale (incluse le
+ *   occorrenze delle serie ricorrenti, focalizzate sul giorno cliccato);
+ * - "COMPITI CON DATA (n)" come intestazione di sezione del reference;
+ * - Carico di studio = giornata di STUDIO (scadenza ≠ svolgimento) con
+ *   selettore per attingere alle scadenze dei giorni successivi;
+ * - Vista settimanale separata: "Panoramica Settimanale" in alto a destra.
  */
 export default function SchoolPage({ selectedDate, weekDates, weekLabel, goToPrevWeek, goToNextWeek, goToToday, onSelectDate }) {
   const dateKey = toDateKey(selectedDate);
-  const { data: tasks, createTask, updateTask, toggleTask, removeTask, removeSeries, moveTaskToDate, addTaskMinutes } = useTasks(dateKey);
+  const todayKey = useDeviceClock();
+  const {
+    data: rawTasks, createTask, updateTaskInstance, toggleTaskInstance,
+    removeTaskInstance, removeSeries, moveTaskInstance, addTaskMinutes,
+  } = useTasks(dateKey);
   const { data: categories, createCategory } = useTaskCategories();
+
+  // Lista del giorno: istanze espanse (serie ricorrenti incluse, ognuna col
+  // proprio targetDate = giorno mostrato → focus corretto dell'occorrenza).
+  const { data: dayTasks = [] } = useExpandedTasks(dateKey);
+
+  // Finestra di pianificazione studio: −45 giorni (recuperi) … +14 (scadenze future)
+  const planStartKey = toDateKey(addDays(selectedDate, -45));
+  const planEndKey = toDateKey(addDays(selectedDate, 14));
+  const { data: planWindowMap } = useExpandedTasksBetween(planStartKey, planEndKey);
+
+  // Attività che compongono il carico della giornata di studio `dateKey`:
+  // assegnate esplicitamente (studyDate === dateKey) + scadenze del giorno
+  // senza pianificazione altrove (auto). Le occorrenze virtuali legacy non
+  // partecipano finché non vengono materializzate dall'interazione.
+  const studyTasks = useMemo(
+    () => collectStudyTasks(planWindowMap, dateKey),
+    [planWindowMap, dateKey]
+  );
+
+  // Scadenze future raggruppate per giorno (per lo StudyPlanSheet)
+  const upcomingByDay = useMemo(
+    () => buildUpcomingGroups(planWindowMap, dateKey, 14),
+    [planWindowMap, dateKey]
+  );
+
+  const isAssignedToDay = useCallback(
+    (task) => isAssignedToStudyDay(task, dateKey),
+    [dateKey]
+  );
+
+  const toggleStudyPlan = useCallback(
+    (task) => {
+      if (task.studyDate === dateKey) {
+        updateTaskInstance(task, { studyDate: '' }); // torna "auto" (giorno della scadenza)
+      } else {
+        updateTaskInstance(task, { studyDate: dateKey });
+      }
+    },
+    [dateKey, updateTaskInstance]
+  );
 
   // Compiti dell'INTERA settimana per la modale di panoramica
   const fullWeek = useMemo(
@@ -47,16 +96,16 @@ export default function SchoolPage({ selectedDate, weekDates, weekLabel, goToPre
   const [dateChangeTask, setDateChangeTask] = useState(null);
   const [showStudy, setShowStudy] = useState(false);
   const [weekOverviewOpen, setWeekOverviewOpen] = useState(false);
+  const [planOpen, setPlanOpen] = useState(false);
 
-  // Compiti del SINGOLO giorno selezionato
   const singleDayTasks = useMemo(() => {
-    return [...(tasks ?? [])].sort(
+    return [...dayTasks].sort(
       (a, b) =>
         Number(a.completed) - Number(b.completed) ||
         String(a.startTime || '').localeCompare(String(b.startTime || '')) ||
         (a.createdAt || 0) - (b.createdAt || 0)
     );
-  }, [tasks]);
+  }, [dayTasks]);
 
   const singleDayOpenCount = singleDayTasks.filter((t) => !t.completed).length;
 
@@ -71,9 +120,9 @@ export default function SchoolPage({ selectedDate, weekDates, weekLabel, goToPre
             String(a.startTime || '').localeCompare(String(b.startTime || '')) ||
             (a.createdAt || 0) - (b.createdAt || 0)
         );
-        return { date, key, items, isToday: key === toDateKey(new Date()), isSelected: key === dateKey };
+        return { date, key, items, isToday: key === todayKey, isSelected: key === dateKey };
       }),
-    [fullWeek, weekTasksByDay, dateKey]
+    [fullWeek, weekTasksByDay, dateKey, todayKey]
   );
 
   const weekTotal = dayGroups.reduce((s, g) => s + g.items.length, 0);
@@ -87,33 +136,36 @@ export default function SchoolPage({ selectedDate, weekDates, weekLabel, goToPre
 
   const handleSave = async (fields) => {
     if (editingTask) {
-      await updateTask(editingTask._id, fields);
+      // Le occorrenze virtuali vengono materializzate sul giorno focalizzato
+      await updateTaskInstance(editingTask, fields);
     } else {
       await createTask(fields);
     }
     setEditingTask(null);
   };
 
-  const handleDelete = (task) => removeTask(task._id);
-  const handleMoveTomorrow = (task) => moveTaskToDate(task._id, toDateKey(addDays(selectedDate, 1)));
+  const handleDelete = (task) => removeTaskInstance(task);
+  const handleMoveTomorrow = (task) => moveTaskInstance(task, toDateKey(addDays(selectedDate, 1)));
 
   return (
-    <div className="h-full overflow-y-auto scrollable px-4 pt-2 pb-32">
-      {/* Header pagina con pulsante Panoramica Settimanale in alto a destra */}
-      <div className="flex items-center justify-between mb-2.5">
-        <div>
+    <div className="h-full overflow-y-auto scrollable px-4 pt-2 page-bottom-pad">
+      {/* Header pagina (reference: titolo grande + azione secondaria a destra) */}
+      <div className="flex items-center justify-between gap-3 mb-2.5">
+        <div className="min-w-0">
           <h1 className="text-[28px] font-semibold text-label tracking-tight leading-tight">Compiti</h1>
-          <p className="text-[13px] text-label-secondary capitalize">{format(selectedDate, 'EEEE d MMMM', { locale: it })}</p>
+          <p className="text-[13px] text-label-secondary capitalize truncate">
+            {format(selectedDate, 'EEEE d MMMM', { locale: it })}
+          </p>
         </div>
 
         <button
           type="button"
           onClick={() => setWeekOverviewOpen(true)}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/[0.08] hover:bg-white/[0.14] border border-white/10 active:scale-95 transition-all text-[12.5px] font-semibold text-label"
+          className="glass-btn flex items-center gap-1.5 h-11 px-3.5 rounded-2xl text-[12.5px] font-semibold text-label shrink-0 active:scale-95 transition-transform"
           aria-label="Apri panoramica settimanale"
         >
-          <CalendarRange size={15} className="text-sky" />
-          <span>Panoramica Settimanale</span>
+          <CalendarRange size={15} className="text-sky shrink-0" />
+          <span className="truncate">Panoramica</span>
         </button>
       </div>
 
@@ -128,17 +180,21 @@ export default function SchoolPage({ selectedDate, weekDates, weekLabel, goToPre
         onToday={goToToday}
       />
 
-      {/* Carico AI del giorno selezionato */}
+      {/* Carico di studio della giornata di studio selezionata */}
       <div className="mb-4">
-        <LoadInsightCard dateKey={dateKey} tasks={tasks ?? []} />
+        <LoadInsightCard
+          dateKey={dateKey}
+          studyTasks={studyTasks}
+          onOpenPlan={() => setPlanOpen(true)}
+        />
       </div>
 
-      {/* Intestazione lista giorno */}
+      {/* Intestazione lista giorno (reference: "COMPITI CON DATA (n)") */}
       <div className="flex items-center justify-between mb-2.5 px-1">
-        <h2 className="text-[12px] font-semibold text-[#8e8e93] uppercase tracking-[0.08em] truncate">
-          Attività di {format(selectedDate, 'EEEE d', { locale: it })} <span className="tabular-nums">({singleDayTasks.length})</span>
+        <h2 className="text-[12px] font-semibold text-[#9a9aa0] uppercase tracking-wider truncate">
+          Compiti con data <span className="font-normal text-label-tertiary tabular-nums">({singleDayTasks.length})</span>
         </h2>
-        <span className="text-[12px] text-label-tertiary tabular-nums">
+        <span className="text-[12px] text-label-tertiary tabular-nums shrink-0">
           {singleDayOpenCount === 0 && singleDayTasks.length > 0
             ? 'Tutti completati!'
             : `${singleDayOpenCount} da fare`}
@@ -156,7 +212,13 @@ export default function SchoolPage({ selectedDate, weekDates, weekLabel, goToPre
         <div className="flex flex-col gap-2">
           <AnimatePresence initial={false}>
             {singleDayTasks.map((task) => (
-              <TaskCard key={task._id} task={task} onToggle={toggleTask} onOpenMenu={openMenu} />
+              <TaskCard
+                key={task.instanceId ?? task._id}
+                task={task}
+                dateKey={dateKey}
+                onToggle={toggleTaskInstance}
+                onOpenMenu={openMenu}
+              />
             ))}
           </AnimatePresence>
         </div>
@@ -175,7 +237,7 @@ export default function SchoolPage({ selectedDate, weekDates, weekLabel, goToPre
         {showStudy && (
           <StudyTimerCard
             selectedDate={selectedDate}
-            tasks={tasks ?? []}
+            tasks={rawTasks ?? dayTasks}
             onAssignMinutes={(taskId, minutes) => addTaskMinutes(taskId, minutes)}
           />
         )}
@@ -189,6 +251,16 @@ export default function SchoolPage({ selectedDate, weekDates, weekLabel, goToPre
         }}
         icon={Plus}
         label="Nuovo compito"
+      />
+
+      {/* Selettore giornata di studio (scadenze oggi…+14 giorni) */}
+      <StudyPlanSheet
+        isOpen={planOpen}
+        onClose={() => setPlanOpen(false)}
+        dateKey={dateKey}
+        upcomingByDay={upcomingByDay}
+        isAssigned={isAssignedToDay}
+        onToggleTask={toggleStudyPlan}
       />
 
       {/* Modale / Sheet: Panoramica Settimanale aggregata */}
@@ -231,7 +303,7 @@ export default function SchoolPage({ selectedDate, weekDates, weekLabel, goToPre
                         onSelectDate(group.date);
                         setWeekOverviewOpen(false);
                       }}
-                      className="flex items-center gap-2 text-left group"
+                      className="flex items-center gap-2 text-left group min-h-11"
                     >
                       <h3
                         className={cn(
@@ -259,13 +331,13 @@ export default function SchoolPage({ selectedDate, weekDates, weekLabel, goToPre
                     <div className="flex flex-col gap-1.5">
                       {group.items.map((task) => (
                         <div
-                          key={task._id}
+                          key={task.instanceId ?? task._id}
                           className="flex items-center gap-2.5 py-1.5 px-2 rounded-xl bg-white/[0.04] border border-white/[0.03]"
                         >
                           <button
                             type="button"
-                            onClick={() => toggleTask(task._id)}
-                            className="shrink-0"
+                            onClick={() => toggleTaskInstance(task)}
+                            className="shrink-0 w-11 h-11 grid place-items-center -ml-2"
                             aria-label={task.completed ? 'Segna come non completato' : 'Segna come completato'}
                           >
                             <CheckCircle2
@@ -313,7 +385,7 @@ export default function SchoolPage({ selectedDate, weekDates, weekLabel, goToPre
         />
       </Suspense>
 
-      {/* Menu contestuale */}
+      {/* Menu contestuale (operazioni sull'istanza del giorno) */}
       <ContextMenu
         isOpen={!!menuTask}
         onClose={() => setMenuTask(null)}
@@ -343,9 +415,9 @@ export default function SchoolPage({ selectedDate, weekDates, weekLabel, goToPre
       <DatePickerDialog
         isOpen={!!dateChangeTask}
         onClose={() => setDateChangeTask(null)}
-        value={dateChangeTask?.date}
+        value={dateChangeTask?.targetDate ?? dateChangeTask?.date}
         onConfirm={(newDate) => {
-          if (dateChangeTask) moveTaskToDate(dateChangeTask._id, newDate);
+          if (dateChangeTask) moveTaskInstance(dateChangeTask, newDate);
           setDateChangeTask(null);
         }}
       />

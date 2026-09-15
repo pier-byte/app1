@@ -1,59 +1,86 @@
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
-import { cn } from '../../lib/cn';
+import { CalendarDays, CalendarRange, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 
 /**
- * CalendarHeader — Titolo mese (cliccabile per jump rapido), "Vai a oggi",
- * toggle Settimana/Mese e frecce.
- * La griglia mensile è in MonthGrid (fit-to-screen), la settimana in WeekStrip.
+ * CalendarHeader — top bar Liquid Glass (ui-references
+ * calendario_mensile_full_screen_liquid_glass): bottone vetro tondo per il
+ * toggle vista (mese/settimana), pill centrale "set 2026 ⌄" che apre il
+ * selettore mese/anno a tamburo, frecce vetro per il periodo. Tutti i
+ * controlli sono target touch ≥44px e centrati con place-items-center.
+ * In vista settimana mostra sotto la WeekStrip coordinata.
  */
-export default function CalendarHeader({ mode, onModeChange, selectedDate, onPrev, onNext, onToday, weekStrip, onHeaderClick }) {
+export default function CalendarHeader({
+  mode,
+  onModeChange,
+  selectedDate,
+  onPrev,
+  onNext,
+  onToday,
+  onHeaderClick,
+  weekStrip,
+}) {
   return (
-    <header className="border-b border-white/[0.06] bg-canvas/85 backdrop-blur-dialog shrink-0">
-      <div className="max-w-[1100px] mx-auto w-full px-4 pt-3">
-        <div className="flex items-center justify-between gap-3 mb-2">
-          <div className="min-w-0">
+    <header className="shrink-0 pt-2.5 pb-1 px-3.5 z-30 select-none">
+      <div className="flex items-center justify-between gap-2">
+        {/* Sinistra: toggle vista + pill mese/anno */}
+        <div className="flex items-center gap-2.5 min-w-0">
+          <button
+            type="button"
+            onClick={() => onModeChange(mode === 'month' ? 'week' : 'month')}
+            aria-label={mode === 'month' ? 'Passa alla vista settimana' : 'Passa alla vista mese'}
+            className="glass-btn w-11 h-11 rounded-full flex items-center justify-center text-[#c9c9ce] shrink-0"
+          >
+            {mode === 'month' ? <CalendarRange size={19} /> : <CalendarDays size={19} />}
+          </button>
+          <button
+            type="button"
+            onClick={onHeaderClick}
+            aria-label="Scegli mese e anno"
+            className="glass-btn flex items-center gap-1.5 px-3.5 h-11 rounded-2xl text-label min-w-0"
+          >
+            <span className="text-[17px] font-semibold tracking-tight capitalize truncate">
+              {format(selectedDate, 'MMM yyyy', { locale: it })}
+            </span>
+            <ChevronDown size={15} className="text-label-tertiary shrink-0" />
+          </button>
+        </div>
+
+        {/* Destra: navigazione periodo (mese) o "Oggi" (settimana) */}
+        <div className="flex items-center gap-2 shrink-0">
+          {mode === 'month' ? (
+            <>
+              <button
+                type="button"
+                onClick={onPrev}
+                aria-label="Mese precedente"
+                className="glass-btn w-11 h-11 rounded-full flex items-center justify-center text-[#c9c9ce]"
+              >
+                <ChevronLeft size={19} />
+              </button>
+              <button
+                type="button"
+                onClick={onNext}
+                aria-label="Mese successivo"
+                className="glass-btn w-11 h-11 rounded-full flex items-center justify-center text-[#c9c9ce]"
+              >
+                <ChevronRight size={19} />
+              </button>
+            </>
+          ) : (
             <button
               type="button"
-              onClick={onHeaderClick}
-              aria-label="Scegli mese e anno"
-              className="group flex items-center gap-1.5 text-left active:opacity-75 transition-opacity"
+              onClick={onToday}
+              aria-label="Vai a oggi"
+              className="glass-btn h-11 px-4 rounded-full text-sky text-[13px] font-semibold"
             >
-              <h1 className="text-[25px] font-semibold tracking-[-0.02em] capitalize leading-tight group-hover:text-sky transition-colors">
-                {format(selectedDate, 'MMMM yyyy', { locale: it })}
-              </h1>
-              <ChevronDown size={18} className="text-label-tertiary group-hover:text-sky transition-colors shrink-0 -mt-0.5" />
+              Oggi
             </button>
-            <button onClick={onToday} className="text-sky text-[13px] font-medium min-h-8">
-              Vai a oggi
-            </button>
-          </div>
-          <div className="flex items-center gap-1.5 shrink-0">
-            <div className="flex bg-white/[0.08] border border-white/[0.06] rounded-full p-1" aria-label="Vista calendario">
-              {['week', 'month'].map((v) => (
-                <button
-                  key={v}
-                  onClick={() => onModeChange(v)}
-                  className={cn(
-                    'h-8 px-3 rounded-full text-[12px] font-semibold transition-colors',
-                    mode === v ? 'bg-accent text-white shadow-sm shadow-blue-600/40' : 'text-[#9a9aa0]'
-                  )}
-                >
-                  {v === 'week' ? 'Settimana' : 'Mese'}
-                </button>
-              ))}
-            </div>
-            <button onClick={onPrev} aria-label="Periodo precedente" className="control-button tap-clean">
-              <ChevronLeft size={20} />
-            </button>
-            <button onClick={onNext} aria-label="Periodo successivo" className="control-button tap-clean">
-              <ChevronRight size={20} />
-            </button>
-          </div>
+          )}
         </div>
-        {mode === 'week' && weekStrip}
       </div>
+
+      {mode === 'week' && weekStrip}
     </header>
   );
 }

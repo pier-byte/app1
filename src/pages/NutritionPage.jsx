@@ -15,6 +15,7 @@ import GoalPlannerDialog from '../components/nutrition/GoalPlannerDialog';
 import MealEditDialog from '../components/nutrition/MealEditDialog';
 import EmptyState from '../components/ui/EmptyState';
 import { toDateKey, getMonday, formatDateDisplay, parseISO } from '../lib/dates';
+import { useDeviceClock } from '../hooks/useDeviceClock';
 import { DEFAULT_WEEK_PLAN } from '../lib/constants';
 import { kcalFromMacros } from '../lib/nutritionMath';
 import { cn } from '../lib/cn';
@@ -141,7 +142,8 @@ export default function NutritionPage({ selectedDate }) {
     return g;
   }, [profile]);
 
-  const isToday = dateKey === toDateKey(new Date());
+  // "Oggi" dall'orologio locale del dispositivo (sync automatico)
+  const isToday = dateKey === useDeviceClock();
 
   return (
     <div className="h-full overflow-y-auto scrollable px-4 pt-2 pb-44">

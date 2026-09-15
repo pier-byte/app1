@@ -16,7 +16,7 @@ const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 // Nota/Wallet ora sono viste interne della sezione Profilo (lazy lì dentro).
 import { startReminderEngine, notify, showInAppToast } from './lib/notifications';
 import { useExpandedTasks, useTasks } from './hooks/useData';
-import { toDateKey } from './lib/dates';
+import { useDeviceClock } from './hooks/useDeviceClock';
 
 export default function App() {
   const { isAuthenticated, authenticate, isLoading: authLoading } = useAuth();
@@ -40,7 +40,9 @@ export default function App() {
 
   // Motore promemoria: controlla le notifiche non ancora mostrate anche
   // quando si cambia tab (l'app deve essere installata per le notifiche iOS).
-  const todayKey = toDateKey(new Date());
+  // "Oggi" è letto dall'orologio locale del dispositivo e si aggiorna da solo
+  // al cambio data / ritorno in foreground (niente bug di offset UTC).
+  const todayKey = useDeviceClock();
   const { data: todayTasks } = useExpandedTasks(todayKey);
   const { updateTask } = useTasks(todayKey);
   useEffect(() => {

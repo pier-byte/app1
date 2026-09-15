@@ -50,6 +50,9 @@ export default defineSchema({
     // Parent: seriesId = proprio _id; figlie: seriesId = _id del parent.
     seriesId: v.optional(v.string()),
     materialized: v.optional(v.boolean()),
+    // Giornata di STUDIO/pianificazione (separata dalla scadenza `date`):
+    // il "Carico di studio" di un giorno somma le attività con studyDate = giorno.
+    studyDate: v.optional(v.string()),
     createdAt: v.optional(v.number()),
   })
     .index("by_date", ["date"])

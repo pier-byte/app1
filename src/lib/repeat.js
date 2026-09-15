@@ -230,7 +230,7 @@ export function expandEventsForDate(events, dateKey) {
   const seenIds = new Set(concrete.map((ev) => ev._id));
   const seenSeries = new Set(concrete.map((ev) => ev.seriesId).filter(Boolean));
   const seenIdentity = new Set(concrete.map(identityKey));
-  const out = [...concrete];
+  const out = concrete.map((ev) => (ev.targetDate ? ev : { ...ev, targetDate: ev.date, virtual: false }));
   for (const ev of events || []) {
     // Le istanze concrete della data sono già in `out`; qui restano solo le
     // occorrenze virtuali espanse dalle regole di ripetizione (task legacy).
@@ -242,7 +242,7 @@ export function expandEventsForDate(events, dateKey) {
     seenIds.add(ev._id);
     if (ev.seriesId) seenSeries.add(ev.seriesId);
     seenIdentity.add(identityKey(ev));
-    out.push(ev);
+    out.push({ ...ev, targetDate: dateKey, instanceId: `${ev._id}@${dateKey}`, virtual: true });
   }
   return out;
 }
@@ -271,20 +271,25 @@ export function expandEventsForRange(events, startKey, endKey) {
   const to = parseISO(endKey);
   if (from > to) return map;
 
-  // 1) Istanze concrete sulla loro data
+  // 1) Istanze concrete sulla loro data: targetDate = la data del documento
   for (const ev of events || []) {
     if (!ev.date) continue;
-    if (ev.date >= startKey && ev.date <= endKey) push(ev.date, ev);
+    if (ev.date >= startKey && ev.date <= endKey) {
+      push(ev.date, ev.targetDate ? ev : { ...ev, targetDate: ev.date, virtual: false });
+    }
   }
   // 2) Occorrenze virtuali dei task legacy (con regola, non materializzati):
-  //    nascoste se il giorno ha già l'istanza normale (stessa serie o stessa identità)
+  //    nascoste se il giorno ha già l'istanza normale (stessa serie o stessa identità).
+  //    Ogni occorrenza è identificata dal giorno mostrato: targetDate +
+  //    instanceId deterministico → UI (DaySheet/Compiti) può focalizzare e
+  //    materializzare l'istanza ESATTA del giorno cliccato.
   for (const ev of events || []) {
     if (!ev.date || ev.materialized || !hasRepeatRule(ev.repeat)) continue;
     for (const key of occurrencesBetween(ev.date, from, to, ev.repeat)) {
       const e = entry(key);
       if (ev._id && (e.ids.has(ev._id) || e.series.has(ev._id))) continue;
       if (e.identity.has(identityKey(ev))) continue; // già c'è la "normale"
-      push(key, ev);
+      push(key, { ...ev, targetDate: key, instanceId: `${ev._id}@${key}`, virtual: true });
     }
   }
   const out = new Map();

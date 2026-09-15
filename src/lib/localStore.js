@@ -256,6 +256,52 @@ export const localMutations = {
       return { tasks: s.tasks.filter((t) => t._id !== sid && t.seriesId !== sid) };
     });
   },
+  /**
+   * Materializza una serie legacy (regola di ripetizione non ancora espansa in
+   * istanze reali): crea i task figli mancanti e marca il base come parent.
+   * Usato quando l'utente interagisce con un'occorrenza virtuale di un giorno
+   * specifico (check/modifica/sposta/elimina) → l'istanza di quel giorno diventa
+   * un documento reale e indipendente. Ritorna [{ _id, date }] dei figli.
+   */
+  materializeSeries({ id }) {
+    const created = [];
+    const index = [];
+    update((s) => {
+      const base = s.tasks.find((t) => t._id === id);
+      if (!base || !hasRepeatRule(base.repeat) || !base.date) return {};
+      const byDate = new Map(
+        s.tasks.filter((t) => t.seriesId === id).map((c) => [c.date, c._id])
+      );
+      const dates = computeOccurrenceDates(base.date, base.repeat);
+      const stamp = base.createdAt ?? Date.now();
+      const children = [];
+      dates.forEach((key, i) => {
+        if (key === base.date) return;
+        if (byDate.has(key)) {
+          index.push({ _id: byDate.get(key), date: key });
+          return;
+        }
+        const child = {
+          ...base,
+          _id: uid(),
+          date: key,
+          completed: false,
+          actualMinutes: 0,
+          attachments: [],
+          reminders: shiftRemindersForDate(base.reminders, key),
+          seriesId: id,
+          materialized: true,
+          createdAt: stamp + i + 1,
+        };
+        children.push(child);
+        created.push(child);
+        index.push({ _id: child._id, date: key });
+      });
+      const parent = { ...base, seriesId: id, materialized: true };
+      return { tasks: [...s.tasks.map((t) => (t._id === id ? parent : t)), ...children] };
+    });
+    return index;
+  },
   toggleTask({ id }) {
     update((s) => ({
       tasks: s.tasks.map((t) => (t._id === id ? { ...t, completed: !t.completed } : t)),

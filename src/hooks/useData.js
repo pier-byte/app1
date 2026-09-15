@@ -36,6 +36,15 @@ export function useTasks(dateKey) {
     const toggle = useMutation(api.tasks.toggle);
     const moveToDate = useMutation(api.tasks.moveToDate);
     const addMinutes = useMutation(api.tasks.addActualMinutes);
+    const materializeM = useMutation(api.tasks.materialize);
+    // Occorrenza virtuale (legacy espansa) → materializza la serie e ritorna
+    // l'_id dell'istanza REALE del giorno targetDate (focus corretto).
+    const resolveInstanceId = async (task) => {
+      const target = task?.targetDate ?? task?.date;
+      if (!task?.virtual) return task?._id;
+      const childId = await materializeM({ id: task._id, date: target });
+      return childId ?? task._id;
+    };
     return {
       data,
       isLoading: data === undefined,
@@ -46,6 +55,11 @@ export function useTasks(dateKey) {
       toggleTask: (id) => toggle({ id }),
       moveTaskToDate: (id, date) => moveToDate({ id, date }),
       addTaskMinutes: (id, minutes) => addMinutes({ id, minutes }),
+      materializeInstance: resolveInstanceId,
+      toggleTaskInstance: async (task) => toggle({ id: await resolveInstanceId(task) }),
+      updateTaskInstance: async (task, patch) => update({ id: await resolveInstanceId(task), ...patch }),
+      removeTaskInstance: async (task) => remove({ id: await resolveInstanceId(task) }),
+      moveTaskInstance: async (task, date) => moveToDate({ id: await resolveInstanceId(task), date }),
     };
   }
 
@@ -57,6 +71,15 @@ export function useTasks(dateKey) {
         .sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0)),
     [state.tasks, dateKey]
   );
+  // Occorrenza virtuale (legacy espansa) → materializza la serie e ritorna
+  // l'_id dell'istanza REALE del giorno targetDate (focus corretto).
+  const resolveInstanceId = async (task) => {
+    const target = task?.targetDate ?? task?.date;
+    if (!task?.virtual) return task?._id;
+    const index = localMutations.materializeSeries({ id: task._id });
+    const child = (index || []).find((c) => c.date === target);
+    return child?._id ?? task._id;
+  };
   return {
     data,
     isLoading: false,
@@ -67,6 +90,11 @@ export function useTasks(dateKey) {
     toggleTask: (id) => localMutations.toggleTask({ id }),
     moveTaskToDate: (id, date) => localMutations.moveTaskToDate({ id, date }),
     addTaskMinutes: (id, minutes) => localMutations.addTaskMinutes({ id, minutes }),
+    materializeInstance: resolveInstanceId,
+    toggleTaskInstance: async (task) => localMutations.toggleTask({ id: await resolveInstanceId(task) }),
+    updateTaskInstance: async (task, patch) => localMutations.updateTask({ id: await resolveInstanceId(task), ...patch }),
+    removeTaskInstance: async (task) => localMutations.removeTask({ id: await resolveInstanceId(task) }),
+    moveTaskInstance: async (task, date) => localMutations.moveTaskToDate({ id: await resolveInstanceId(task), date }),
   };
 }
 
